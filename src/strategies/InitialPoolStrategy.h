@@ -7,7 +7,7 @@
 
 class InitialPoolStrategy {
 public:
-    virtual void buildInitialPool(BestSolutionInfo* frt, Population& population, Graph& graph, ImprovementStrategy* improvementStrategy, int maxSeconds) = 0;
+    virtual void buildInitialPool(BestSolutionInfo* frt, Population& population, Graph& graph, ImprovementStrategy* improvementStrategy, int maxSeconds, int* generation_cnt) = 0;
     virtual void generateInitialSolution(Partition& partition, Graph& graph) = 0;
     virtual ~InitialPoolStrategy() = default;
 };

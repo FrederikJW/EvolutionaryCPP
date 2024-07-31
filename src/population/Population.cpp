@@ -55,7 +55,6 @@ int Population::insertPopulationWhenFull(Partition* partition, int objval) {
     int worst_obj_indv = -1;
 
     for (int i = 0; i < partitions.size(); ++i) {
-        partitions[i]->checkIntegrity();
         int dist2p = partition->calculateMaxMatch(partition->getPvertex(), partition->getBucketSize() - 1,
             partitions[i]->getPvertex(), partitions[i]->getBucketSize() - 1);
         if (dist2p < minDst) {
@@ -86,7 +85,6 @@ int Population::addPopulation(Partition* partition, int objval) {
     int index = -1;
     if (partitions.size() < static_cast<size_t>(poolSize)) {
         bool add = true;
-        int i = 0;
         for (unsigned int i = 0; i < partitions.size(); i++) {
             Partition* existingPartition = partitions[i];
             int dis = existingPartition->calculateMaxMatch(existingPartition->getPvertex(), existingPartition->getBucketSize() - 1,
@@ -96,13 +94,11 @@ int Population::addPopulation(Partition* partition, int objval) {
                 add = false;
                 break;
             }
-            i++;
         }
         if (add) {
             index = partitions.size();
             Partition* partitionCopy = new Partition(partition->getNnode());
             partitionCopy->copyPartition(*partition);
-            partitionCopy->checkIntegrity();
             partitions.push_back(partitionCopy);
             objValues.push_back(objval);
             distances.push_back(MAX_VAL);

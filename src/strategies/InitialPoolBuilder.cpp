@@ -6,9 +6,8 @@
 
 InitialPoolBuilder::InitialPoolBuilder() {}
 
-void InitialPoolBuilder::buildInitialPool(BestSolutionInfo *frt, Population& population, Graph& graph, ImprovementStrategy* improvementStrategy, int maxSeconds) {
+void InitialPoolBuilder::buildInitialPool(BestSolutionInfo *frt, Population& population, Graph& graph, ImprovementStrategy* improvementStrategy, int maxSeconds, int* generation_cnt) {
     clock_t startTime = clock();
-    int generation_cnt = 0;
     int nnode = graph.getNodeCount();
 
     Partition childPartition(nnode);
@@ -16,8 +15,8 @@ void InitialPoolBuilder::buildInitialPool(BestSolutionInfo *frt, Population& pop
     while (population.partitionCount() < population.getPoolSize()) {
         printf("population size: %d\n", population.partitionCount());
         generateInitialSolution(childPartition, graph);
-        improvementStrategy->improveSolution(childPartition, startTime, maxSeconds, frt, generation_cnt);
-        generation_cnt++;
+        improvementStrategy->improveSolution(childPartition, startTime, maxSeconds, frt, *generation_cnt);
+        (*generation_cnt)++;
         if ((double)(clock() - startTime) / CLOCKS_PER_SEC >= maxSeconds)
             break;
 

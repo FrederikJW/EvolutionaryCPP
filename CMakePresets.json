@@ -27,7 +27,8 @@
             },
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug"
-            }
+            },
+            "toolchainFile": "D:/vcpkg/scripts/buildsystems/vcpkg.cmake"
         },
         {
             "name": "x64-release",
@@ -35,7 +36,8 @@
             "inherits": "x64-debug",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release"
-            }
+            },
+            "toolchainFile": "D:/vcpkg/scripts/buildsystems/vcpkg.cmake"
         },
         {
             "name": "x86-debug",
@@ -47,7 +49,8 @@
             },
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug"
-            }
+            },
+            "toolchainFile": "D:/vcpkg/scripts/buildsystems/vcpkg.cmake"
         },
         {
             "name": "x86-release",
@@ -55,7 +58,8 @@
             "inherits": "x86-debug",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release"
-            }
+            },
+            "toolchainFile": "D:/vcpkg/scripts/buildsystems/vcpkg.cmake"
         }
     ]
 }

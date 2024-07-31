@@ -7,7 +7,7 @@ MemeticRun::MemeticRun(CrossoverStrategy* crossoverStrategy, InitialPoolStrategy
 
 void MemeticRun::run(BestSolutionInfo* frt, Graph& graph, int* totalGen, int poolSize) {
     // TODO: move this param somewehere else
-    int param_knownbest = 309125;
+    int param_knownbest = 310000;
     
     double bestTime = 0.0;
     clock_t startTime = clock();
@@ -26,7 +26,7 @@ void MemeticRun::run(BestSolutionInfo* frt, Graph& graph, int* totalGen, int poo
     improvementStrategy->calibrateTemp();
 
     printf("Build initial pool.\n");
-    initialPoolStrategy->buildInitialPool(frt, population, graph, improvementStrategy, maxSeconds);
+    initialPoolStrategy->buildInitialPool(frt, population, graph, improvementStrategy, maxSeconds, &generationCnt);
 
     printf("Run evolution.\n");
     while (generationCnt < maxGenerations && (double)(clock() - startTime) / CLOCKS_PER_SEC < maxSeconds) {

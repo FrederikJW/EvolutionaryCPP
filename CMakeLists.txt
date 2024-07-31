@@ -22,6 +22,7 @@ include_directories(${PROJECT_SOURCE_DIR}/include)
 # Source files
 file(GLOB SOURCES
     ${PROJECT_SOURCE_DIR}/src/*.cpp
+    ${PROJECT_SOURCE_DIR}/src/CPPJovanovic/*.cpp
     ${PROJECT_SOURCE_DIR}/src/graph/*.cpp
     ${PROJECT_SOURCE_DIR}/src/partition/*.cpp
     ${PROJECT_SOURCE_DIR}/src/population/*.cpp
@@ -29,5 +30,18 @@ file(GLOB SOURCES
     ${PROJECT_SOURCE_DIR}/src/util/*.cpp
 )
 
+# Add the vcpkg toolchain file
+set(CMAKE_TOOLCHAIN_FILE "D:/vcpkg/scripts/buildsystems/vcpkg.cmake")
+
+# Add TBB
+find_package(TBB CONFIG REQUIRED)
+
 # Executable
 add_executable(EvolutionaryCPP ${SOURCES})
+
+# Link TBB
+target_link_libraries(EvolutionaryCPP TBB::tbb)
+
+include_directories(${TBB_INCLUDE_DIRS})
+
+target_compile_options(EvolutionaryCPP PRIVATE ${TBB_CXX_FLAGS})

@@ -9,7 +9,7 @@
 class InitialPoolBuilder : public InitialPoolStrategy {
 public:
     InitialPoolBuilder();
-    void buildInitialPool(BestSolutionInfo *frt, Population& population, Graph& graph, ImprovementStrategy* improvementStrategy, int maxSeconds) override;
+    void buildInitialPool(BestSolutionInfo *frt, Population& population, Graph& graph, ImprovementStrategy* improvementStrategy, int maxSeconds, int *generation_cnt) override;
     void generateInitialSolution(Partition& partition, Graph& graph) override;
 };
 

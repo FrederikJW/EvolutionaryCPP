@@ -3,6 +3,7 @@
 #include "strategies/InitialPoolBuilder.h"
 #include "strategies/MergeDivideCrossover.h"
 #include "strategies/SimulatedAnnealingImprovement.h"
+#include "strategies/RCLInitStrategy.h"
 #include <fstream>
 #include <iostream>
 #include <cstring>
@@ -135,7 +136,27 @@ void reportResult() {
     printf("\n");
 }
 
-int main(int argc, char** argv) {
+int rcl_test(int argc, char** argv) {
+    // loading graph
+    Graph graph;
+    graph.load(param_filename);
+    nnode = graph.getNodeCount();
+
+    finalBest.best_partition = new Partition(nnode);
+    clearResult(&finalBest);
+
+    Population population(param_pool_size);
+
+    int generationCnt = 0;
+
+    ImprovementStrategy* simulatedAnnealingImprovement = new SimulatedAnnealingImprovement(param_knownbest, param_minpercent, param_tempfactor, param_sizefactor);
+    InitialPoolStrategy* RCLStrategy = new RCLInitStrategy();
+    RCLStrategy->buildInitialPool(&finalBest, population, graph, simulatedAnnealingImprovement, param_time, &generationCnt);
+
+    return 0;
+}
+
+int normal_run(int argc, char** argv) {
     fout = NULL;
 
     Graph graph;
@@ -170,7 +191,7 @@ int main(int argc, char** argv) {
 
         ImprovementStrategy* simulatedAnnealingImprovement = new SimulatedAnnealingImprovement(param_knownbest, param_minpercent, param_tempfactor, param_sizefactor);
         CrossoverStrategy* mergeDevideCrossover = new MergeDivideCrossover(param_shrink);
-        InitialPoolStrategy* initialPoolBuilder = new InitialPoolBuilder();
+        InitialPoolStrategy* initialPoolBuilder = new RCLInitStrategy();
 
         MemeticRun memeticRun(mergeDevideCrossover, initialPoolBuilder, simulatedAnnealingImprovement, param_max_generations, param_time);
         memeticRun.run(&finalBest, graph, &totalgen, param_pool_size);
@@ -198,4 +219,8 @@ int main(int argc, char** argv) {
     delete[] bestInAlllPartition;
 
     return 0;
+}
+
+int main(int argc, char** argv) {
+    return normal_run(argc, argv);
 }

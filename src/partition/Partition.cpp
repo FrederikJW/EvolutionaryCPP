@@ -65,7 +65,6 @@ void Partition::copyPartition(const Partition& source) {
     std::memcpy(pcnt, source.pcnt, sizeof(int) * (nnode + 1));
     std::memcpy(ppos, source.ppos, sizeof(int) * (nnode + 1));
     std::memcpy(pvertex, source.pvertex, sizeof(int) * nnode);
-    checkIntegrity();
 }
 
 void swapAry(int* ary, int idx1, int idx2) {
@@ -88,7 +87,6 @@ void Partition::updatePartition(int v, int target) {
         pbkt_size--;
     }
     pvertex[v] = target;
-    checkIntegrity();
 }
 
 void Partition::print(FILE* fout) const {
