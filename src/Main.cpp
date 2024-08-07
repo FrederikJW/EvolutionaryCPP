@@ -4,6 +4,7 @@
 #include "strategies/MergeDivideCrossover.h"
 #include "strategies/SimulatedAnnealingImprovement.h"
 #include "strategies/RCLInitStrategy.h"
+#include "strategies/SaloExtendedImprovement.h"
 #include <fstream>
 #include <iostream>
 #include <cstring>
@@ -149,9 +150,9 @@ int rcl_test(int argc, char** argv) {
 
     int generationCnt = 0;
 
-    ImprovementStrategy* simulatedAnnealingImprovement = new SimulatedAnnealingImprovement(param_knownbest, param_minpercent, param_tempfactor, param_sizefactor);
+    ImprovementStrategy* improvementStrategy = new SimulatedAnnealingImprovement(param_knownbest, param_minpercent, param_tempfactor, param_sizefactor);
     InitialPoolStrategy* RCLStrategy = new RCLInitStrategy();
-    RCLStrategy->buildInitialPool(&finalBest, population, graph, simulatedAnnealingImprovement, param_time, &generationCnt);
+    RCLStrategy->buildInitialPool(&finalBest, population, graph, improvementStrategy, param_time, &generationCnt);
 
     return 0;
 }
@@ -189,11 +190,11 @@ int normal_run(int argc, char** argv) {
         clearResult(&finalBest);
         clock_t starttime = clock();
 
-        ImprovementStrategy* simulatedAnnealingImprovement = new SimulatedAnnealingImprovement(param_knownbest, param_minpercent, param_tempfactor, param_sizefactor);
+        ImprovementStrategy* improvementStrategy = new SaloExtendedImprovement(param_knownbest, param_minpercent, param_tempfactor, param_sizefactor);
         CrossoverStrategy* mergeDevideCrossover = new MergeDivideCrossover(param_shrink);
-        InitialPoolStrategy* initialPoolBuilder = new RCLInitStrategy();
+        InitialPoolStrategy* initialPoolstrategy = new RCLInitStrategy();
 
-        MemeticRun memeticRun(mergeDevideCrossover, initialPoolBuilder, simulatedAnnealingImprovement, param_max_generations, param_time);
+        MemeticRun memeticRun(mergeDevideCrossover, initialPoolstrategy, improvementStrategy, param_max_generations, param_time);
         memeticRun.run(&finalBest, graph, &totalgen, param_pool_size);
 
         totaltime = (double)(clock() - starttime) / CLOCKS_PER_SEC;

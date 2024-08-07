@@ -12,6 +12,10 @@ public:
     int mChange;
 
     SAMoveType mMoveType;
+
+    // Constructor to initialize all values to 0
+    SARelocation()
+        : mN0(0), mN1(0), mC0(0), mC1(0), mChange(0), mMoveType(SAMoveType::N0) {}
 };
 
 #endif // SARELOCATION_H

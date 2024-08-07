@@ -21,6 +21,7 @@ private:
     int mMaxIndex;
 
 public:
+    RCL() {};
     RCL(int iSize);
 
     int getCurrentSize() const;

@@ -13,6 +13,10 @@ CPPSolution::CPPSolution(CPPInstance* nInstance) {
     Allocate();
 }
 
+CPPSolution::CPPSolution(int* pvertex, int numVertices, int objective, CPPInstance* nInstance) : CPPSolutionBase(pvertex, numVertices, objective, nInstance) {
+    mChange.resize(mInstance->getNumberOfNodes(), std::vector<int>(mInstance->getNumberOfNodes(), 0));
+}
+
 void CPPSolution::Init(int size) {
     EmptyChange.resize(size, std::vector<int>(size, 0));
 }

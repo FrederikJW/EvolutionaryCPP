@@ -1,7 +1,7 @@
 #include "InitialPoolBuilder.h"
 #include "ImprovementStrategy.h"
 #include "RCLInitStrategy.h"
-#include "../CPPJovanovic/CPPProblem.h"
+#include "../CPPJovanovic/CPPGreedy.h"
 #include "../CPPJovanovic/CPPInstance.h"
 #include <ctime>
 #include <cstdlib>
@@ -16,7 +16,7 @@ void RCLInitStrategy::buildInitialPool(BestSolutionInfo* frt, Population& popula
     Partition childPartition(nnode);
 
     CPPInstance* instance = new CPPInstance("instance/rand500-100.txt");
-    CPPProblem* problem = new CPPProblem(instance);
+    CPPGreedy* problem = new CPPGreedy(instance);
 
     while (population.partitionCount() < population.getPoolSize()) {
         printf("population size: %d\n", population.partitionCount());
@@ -69,7 +69,7 @@ void RCLInitStrategy::convertCPPSolutionToPartition(Partition& partition, CPPSol
 
 void RCLInitStrategy::generateInitialSolution(Partition& partition, Graph& graph) {
     CPPInstance* instance = new CPPInstance("instance/rand500-100.txt");
-    CPPProblem* problem = new CPPProblem(instance);
+    CPPGreedy* problem = new CPPGreedy(instance);
 
     problem->SolveGreedy();
 

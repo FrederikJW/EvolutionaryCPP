@@ -4,13 +4,15 @@
 #include <vector>
 #include <string>
 #include <sstream>
+#include <unordered_map>
 #include "CPPSolutionBase.h"
 
 
 void parallelAddSse(std::vector<int>& a, const std::vector<int>& b) {
     tbb::parallel_for(tbb::blocked_range<size_t>(0, a.size(), 4),
         [&a, &b](const tbb::blocked_range<size_t>& r) {
-            for (size_t i = r.begin(); i != r.end(); i += 4) {
+            
+            for (size_t i = 0; i < r.size() * 4; i += 4) {
                 __m128i a_values = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&a[i]));
                 __m128i b_values = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&b[i]));
                 __m128i result = _mm_add_epi32(a_values, b_values);
@@ -147,6 +149,33 @@ CPPSolutionBase::CPPSolutionBase(int iObjective, std::vector<std::vector<int>> i
 {
     mObjective = iObjective;
     mCliques = std::move(iPartitions);
+}
+
+CPPSolutionBase::CPPSolutionBase(int* pvertex, int numVertices, int objective, CPPInstance* nInstance)
+{   
+    // do not delete mInstance if solution object is deleted
+    mInstance = nInstance;
+    std::unordered_map<int, std::vector<int>> groupMap;
+    mNodeClique.resize(numVertices);
+
+    for (int i = 0; i < numVertices; ++i) {
+        groupMap[pvertex[i]].push_back(i);
+        //mNodeClique[i] = pvertex[i];
+    }
+
+    std::vector<std::vector<int>> groups(groupMap.size());
+
+    int groupIndex = 0;
+    for (auto& pair : groupMap) {
+        for (int j : pair.second) {
+            mNodeClique[j] = groupIndex;
+        }
+        groups[groupIndex] = std::move(pair.second);
+        groupIndex++;
+    }
+
+    mCliques = std::move(groups);
+    mObjective = objective;
 }
 
 bool CPPSolutionBase::CheckSolutionValid(CPPInstance tInstance)
@@ -852,7 +881,7 @@ void CPPSolutionBase::ApplyRelocation(SARelocation Relocation)
     while (RemoveEmptyCliqueSA(true, true));
 }
 
-bool CPPSolutionBase::SimulatedAnealing(std::default_random_engine& iGenerator, SAParameters& iSAParameters, double& AcceptRelative)
+bool CPPSolutionBase::SimulatedAnnealing(std::default_random_engine& iGenerator, SAParameters& iSAParameters, double& AcceptRelative)
 {
     int NeiborhoodSize = mInstance->getNumberOfNodes() * getNumberOfCliques();
     int n;
@@ -910,11 +939,11 @@ bool CPPSolutionBase::SimulatedAnealing(std::default_random_engine& iGenerator, 
 
         counterCool++;
 
-        if (iSAParameters.mCooling == CPPProblem::CPPCooling::Geometric)
+        if (iSAParameters.mCooling == CPPCooling::Geometric)
         {
             T *= iSAParameters.mCoolingParam;
         }
-        if (iSAParameters.mCooling == CPPProblem::CPPCooling::LinearMultiplicative)
+        if (iSAParameters.mCooling == CPPCooling::LinearMultiplicative)
         {
             T = iSAParameters.mInitTemperature * 1 / (1 + iSAParameters.mCoolingParam * counterCool);
         }
@@ -1261,7 +1290,7 @@ bool CPPSolutionBase::RemoveEmptyCliqueSA(bool bUpdateAllConnections, bool bUseC
     return false;
 }
 
-bool CPPSolutionBase::LocalSearch(std::default_random_engine& iGenerator, std::vector<std::vector<int>> Nodes)
+bool CPPSolutionBase::LocalSearch(std::vector<std::vector<int>> Nodes)
 {
     std::vector<BufferElement> currentBuffer;
     int counter = 0;

@@ -3,21 +3,22 @@
 
 #include "CPPInstance.h"
 #include "CPPCandidate.h"
+#include "CPPSolutionBase.h"
 
 #include <vector>
 #include <string>
 
-class CPPSolution {
+class CPPSolution : public CPPSolutionBase {
 private:
     std::vector<std::vector<int>> mChange;
     static std::vector<std::vector<int>> EmptyChange;
-    std::vector<std::vector<int>> mCliques;
-    std::vector<int> mNodeClique;
-    CPPInstance* mInstance;
 
 public:
-    CPPSolution();
+    using CPPSolutionBase::CPPSolutionBase;
+
+    CPPSolution() {};
     CPPSolution(CPPInstance* nInstance);
+    CPPSolution(int* pvertex, int numVertices, int objective, CPPInstance* nInstance);
 
     static void Init(int size);
 

@@ -6,6 +6,7 @@
 #include "SARelocation.h"
 #include "SAParameters.h"
 #include "BufferElement.h"
+#include "CPPTypes.h"
 
 #include <vector>
 #include <random>
@@ -14,13 +15,12 @@ enum SASelectType { Single, Dual, Triple };
 
 class CPPSolutionBase {
 protected:
-    std::vector<std::vector<int>> mCliques;
-    std::vector<int> mCliqueSizes;
+    std::vector<std::vector<int>> mCliques; // holds a vector of nodes for every clique
+    std::vector<int> mCliqueSizes; // holds the size of every clique
 
     int mObjective;
-    std::vector<int> mNodeClique;
+    std::vector<int> mNodeClique; // holds the clique id for every node
     CPPInstance* mInstance;
-    int mMaxBuffer;
     std::vector<std::vector<int>> mAllConnections;
     SASelectType mSASelectType;
     std::vector<int> mRestricted;
@@ -30,8 +30,10 @@ public:
     CPPSolutionBase();
     CPPSolutionBase(const CPPSolutionBase& iSolution);
     CPPSolutionBase(int iObjective, std::vector<std::vector<int>> iPartitions);
+    CPPSolutionBase(int* pvertex, int numVertices, int objective, CPPInstance* nInstance);
 
     SASelectType getSASType() const { return mSASelectType; }
+    CPPInstance* getInstance() { return mInstance; }
     void setSASType(SASelectType value) { mSASelectType = value; }
 
     std::default_random_engine getGenerator() const { return mGenerator; }
@@ -73,7 +75,7 @@ public:
 
     bool RemoveEmptyClique(bool bUpdateAllConections = false, bool bUseCliqueSize = false);
     bool RemoveEmptyCliqueSA(bool bUpdateAllConections = false, bool bUseCliqueSize = false);
-    virtual bool LocalSearch(std::default_random_engine& iGenerator, std::vector<std::vector<int>> Nodes = {});
+    virtual bool LocalSearch(std::vector<std::vector<int>> Nodes = {});
     bool ImproveMove(std::vector<std::vector<int>>& Nodes);
     bool ImproveMove();
     void ExpandedBuffer(std::vector<BufferElement>& AllTest, int iNode, int iClique, int oClique);
@@ -93,7 +95,7 @@ public:
     void SASelectSingle(SARelocation& Relocation, std::default_random_engine& iGenerator);
     void SASelect(SARelocation& Relocations, std::default_random_engine& iGenerator);
     void ApplyRelocation(SARelocation Relocation);
-    bool SimulatedAnealing(std::default_random_engine& iGenerator, SAParameters& iSAParameters, double& AcceptRelative);
+    bool SimulatedAnnealing(std::default_random_engine& iGenerator, SAParameters& iSAParameters, double& AcceptRelative);
     bool CalibrateSA(std::default_random_engine& iGenerator, SAParameters& iSAParameters, double& Accept);
     double FastExp(double x);
 

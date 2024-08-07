@@ -1,11 +1,11 @@
 #ifndef SAPARAMETERS_H
 #define SAPARAMETERS_H
 
-#include "CPPProblem.h"
+#include "CPPTypes.h"
 
 class SAParameters {
 public:
-    CPPProblem::CPPCooling mCooling;
+    CPPCooling mCooling;
     double mInitTemperature;
     int mSizeRepeat;
     double mCoolingParam;

@@ -37,7 +37,7 @@ set(CMAKE_TOOLCHAIN_FILE "D:/vcpkg/scripts/buildsystems/vcpkg.cmake")
 find_package(TBB CONFIG REQUIRED)
 
 # Executable
-add_executable(EvolutionaryCPP ${SOURCES})
+add_executable(EvolutionaryCPP ${SOURCES} "src/strategies/SaloExtendedImprovement.cpp")
 
 # Link TBB
 target_link_libraries(EvolutionaryCPP TBB::tbb)
