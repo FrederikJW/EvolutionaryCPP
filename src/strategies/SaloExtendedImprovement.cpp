@@ -28,16 +28,16 @@ std::vector<std::vector<int>> convertPvertexToMcliques(int* pvertex, int numVert
     return groups;
 }
 
-SaloExtendedImprovement::SaloExtendedImprovement(int knownbest, double minpercent, double tempfactor, int sizefactor) : knownbest(knownbest), minpercent(minpercent), tempfactor(tempfactor), sizefactor(sizefactor), temp(0), problem(nullptr), bestSolution(nullptr) {
+SaloExtendedImprovement::SaloExtendedImprovement(int knownbest, double minpercent, double tempfactor, int sizefactor) : knownbest(knownbest), minpercent(minpercent), tempfactor(tempfactor), sizefactor(sizefactor), temp(0), problem(nullptr) {
     CPPInstance* instance = new CPPInstance("instance/rand500-100.txt");
     problem = new CPPProblem("file1", "rand500-100", instance);
     problem->SetID(2);
+    problem->SetSASelect(SASelectType::Dual);
 }
 
 SaloExtendedImprovement::~SaloExtendedImprovement() {
     disposeEnvironment();
     delete problem;
-    delete bestSolution;
 }
 
 void SaloExtendedImprovement::improveSolution(Partition& solution, clock_t startTime, int maxSeconds, BestSolutionInfo* frt, int generation_cnt) {
@@ -50,14 +50,7 @@ void SaloExtendedImprovement::setEnvironment(Graph& graph) {
 }
 
 void SaloExtendedImprovement::setStart(Partition& startSol) {
-    delete bestSolution;
-    bestSolution = new CPPSolution(startSol.getPvertex(), startSol.getNnode(), startSol.getValue(), problem->GetInstance());
-
-    problem->AllocateSolution(bestSolution);
-
-    // set move selection to dual which corresponds to simulated annealing extended
-    // normally simulated annealing selects a single vertice which is considered to move
-    bestSolution->setSASType(SASelectType::Dual);
+    problem->AllocateSolution(startSol.getPvertex(), startSol.getNnode(), startSol.getValue());
 }
 
 void SaloExtendedImprovement::disposeEnvironment() {
@@ -77,17 +70,17 @@ int SaloExtendedImprovement::getBestObjective() {
 }
 
 Partition& SaloExtendedImprovement::getBestPartition() {
-    int nnode = bestSolution->getInstance()->getNumberOfNodes();
-    Partition partition = Partition(nnode);
+    int nnode = problem->GetInstance()->getNumberOfNodes();
+    Partition *partition = new Partition(nnode);
 
     int* vpart = new int[nnode];
 
     for (int i = 0; i < nnode; i++) {
-        vpart[i] = bestSolution->getNodeClique()[i];
+        vpart[i] = problem->GetSolution()->getNodeClique()[i] + 1;
     }
 
-    partition.buildPartition(vpart);
+    partition->buildPartition(vpart);
 
     delete[] vpart;
-    return partition;
+    return *partition;
 }

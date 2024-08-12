@@ -35,8 +35,8 @@ private:
 
     CPPCandidate* GetHeuristicMaxIncrease();
     CPPCandidate* GetHeuristic();
-    bool AddToSolution(const CPPCandidate& N);
-    void RemoveFromAvailable(const CPPCandidate& N);
+    bool AddToSolution(CPPCandidate& N);
+    void RemoveFromAvailable(CPPCandidate& N);
     void InitGreedy();
 };
 

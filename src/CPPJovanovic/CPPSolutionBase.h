@@ -49,8 +49,8 @@ public:
     virtual void FixCliques();
     bool InSameClique(int nodeA, int nodeB);
     virtual int CalculateObjective();
-    virtual int GetChange(int A, int B) { return -1; }
-    virtual int GetChange(const std::vector<int>& A, int B) { return -1; }
+    virtual int GetChange(int iNode, int iClique) { return -1; }
+    virtual int GetChange(const std::vector<int>& nodes, int iClique) { return -1; }
 
     int getObjective() const { return mObjective; }
     void setObjective(int value) { mObjective = value; }
@@ -58,7 +58,7 @@ public:
     std::vector<std::vector<int>> getCliques() const { return mCliques; }
     std::vector<int> getNodeClique() const { return mNodeClique; }
 
-    virtual void AddCandidate(CPPCandidate A);
+    virtual void AddCandidate(CPPCandidate& A);
 
     bool CheckSolutionValid(CPPInstance tInstance);
     std::vector<int> CliqueForNode(int iNode);

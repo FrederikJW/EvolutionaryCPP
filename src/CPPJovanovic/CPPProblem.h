@@ -24,7 +24,7 @@ private:
     CPPSolutionBase* mSolution;
     CPPSolutionHolder mSolutionHolder;
 
-    RCL<CPPCandidate> mRCL;
+    RCL<CPPCandidate>* mRCL;
 
     int mRCLSize;
     std::mt19937 mGenerator;
@@ -70,6 +70,7 @@ public:
     void SetSASelect(SASelectType value) { mSASType = value; }
 
     CPPInstance* GetInstance() { return mInstance; }
+    CPPSolutionBase* GetSolution() { return mSolution; }
 
     long GetBestTime();
     void Solve(int iMaxIterations, double iTimeLimit);
@@ -80,6 +81,7 @@ public:
     static void Shuffle(std::vector<int>& list, std::mt19937& iGenerator);
     void AllocateSolution();
     void AllocateSolution(CPPSolutionBase* solution);
+    void AllocateSolution(int* pvertex, int numVertices, int objective);
     std::vector<double> GetFrequency(int BaseSolutionIndex, const std::vector<int>& SelectedSolutionIndexes);
     void UpdateEdgeFrequency(std::vector<std::vector<int>>& Occurence, CPPSolutionBase* Base, CPPSolutionBase* Update);
     std::vector<std::vector<int>> GetFrequencyEdge(int BaseSolutionIndex, const std::vector<int>& SelectedSolutionIndexes);

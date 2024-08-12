@@ -26,7 +26,7 @@ public:
 
     int getCurrentSize() const;
 
-    T getCandidate(int index) const;
+    T* getCandidate(int index);
 
     double getValue(int index) const;
 

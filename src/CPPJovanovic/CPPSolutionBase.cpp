@@ -1,5 +1,6 @@
 #include <tbb/tbb.h>
 #include <emmintrin.h>
+#include <immintrin.h> 
 #include <fstream>
 #include <vector>
 #include <string>
@@ -7,7 +8,7 @@
 #include <unordered_map>
 #include "CPPSolutionBase.h"
 
-
+// does not work correctly
 void parallelAddSse(std::vector<int>& a, const std::vector<int>& b) {
     tbb::parallel_for(tbb::blocked_range<size_t>(0, a.size(), 4),
         [&a, &b](const tbb::blocked_range<size_t>& r) {
@@ -21,6 +22,26 @@ void parallelAddSse(std::vector<int>& a, const std::vector<int>& b) {
         });
 }
 
+void parallelAddSse2(std::vector<int>& a, const std::vector<int>& b) {
+    size_t size = a.size();
+
+    // Ensure that both vectors have the same size
+    if (size != b.size()) {
+        throw std::invalid_argument("Vectors must have the same size");
+    }
+
+    for (size_t i = 0; i < size; i += 4) {
+        // Load 4 integers from each vector into SSE registers
+        __m128i va = _mm_loadu_si128((__m128i*) & a[i]);
+        __m128i vb = _mm_loadu_si128((__m128i*) & b[i]);
+
+        // Perform the addition
+        __m128i vresult = _mm_add_epi32(va, vb);
+
+        // Store the result back to vector a
+        _mm_storeu_si128((__m128i*) & a[i], vresult);
+    }
+}
 
 void shuffle(std::vector<int>& list, std::default_random_engine& iGenerator) {
     int n = list.size(); // The number of items left to shuffle (loop invariant).
@@ -126,7 +147,7 @@ int CPPSolutionBase::CalculateObjective()
     return result;
 }
 
-void CPPSolutionBase::AddCandidate(CPPCandidate A) {};
+void CPPSolutionBase::AddCandidate(CPPCandidate& A) {};
 
 CPPSolutionBase::CPPSolutionBase()
 {
@@ -270,8 +291,8 @@ void CPPSolutionBase::UpdateAllConnections(int nNode, int nClique)
     const std::vector<int>& NodeWeights = mInstance->getWeights()[nNode];
     const std::vector<int>& NodeNegativeWeights = mInstance->getNegativeWeights()[nNode];
 
-    parallelAddSse(newAllConnectedNode, NodeWeights);
-    parallelAddSse(oldAllConnectedNode, NodeNegativeWeights);
+    parallelAddSse2(newAllConnectedNode, NodeWeights);
+    parallelAddSse2(oldAllConnectedNode, NodeNegativeWeights);
 }
 
 void CPPSolutionBase::UpdateAllConnectionsRestricted(int nNodeIndex, int nClique)
@@ -882,7 +903,8 @@ void CPPSolutionBase::ApplyRelocation(SARelocation Relocation)
 }
 
 bool CPPSolutionBase::SimulatedAnnealing(std::default_random_engine& iGenerator, SAParameters& iSAParameters, double& AcceptRelative)
-{
+{   
+    // printf("enter SA");
     int NeiborhoodSize = mInstance->getNumberOfNodes() * getNumberOfCliques();
     int n;
     double Prob;
@@ -910,7 +932,8 @@ bool CPPSolutionBase::SimulatedAnnealing(std::default_random_engine& iGenerator,
     AcceptTotal = 0;
     int sumNodeChange;
     while (true)
-    {
+    {   
+        // gets caught in an endless loop here?
         counter++;
         Accept = 0;
         waste = 0;
@@ -920,7 +943,8 @@ bool CPPSolutionBase::SimulatedAnnealing(std::default_random_engine& iGenerator,
             cRelocation.mChange = INT_MIN;
             SASelect(cRelocation, iGenerator);
             Prob = FastExp(cRelocation.mChange / T);
-
+            if (cRelocation.mChange / T > 900 || cRelocation.mChange / T < -900)
+                printf("  Prob=%.3f x=%.3f T=%.3f mchange=%d\n", Prob, cRelocation.mChange / T, T, cRelocation.mChange);
             if (Prob * 1000 > 1 + iGenerator() % 1000)
             {
                 Accept++;
@@ -962,11 +986,13 @@ bool CPPSolutionBase::SimulatedAnnealing(std::default_random_engine& iGenerator,
 
         if (T < 0.0005)
             break;
+        // printf("Stag=%d T=%.3f\n", Stag, T);
     }
 
     CreateFromNodeClique(tNodeClique);
 
     AcceptRelative = static_cast<double>(AcceptTotal) / (NeiborhoodSize * iSAParameters.mSizeRepeat * counter);
+    // printf("exit SA");
     return true;
 }
 

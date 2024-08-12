@@ -38,6 +38,7 @@ void Partition::buildPartition(int* vpart) {
     for (int i = 0; i < nnode; ++i) {
         int pid = vpart[i];
         if (pid == EMPTY_IDX || pid > nnode) {
+            // ends up here; wrong translation?
             printf("Invalid partition for node %d\n", pid);
             exit(0);
         }

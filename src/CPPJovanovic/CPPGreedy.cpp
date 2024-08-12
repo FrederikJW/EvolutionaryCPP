@@ -145,7 +145,7 @@ CPPCandidate* CPPGreedy::GetHeuristicMaxIncrease() {
         return new CPPCandidate(mAvailableNodes[index], mSolution->NumberOfCliques(), index);
     }
 
-    return new CPPCandidate(mRCL->getCandidate(mGenerator() % mRCL->getCurrentSize()));
+    return new CPPCandidate(*mRCL->getCandidate(mGenerator() % mRCL->getCurrentSize()));
 }
 
 CPPCandidate* CPPGreedy::GetHeuristic() {
@@ -161,12 +161,12 @@ CPPSolution& CPPGreedy::getSolution() {
     return *mSolution;
 }
 
-bool CPPGreedy::AddToSolution(const CPPCandidate& N) {
+bool CPPGreedy::AddToSolution(CPPCandidate& N) {
     RemoveFromAvailable(N);
     mSolution->AddCandidate(N);
     return true;
 }
 
-void CPPGreedy::RemoveFromAvailable(const CPPCandidate& N) {
+void CPPGreedy::RemoveFromAvailable(CPPCandidate& N) {
     mAvailableNodes.erase(mAvailableNodes.begin() + N.getCandidateIndex());
 }

@@ -33,7 +33,6 @@ private:
     double minpercent;
     double tempfactor;
     int sizefactor;
-    CPPSolutionBase* bestSolution;
     CPPProblem* problem;
 };
 

@@ -4,9 +4,8 @@
 #include <thread>
 
 CPPProblem::CPPProblem(const std::string& FileName, const std::string& InstanceName, CPPInstance* nInstance)
-    : mInstance(nInstance), mRCLSize(2), mFileName(FileName), mInstanceName(InstanceName), mGenerator(2), mMetaHeuristic(FSS), mGreedyHeuristic(MaxIncrease) {
+    : mInstance(nInstance), mRCLSize(2), mFileName(FileName), mInstanceName(InstanceName), mGenerator(2), mMetaHeuristic(FSS), mGreedyHeuristic(MaxIncrease), mRCL(nullptr) {
     mSolution = new CPPSolution(mInstance);
-    mRCL = RCL<CPPCandidate>(mRCLSize);
     mLogFileName = "./Log" + mInstanceName;
     std::ofstream S(mLogFileName);
     S.close();
@@ -166,6 +165,17 @@ void CPPProblem::AllocateSolution(CPPSolutionBase* solution) {
     switch (mGreedyHeuristic) {
     case MaxIncrease:
         mSolution = solution;
+        break;
+    }
+    mSolution->setGenerator(mGenerator);
+    mSolution->setSASType(mSASType);
+}
+
+void CPPProblem::AllocateSolution(int* pvertex, int numVertices, int objective) {
+    delete mSolution;
+    switch (mGreedyHeuristic) {
+    case MaxIncrease:
+        mSolution = new CPPSolution(pvertex, numVertices, objective, GetInstance());
         break;
     }
     mSolution->setGenerator(mGenerator);
@@ -425,7 +435,7 @@ void CPPProblem::Calibrate(double iTimeLimit) {
 
     while (true) {
         // TODO: this erases the solution partially
-        // SolveGreedy();
+        SolveGreedy();
         mSolution->CalibrateSA(mGenerator, mSAParams, Accept);
         cSolutionValue = mSolution->CalculateObjective();
         mSolution->setObjective(cSolutionValue);
@@ -447,6 +457,8 @@ void CPPProblem::Calibrate(double iTimeLimit) {
         }
         break;
     }
+    
+    printf("Accept probability %.3f, Calibrate temp %.2f\n\n", Accept, mSAParams.mInitTemperature);
 }
 
 void CPPProblem::SASearch() {
@@ -499,7 +511,9 @@ CPPCandidate* CPPProblem::GetHeuristicMaxIncrease() {
 
     if (mAvailableNodes.empty()) return nullptr;
 
-    mRCL = RCL<CPPCandidate>(mRCLSize);
+    delete mRCL;
+    mRCL = new RCL<CPPCandidate>(mRCLSize);
+    // TODO: check mRCL and candidates for memory leak
 
     if (mSolution->getCliques().empty()) {
         Select = mGenerator() % mAvailableNodes.size();
@@ -510,17 +524,17 @@ CPPCandidate* CPPProblem::GetHeuristicMaxIncrease() {
     for (const auto& n : mAvailableNodes) {
         for (int c = 0; c < mSolution->getNumberOfCliques(); ++c) {
             cValue = mSolution->GetChange(n, c);
-            mRCL.add(*(new CPPCandidate(n, c, counter)), cValue);
+            mRCL->add(*(new CPPCandidate(n, c, counter)), cValue);
         }
         counter++;
     }
 
-    if (mRCL.getMaxValue() <= 0 || mRCL.getCurrentSize() == 0) {
+    if (mRCL->getMaxValue() <= 0 || mRCL->getCurrentSize() == 0) {
         int index = mGenerator() % mAvailableNodes.size();
         return new CPPCandidate(mAvailableNodes[index], mSolution->getNumberOfCliques(), index);
     }
 
-    return &mRCL.getCandidate(mGenerator() % mRCL.getCurrentSize());
+    return mRCL->getCandidate(mGenerator() % mRCL->getCurrentSize());
 }
 
 CPPCandidate* CPPProblem::GetHeuristic() {

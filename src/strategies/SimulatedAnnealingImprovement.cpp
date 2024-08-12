@@ -136,7 +136,7 @@ void SimulatedAnnealingImprovement::calibrateTemp() {
             break;
         }
     }
-    // TODO: initial Temperature is very low; is this normal?
+
     temp = _temp;
 }
 

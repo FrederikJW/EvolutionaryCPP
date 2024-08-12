@@ -39,7 +39,7 @@ void CPPSolution::InitChange() {
     }
 }
 
-void CPPSolution::AddCandidate(const CPPCandidate& A) {
+void CPPSolution::AddCandidate(CPPCandidate& A) {
     AddNodeToClique(A);
 }
 
@@ -72,10 +72,10 @@ void CPPSolution::Clear() {
     InitChange();
 }
 
-int CPPSolution::AddNodeToClique(const CPPCandidate& N) {
+int CPPSolution::AddNodeToClique(CPPCandidate& N) {
     int result = 0;
     for (int n : N.getNodes())
-        result += AddNodeToClique(n, N.getCandidateIndex());
+        result += AddNodeToClique(n, N.getClique());
     return result;
 }
 
