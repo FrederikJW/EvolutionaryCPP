@@ -70,7 +70,7 @@ public:
     void SetSASelect(SASelectType value) { mSASType = value; }
 
     CPPInstance* GetInstance() { return mInstance; }
-    CPPSolutionBase* GetSolution() { return mSolution; }
+    CPPSolutionBase& GetSolution() { return *mSolution; }
 
     long GetBestTime();
     void Solve(int iMaxIterations, double iTimeLimit);
@@ -101,6 +101,7 @@ public:
     CPPCandidate* GetHeuristicMaxIncrease();
     CPPCandidate* GetHeuristic();
     bool AddToSolution(CPPCandidate* N);
+    bool AddToSolutionHolder(CPPSolutionBase& iSolution);
     void RemoveFromAvailable(CPPCandidate* N);
 };
 

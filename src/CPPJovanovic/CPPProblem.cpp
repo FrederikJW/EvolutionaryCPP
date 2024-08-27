@@ -308,7 +308,12 @@ std::vector<std::vector<int>> CPPProblem::GetFix(int N, int K, double FixSize) {
 
     std::sort(Elem.begin(), Elem.end(), [](double* a, double* b) { return a[1] > b[1]; });
 
-    std::vector<std::vector<int>> resultCliques(mSolutionHolder.Solutions()[mGenerator() % std::min(N, static_cast<int>(mSolutionHolder.Solutions().size()))].getCliques().size());
+    // rewrote resultCliques creation to account for solutions with different clique counts
+    size_t maxSize = 0;
+    for (const auto& solution : mSolutionHolder.Solutions()) {
+        maxSize = std::max(maxSize, solution.getCliques().size());
+    }
+    std::vector<std::vector<int>> resultCliques(maxSize);
 
     for (int i = 0; i < FixSize * mInstance->getNumberOfNodes(); ++i) {
         int cNode = static_cast<int>(Elem[i][0]);
@@ -370,7 +375,6 @@ void CPPProblem::SolveFixSetSearch(int MaxGenerated, double iTimeLimit) {
     double Accept;
 
     std::vector<std::vector<int>> FixSet;
-    std::vector<std::vector<int>> FixSet1;
 
     mStartTime = std::chrono::steady_clock::now();
     SolveGRASP(mFixInitPopulation, iTimeLimit);
@@ -548,6 +552,11 @@ CPPCandidate* CPPProblem::GetHeuristic() {
 bool CPPProblem::AddToSolution(CPPCandidate* N) {
     if (mGreedyHeuristic == MaxIncrease) RemoveFromAvailable(N);
     mSolution->AddCandidate(*N);
+    return true;
+}
+
+bool CPPProblem::AddToSolutionHolder(CPPSolutionBase& iSolution) {
+    mSolutionHolder.Add(iSolution);
     return true;
 }
 

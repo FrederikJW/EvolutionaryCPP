@@ -144,6 +144,7 @@ int CPPSolutionBase::CalculateObjective()
         result += CalculateObjectiveForClique(Clique);
     }
 
+    mObjective = result;
     return result;
 }
 

@@ -5,6 +5,9 @@
 #include "strategies/SimulatedAnnealingImprovement.h"
 #include "strategies/RCLInitStrategy.h"
 #include "strategies/SaloExtendedImprovement.h"
+#include "strategies/EvolutionStrategy.h"
+#include "strategies/FixedSetEvolution.h"
+#include "strategies/SolutionEvolution.h"
 #include <fstream>
 #include <iostream>
 #include <cstring>
@@ -193,9 +196,12 @@ int normal_run(int argc, char** argv) {
         ImprovementStrategy* improvementStrategy = new SaloExtendedImprovement(param_knownbest, param_minpercent, param_tempfactor, param_sizefactor);
         CrossoverStrategy* mergeDevideCrossover = new MergeDivideCrossover(param_shrink);
         InitialPoolStrategy* initialPoolstrategy = new RCLInitStrategy();
+        
+        EvolutionStrategy* evolutionStrategy = new FixedSetEvolution(mergeDevideCrossover, initialPoolstrategy, improvementStrategy, &graph, param_max_generations, param_time);
+        evolutionStrategy->run(&finalBest, &totalgen, param_pool_size);
 
-        MemeticRun memeticRun(mergeDevideCrossover, initialPoolstrategy, improvementStrategy, param_max_generations, param_time);
-        memeticRun.run(&finalBest, graph, &totalgen, param_pool_size);
+        // MemeticRun memeticRun(mergeDevideCrossover, initialPoolstrategy, improvementStrategy, param_max_generations, param_time);
+        // memeticRun.run(&finalBest, graph, &totalgen, param_pool_size);
 
         totaltime = (double)(clock() - starttime) / CLOCKS_PER_SEC;
         fprintf(fout, "%-d\t %-d\t %-d\t %-.2f\t %-d\t %-.2f\t %-d\n", run_cnt + 1, finalBest.best_val, finalBest.best_partition->getBucketSize() - 1,

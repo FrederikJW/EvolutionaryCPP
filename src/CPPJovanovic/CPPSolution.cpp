@@ -100,13 +100,14 @@ int CPPSolution::NumberOfCliques() {
     return mCliques.size();
 }
 
+/*
 int CPPSolution::CalculateObjective() {
     int result = 0;
     for (const auto& Clique : mCliques) {
         result += CalculateObjectiveForClique(Clique);
     }
     return result;
-}
+}*/
 
 int CPPSolution::CalculateObjectiveForClique(std::vector<int> Clique) {
     int result = 0;

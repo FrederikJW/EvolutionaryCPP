@@ -19,6 +19,7 @@ public:
 
     void improveSolution(Partition& solution, clock_t startTime, int maxSeconds, BestSolutionInfo* frt, int generation_cnt) override;
     void search(clock_t startTime, int maxSeconds) override;
+    void selectBetter(BestSolutionInfo* frt, clock_t start_time, int generation_cnt);
     void setEnvironment(Graph& graph) override;
     void setStart(Partition& startSol) override;
     void calibrateTemp() override;

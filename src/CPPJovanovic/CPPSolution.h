@@ -35,7 +35,6 @@ public:
     int AddNodeToClique(CPPCandidate& N);
     int AddNodeToClique(int iNode, int iClique);
     int NumberOfCliques();
-    int CalculateObjective();
     int CalculateObjectiveForClique(std::vector<int> Clique);
 };
 

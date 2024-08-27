@@ -15,6 +15,7 @@ public:
     int insertPopulationWhenFull(Partition* partition, int objval);
 
     Partition& getPartition(int id);
+    std::vector<Partition*>& getPartitions() { return partitions; }
     double getAverageObjective() const;
     int getMaxObjective() const;
     int getMinObjective() const;

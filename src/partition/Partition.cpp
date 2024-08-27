@@ -38,7 +38,6 @@ void Partition::buildPartition(int* vpart) {
     for (int i = 0; i < nnode; ++i) {
         int pid = vpart[i];
         if (pid == EMPTY_IDX || pid > nnode) {
-            // ends up here; wrong translation?
             printf("Invalid partition for node %d\n", pid);
             exit(0);
         }
@@ -66,6 +65,7 @@ void Partition::copyPartition(const Partition& source) {
     std::memcpy(pcnt, source.pcnt, sizeof(int) * (nnode + 1));
     std::memcpy(ppos, source.ppos, sizeof(int) * (nnode + 1));
     std::memcpy(pvertex, source.pvertex, sizeof(int) * nnode);
+    value = source.getValue();
 }
 
 void swapAry(int* ary, int idx1, int idx2) {

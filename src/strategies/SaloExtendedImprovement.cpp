@@ -43,6 +43,8 @@ SaloExtendedImprovement::~SaloExtendedImprovement() {
 void SaloExtendedImprovement::improveSolution(Partition& solution, clock_t startTime, int maxSeconds, BestSolutionInfo* frt, int generation_cnt) {
     setStart(solution);
     search(startTime, maxSeconds);
+    selectBetter(frt, startTime, generation_cnt);
+    printf("Child has been raised to by SA %d\n", frt->best_val);
 }
 
 void SaloExtendedImprovement::setEnvironment(Graph& graph) {
@@ -65,8 +67,22 @@ void SaloExtendedImprovement::search(clock_t startTime, int maxSeconds) {
     problem->SASearch();
 }
 
+void SaloExtendedImprovement::selectBetter(BestSolutionInfo* frt, clock_t start_time, int generation_cnt) {
+    if (getBestObjective() > frt->best_val) {
+        Partition* bestPartition = &getBestPartition();
+        frt->best_partition->copyPartition(*bestPartition);
+        delete bestPartition;
+        frt->best_val = getBestObjective();
+        frt->best_foundtime = (double)(clock() - start_time) / CLOCKS_PER_SEC;
+        frt->best_generation = generation_cnt;
+        if (frt->best_val >= knownbest) {
+            return;
+        }
+    }
+}
+
 int SaloExtendedImprovement::getBestObjective() {
-    return problem->GetBestSolution();
+    return problem->GetSolution().getObjective();
 }
 
 Partition& SaloExtendedImprovement::getBestPartition() {
@@ -76,10 +92,12 @@ Partition& SaloExtendedImprovement::getBestPartition() {
     int* vpart = new int[nnode];
 
     for (int i = 0; i < nnode; i++) {
-        vpart[i] = problem->GetSolution()->getNodeClique()[i] + 1;
+        // TODO: does this return the actual best solution?
+        vpart[i] = problem->GetSolution().getNodeClique()[i] + 1;
     }
 
     partition->buildPartition(vpart);
+    partition->setValue(getBestObjective());
 
     delete[] vpart;
     return *partition;
