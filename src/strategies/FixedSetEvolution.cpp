@@ -102,6 +102,9 @@ void FixedSetEvolution::run(BestSolutionInfo* frt_, int* totalGen, int poolSize)
     std::chrono::steady_clock::time_point mStartTime;
 
     mStartTime = std::chrono::steady_clock::now();
+
+    improvementStrategy->setEnvironment(*graph);
+
     // TODO: use initial population strategy
     // problem->SolveGRASP(mFixInitPopulation, iTimeLimit);
     printf("Calibrate the initial temperature.\n");

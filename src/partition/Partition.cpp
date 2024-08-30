@@ -16,7 +16,7 @@ void Partition::allocate(int n) {
     pbkt = new int[n + 1];
     pcnt = new int[n + 1];
     pvertex = new int[n];
-    assert(n == 500);
+    // assert(n == 500);
 }
 
 void Partition::deallocate() {

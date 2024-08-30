@@ -68,7 +68,7 @@ void RCLInitStrategy::convertCPPSolutionToPartition(Partition& partition, CPPSol
 }
 
 void RCLInitStrategy::generateInitialSolution(Partition& partition, Graph& graph) {
-    CPPInstance* instance = new CPPInstance("instance/rand500-100.txt");
+    CPPInstance* instance = new CPPInstance(graph.getNodeCount(), graph.getMatrix());
     CPPGreedy* problem = new CPPGreedy(instance);
 
     problem->SolveGreedy();
