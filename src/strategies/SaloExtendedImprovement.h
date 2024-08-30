@@ -35,6 +35,7 @@ private:
     double tempfactor;
     int sizefactor;
     CPPProblem* problem;
+    CPPInstance* instance;
 };
 
 #endif // SALOEXTENDEDIMPROVEMENT_H

@@ -15,7 +15,7 @@ void RCLInitStrategy::buildInitialPool(BestSolutionInfo* frt, Population& popula
 
     Partition childPartition(nnode);
 
-    CPPInstance* instance = new CPPInstance("instance/rand500-100.txt");
+    CPPInstance* instance = new CPPInstance(nnode, graph.getMatrix());;
     CPPGreedy* problem = new CPPGreedy(instance);
 
     while (population.partitionCount() < population.getPoolSize()) {

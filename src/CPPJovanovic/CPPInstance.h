@@ -12,6 +12,7 @@ private:
 
 public:
     CPPInstance(const std::string& FileName);
+    CPPInstance(int nnode, int** matrix);
 
     int getNumberOfNodes() const;
     const std::vector<std::vector<int>>& getWeights() const;
@@ -21,6 +22,7 @@ public:
     void InitNegativeWeights();
     void Allocate();
     void Load(const std::string& FileName);
+    void LoadFromMatrix(int nnode, int** matrix);
     void LoadMIP1(const std::string& FileName);
     void LoadMIP_GT(const std::string& FileName);
     double GetCForModularityMaximization(const std::string& FileName);

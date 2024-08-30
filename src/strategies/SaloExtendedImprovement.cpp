@@ -28,16 +28,12 @@ std::vector<std::vector<int>> convertPvertexToMcliques(int* pvertex, int numVert
     return groups;
 }
 
-SaloExtendedImprovement::SaloExtendedImprovement(int knownbest, double minpercent, double tempfactor, int sizefactor) : knownbest(knownbest), minpercent(minpercent), tempfactor(tempfactor), sizefactor(sizefactor), temp(0), problem(nullptr) {
-    CPPInstance* instance = new CPPInstance("instance/rand500-100.txt");
-    problem = new CPPProblem("file1", "rand500-100", instance);
-    problem->SetID(2);
-    problem->SetSASelect(SASelectType::Dual);
+SaloExtendedImprovement::SaloExtendedImprovement(int knownbest, double minpercent, double tempfactor, int sizefactor) : knownbest(knownbest), minpercent(minpercent), tempfactor(tempfactor), sizefactor(sizefactor), temp(0), problem(nullptr), instance(nullptr) {
+    
 }
 
 SaloExtendedImprovement::~SaloExtendedImprovement() {
     disposeEnvironment();
-    delete problem;
 }
 
 void SaloExtendedImprovement::improveSolution(Partition& solution, clock_t startTime, int maxSeconds, BestSolutionInfo* frt, int generation_cnt) {
@@ -48,7 +44,10 @@ void SaloExtendedImprovement::improveSolution(Partition& solution, clock_t start
 }
 
 void SaloExtendedImprovement::setEnvironment(Graph& graph) {
-    // not needed?
+    instance = new CPPInstance(graph.getNodeCount(), graph.getMatrix());
+    problem = new CPPProblem("file1", "rand500-100", instance);
+    problem->SetID(2);
+    problem->SetSASelect(SASelectType::Dual);
 }
 
 void SaloExtendedImprovement::setStart(Partition& startSol) {
@@ -56,7 +55,8 @@ void SaloExtendedImprovement::setStart(Partition& startSol) {
 }
 
 void SaloExtendedImprovement::disposeEnvironment() {
-    // not needed?
+    delete instance;
+    delete problem;
 }
 
 void SaloExtendedImprovement::calibrateTemp() {

@@ -14,6 +14,10 @@ CPPInstance::CPPInstance(const std::string& FileName) {
     Load(FileName);
 }
 
+CPPInstance::CPPInstance(int nnode, int** matrix) {
+    LoadFromMatrix(nnode, matrix);
+}
+
 int CPPInstance::getNumberOfNodes() const {
     return mNumberOfNodes;
 }
@@ -41,6 +45,19 @@ void CPPInstance::InitNegativeWeights() {
 
 void CPPInstance::Allocate() {
     mWeights.resize(mNumberOfNodes, std::vector<int>(mNumberOfNodes));
+}
+
+void CPPInstance::LoadFromMatrix(int nnode, int** matrix) {
+    mNumberOfNodes = nnode;
+    Allocate();
+    for (int i = 0; i < mNumberOfNodes; ++i) {
+        for (int j = i; j < mNumberOfNodes; ++j) {
+            mWeights[i][j] = matrix[i][j];
+            mWeights[j][i] = matrix[j][i];
+        }
+    }
+
+    InitNegativeWeights();
 }
 
 void CPPInstance::Load(const std::string& FileName) {

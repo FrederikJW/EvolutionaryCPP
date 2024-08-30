@@ -74,7 +74,7 @@ void FixedSetEvolution::run(BestSolutionInfo* frt_, int* totalGen, int poolSize)
     double iTimeLimit = 2000;
 
     // graph?
-    CPPInstance* instance = new CPPInstance("instance/rand500-100.txt");
+    CPPInstance* instance = new CPPInstance(graph->getNodeCount(), graph->getMatrix());
     int nnode = instance->getNumberOfNodes();
     problem = new CPPProblem("file1", "rand500-100", instance);
     problem->SetID(2);
