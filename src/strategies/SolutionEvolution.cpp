@@ -1,11 +1,6 @@
 #include "SolutionEvolution.h"
 
 void SolutionEvolution::run(BestSolutionInfo* frt_, int* totalGen, int poolSize) {
-    // TODO: only implement runGeneration part here
-
-    // TODO: move this param somewehere else
-    int param_knownbest = 310000;
-
     frt = frt_;
     bestTime = 0.0;
     startTime = clock();
@@ -27,12 +22,8 @@ void SolutionEvolution::run(BestSolutionInfo* frt_, int* totalGen, int poolSize)
     initialPoolStrategy->buildInitialPool(frt, *population, *graph, improvementStrategy, maxSeconds, &generationCnt);
 
     printf("Run evolution.\n");
-    while (generationCnt < maxGenerations && (double)(clock() - startTime) / CLOCKS_PER_SEC < maxSeconds) {
+    while (generationCnt < maxGenerations && (double)(clock() - startTime) / CLOCKS_PER_SEC < maxSeconds && frt->best_val < graph->getKnownbest()) {
         runGeneration();
-
-        if (frt->best_val >= param_knownbest) {
-            break;
-        }
 
         generationCnt++;
     }
@@ -56,6 +47,8 @@ void SolutionEvolution::runGeneration() {
     crossoverStrategy->crossover(*graph, population->getPartition(idx1), population->getPartition(idx2), *childPartition);
 
     improvementStrategy->improveSolution(*childPartition, startTime, maxSeconds, frt, generationCnt);
+
+    recorder->recordSolution(childPartition, clock());
 
     population->addPopulation(&(improvementStrategy->getBestPartition()), improvementStrategy->getBestObjective());
     printf("Generation %d, best value: %d, avg value: %.2f, min distance: %d\n",

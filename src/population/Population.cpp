@@ -147,3 +147,20 @@ int Population::partitionCount() {
 int Population::getPoolSize() {
     return poolSize;
 }
+
+float Population::getAvgDistance() {
+    int numPartitions = partitionCount();
+    int numPairs = 0;
+    int distance = 0;
+    for (int i = 0; i < numPartitions - 1; i++) {
+        for (int j = i + 1; j < numPartitions; j++) {
+            Partition& partition1 = getPartition(i);
+            Partition& partition2 = getPartition(j);
+            distance += partition1.calculateMaxMatch(partition1.getPvertex(), partition1.getBucketSize() - 1,
+                partition2.getPvertex(), partition2.getBucketSize() - 1);
+            numPairs++;
+        }
+    }
+    
+    return distance / numPairs;
+}

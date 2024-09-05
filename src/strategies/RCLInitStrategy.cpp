@@ -7,8 +7,6 @@
 #include <cstdlib>
 #include <cstdio>
 
-RCLInitStrategy::RCLInitStrategy() {}
-
 void RCLInitStrategy::buildInitialPool(BestSolutionInfo* frt, Population& population, Graph& graph, ImprovementStrategy* improvementStrategy, int maxSeconds, int* generation_cnt) {
     clock_t startTime = clock();
     int nnode = graph.getNodeCount();
@@ -26,6 +24,9 @@ void RCLInitStrategy::buildInitialPool(BestSolutionInfo* frt, Population& popula
         convertCPPSolutionToPartition(childPartition, problem->getSolution());
         
         improvementStrategy->improveSolution(childPartition, startTime, maxSeconds, frt, *generation_cnt);
+
+        recorder->recordSolution(&childPartition, clock());
+
         (*generation_cnt)++;
         if ((double)(clock() - startTime) / CLOCKS_PER_SEC >= maxSeconds)
             break;

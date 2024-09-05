@@ -9,7 +9,8 @@
 
 class RCLInitStrategy : public InitialPoolStrategy {
 public:
-    RCLInitStrategy();
+    using InitialPoolStrategy::InitialPoolStrategy;
+
     void buildInitialPool(BestSolutionInfo* frt, Population& population, Graph& graph, ImprovementStrategy* improvementStrategy, int maxSeconds, int* generation_cnt) override;
     void generateInitialSolution(Partition& partition, Graph& graph) override;
     void convertCPPSolutionToPartition(Partition& partition, CPPSolution& solution);

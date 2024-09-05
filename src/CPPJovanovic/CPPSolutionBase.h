@@ -58,7 +58,7 @@ public:
     std::vector<std::vector<int>> getCliques() const { return mCliques; }
     std::vector<int> getNodeClique() const { return mNodeClique; }
 
-    virtual void AddCandidate(CPPCandidate& A);
+    virtual void AddCandidate(const CPPCandidate& A);
 
     bool CheckSolutionValid(CPPInstance tInstance);
     std::vector<int> CliqueForNode(int iNode);

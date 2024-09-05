@@ -38,6 +38,14 @@ int** Graph::getMatrix() {
     return matrix;
 }
 
+void Graph::setKnownbest(int value) {
+    knownbest = value;
+}
+
+int Graph::getKnownbest() {
+    return knownbest;
+}
+
 void Graph::allocateMatrix() {
     matrix = new int* [nnode];
     for (int i = 0; i < nnode; i++) {

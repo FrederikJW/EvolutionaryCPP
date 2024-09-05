@@ -22,6 +22,7 @@ public:
     int getMinDistance() const;
     int partitionCount();
     int getPoolSize();
+    float getAvgDistance();
 
 private:
     std::vector<Partition*> partitions;

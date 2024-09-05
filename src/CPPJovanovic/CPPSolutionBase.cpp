@@ -6,6 +6,7 @@
 #include <string>
 #include <sstream>
 #include <unordered_map>
+#include <cmath>
 #include "CPPSolutionBase.h"
 
 // does not work correctly
@@ -148,7 +149,7 @@ int CPPSolutionBase::CalculateObjective()
     return result;
 }
 
-void CPPSolutionBase::AddCandidate(CPPCandidate& A) {};
+void CPPSolutionBase::AddCandidate(const CPPCandidate& A) {};
 
 CPPSolutionBase::CPPSolutionBase()
 {
@@ -944,8 +945,9 @@ bool CPPSolutionBase::SimulatedAnnealing(std::default_random_engine& iGenerator,
             cRelocation.mChange = INT_MIN;
             SASelect(cRelocation, iGenerator);
             Prob = FastExp(cRelocation.mChange / T);
-            if (cRelocation.mChange / T > 900 || cRelocation.mChange / T < -900)
-                printf("  Prob=%.3f x=%.3f T=%.3f mchange=%d\n", Prob, cRelocation.mChange / T, T, cRelocation.mChange);
+            // printf("  Prob=%.3f x=%.3f T=%.3f mchange=%d\n", Prob, cRelocation.mChange / T, T, cRelocation.mChange);
+            /*if (cRelocation.mChange / T > 900 || cRelocation.mChange / T < -900)
+                printf("  Prob=%.3f x=%.3f T=%.3f mchange=%d\n", Prob, cRelocation.mChange / T, T, cRelocation.mChange);*/
             if (Prob * 1000 > 1 + iGenerator() % 1000)
             {
                 Accept++;

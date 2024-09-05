@@ -26,13 +26,13 @@ public:
     const std::vector<std::vector<int>>& getCliques() const;
     const std::vector<int>& getNodes() const;
     void InitChange();
-    void AddCandidate(CPPCandidate& A) override;
+    void AddCandidate(const CPPCandidate& A) override;
     int GetChange(int iNode, int iClique) override;
     int GetChange(const std::vector<int>& nodes, int iClique) override;
     void UpdateChange(int Clique, int Node);
     void Allocate();
     void Clear();
-    int AddNodeToClique(CPPCandidate& N);
+    int AddNodeToClique(const CPPCandidate& N);
     int AddNodeToClique(int iNode, int iClique);
     int NumberOfCliques();
     int CalculateObjectiveForClique(std::vector<int> Clique);

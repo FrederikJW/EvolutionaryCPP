@@ -136,7 +136,7 @@ void FixedSetEvolution::run(BestSolutionInfo* frt_, int* totalGen, int poolSize)
     
     printf("Run evolution.\n");
     // for (int i = 0; i < MaxGenerated - mFixInitPopulation; ++i) {
-    while (generationCnt < maxGenerations && (double)(clock() - startTime) / CLOCKS_PER_SEC < maxSeconds) {
+    while (generationCnt < maxGenerations && (double)(clock() - startTime) / CLOCKS_PER_SEC < maxSeconds && frt->best_val < graph->getKnownbest()) {
         printf("\n------------The %dth generation-----------\n", generationCnt);
 
         if (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - mStartTime).count() > iTimeLimit) break;
@@ -148,9 +148,10 @@ void FixedSetEvolution::run(BestSolutionInfo* frt_, int* totalGen, int poolSize)
 
         // TODO this could be optimized by no conversion and using the same solution/partition structure
         convertCPPSolutionToPartition(*childPartition, problem->GetSolution());
-
-        // TODO: solution always returns 252484 score 
+ 
         improvementStrategy->improveSolution(*childPartition, startTime, maxSeconds, frt, generationCnt);
+
+        recorder->recordSolution(childPartition, clock());
 
         CPPSolutionBase* mSolution = new CPPSolutionBase(childPartition->getPvertex(), nnode, childPartition->getValue(), instance);
 

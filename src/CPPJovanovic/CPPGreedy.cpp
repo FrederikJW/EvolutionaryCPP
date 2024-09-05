@@ -161,12 +161,13 @@ CPPSolution& CPPGreedy::getSolution() {
     return *mSolution;
 }
 
-bool CPPGreedy::AddToSolution(CPPCandidate& N) {
+// TODO: reference might be incorrect here
+bool CPPGreedy::AddToSolution(const CPPCandidate& N) {
     RemoveFromAvailable(N);
     mSolution->AddCandidate(N);
     return true;
 }
 
-void CPPGreedy::RemoveFromAvailable(CPPCandidate& N) {
+void CPPGreedy::RemoveFromAvailable(const CPPCandidate& N) {
     mAvailableNodes.erase(mAvailableNodes.begin() + N.getCandidateIndex());
 }
