@@ -9,17 +9,17 @@
 // TODO: move these parameter to somewhere else
 #define EMPTY_IDX 0
 
-SimulatedAnnealingImprovement::SimulatedAnnealingImprovement(int knownbest, double minpercent, double tempfactor, int sizefactor) : lsdata(nullptr), knownbest(knownbest), minpercent(minpercent), tempfactor(tempfactor), sizefactor(sizefactor), temp(0){}
-
 SimulatedAnnealingImprovement::~SimulatedAnnealingImprovement() {
     disposeEnvironment();
 }
 
 void SimulatedAnnealingImprovement::improveSolution(Partition& solution, clock_t startTime, int maxSeconds, BestSolutionInfo *frt, int generation_cnt) {
+    recorder->enter("improve_solution");
     setStart(solution);
     search(startTime, maxSeconds);
-    printf("Child has been raised to by SA %d\n", lsdata->fbest);
     selectBetter(frt, startTime, generation_cnt);
+    recorder->exit("improve_solution");
+    printf("Child has been raised to by SA %d\n", lsdata->fbest);
 }
 
 void SimulatedAnnealingImprovement::setEnvironment(Graph& graph) {

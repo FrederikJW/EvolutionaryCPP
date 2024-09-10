@@ -1,5 +1,6 @@
 #include "Defines.h"
 #include "MemeticRun.h"
+#include "Recorder.h"
 #include "strategies/InitialPoolBuilder.h"
 #include "strategies/MergeDivideCrossover.h"
 #include "strategies/SimulatedAnnealingImprovement.h"
@@ -15,14 +16,16 @@
 #include <cstdlib>
 #include <ctime>
 #include <climits>
+#include <string>
 // #include <unistd.h>
 
 int nnode;
 int nedge;
 int** matrix;
 
-char param_filename[1000] = "instance/rand500-100.txt";
-int param_knownbest = 309125;
+// char param_filename[1000] = "instance/rand500-100.txt";
+char param_filename[1000] = "instance/Small Set (38 instances)/rand100-5.txt";
+int param_knownbest = 1407;
 int param_time = 500;
 int param_seed = 123456;
 int param_max_generations = 100000;
@@ -37,10 +40,63 @@ int totalgen;
 BestSolutionInfo finalBest;
 FILE* fout = NULL;
 
+// Enum for Evolution Strategy
+enum class EvolutionStrategyCode {
+    Sol, // Sol
+    FSS  // FSS
+};
+
+// Enum for Improvement Strategy
+enum class ImprovementStrategyCode {
+    SA,  // SA
+    SAe  // SAe
+};
+
+// Enum for Initial Pool Strategy
+enum class InitialPoolStrategyCode {
+    RCL, // RCL
+    Std  // Std
+};
+
 void showUsage() {
     std::cerr << "usage: [-f <file path>] [-t <run time>] [-g <seed>] [-v <best solution>] "
         << "[-x <max generation>] [-b <theta size>] [-c <theta cool>] [-d <theta minper>] "
         << "[-s <shrink ratio>] [-p <pool size>]\n" << std::endl;
+}
+
+std::string getAlgorithmConfigCode(EvolutionStrategyCode evol, ImprovementStrategyCode impr, InitialPoolStrategyCode ini) {
+    std::string configCode = "";
+    switch (impr) {
+    case ImprovementStrategyCode::SA:
+        configCode += "SA-";
+        break;
+    case ImprovementStrategyCode::SAe:
+        configCode += "SAe-";
+        break;
+    }
+
+    CrossoverStrategy* mergeDevideCrossover = new MergeDivideCrossover(param_shrink);
+
+    InitialPoolStrategy* initialPoolstrategy = nullptr;
+    switch (ini) {
+    case InitialPoolStrategyCode::RCL:
+        configCode += "RCL-";
+        break;
+    case InitialPoolStrategyCode::Std:
+        configCode += "Std-";
+        break;
+    }
+
+    EvolutionStrategy* evolutionStrategy = nullptr;
+    switch (evol) {
+    case EvolutionStrategyCode::Sol:
+        configCode += "Sol";
+        break;
+    case EvolutionStrategyCode::FSS:
+        configCode += "FSS";
+        break;
+    }
+    return configCode;
 }
 
 void readParameters(int argc, char** argv) {
@@ -144,7 +200,10 @@ int rcl_test(int argc, char** argv) {
     // loading graph
     Graph graph;
     graph.load(param_filename);
+
     nnode = graph.getNodeCount();
+
+    Recorder* recorder = new Recorder(param_filename, "RCLTest");
 
     finalBest.best_partition = new Partition(nnode);
     clearResult(&finalBest);
@@ -153,15 +212,15 @@ int rcl_test(int argc, char** argv) {
 
     int generationCnt = 0;
 
-    ImprovementStrategy* improvementStrategy = new SimulatedAnnealingImprovement(param_knownbest, param_minpercent, param_tempfactor, param_sizefactor);
-    InitialPoolStrategy* RCLStrategy = new RCLInitStrategy();
+    ImprovementStrategy* improvementStrategy = new SimulatedAnnealingImprovement(param_knownbest, param_minpercent, param_tempfactor, param_sizefactor, recorder);
+    InitialPoolStrategy* RCLStrategy = new RCLInitStrategy(recorder);
     RCLStrategy->buildInitialPool(&finalBest, population, graph, improvementStrategy, param_time, &generationCnt);
 
     return 0;
 }
 
 int normal_run(int argc, char** argv) {
-    fout = NULL;
+    // fout = NULL;
 
     Graph graph;
 
@@ -169,18 +228,25 @@ int normal_run(int argc, char** argv) {
 
     srand(param_seed);
 
-    fout = setupRecordFile();
+    EvolutionStrategyCode evolutionStrategyCode = EvolutionStrategyCode::FSS; // Sol, FSS
+    ImprovementStrategyCode improvementStrategyCode = ImprovementStrategyCode::SAe; // SA, SAe
+    InitialPoolStrategyCode initialPoolStrategyCode = InitialPoolStrategyCode::RCL; // RCL, Std
+
+    // fout = setupRecordFile();
+
+    Recorder* recorder = new Recorder(param_filename, getAlgorithmConfigCode(evolutionStrategyCode, improvementStrategyCode, initialPoolStrategyCode));
 
     // use graph.load
     graph.load(param_filename);
+    graph.setKnownbest(param_knownbest);
     nnode = graph.getNodeCount();
     finalBest.best_partition = new Partition(nnode);
 
+    std::string line = "";
     for (int i = 0; i < argc; i++) {
-        fprintf(fout, "%s ", argv[i]);
+        line += argv[i];
     }
-    fprintf(fout, "\n");
-    fprintf(fout, "idx\t best_v\t npat\t find_t\t find_i\t ttl_t\t  ttl_i\n");
+    recorder->writeLine(line);
 
     int run_cnt = 0;
     float sumtime = 0.0;
@@ -192,20 +258,52 @@ int normal_run(int argc, char** argv) {
     while (run_cnt < 1) {
         clearResult(&finalBest);
         clock_t starttime = clock();
+        recorder->setStartTime(starttime);
 
-        ImprovementStrategy* improvementStrategy = new SaloExtendedImprovement(param_knownbest, param_minpercent, param_tempfactor, param_sizefactor);
+        ImprovementStrategy* improvementStrategy = nullptr;
+        switch (improvementStrategyCode) {
+            case ImprovementStrategyCode::SA:
+                improvementStrategy = new SimulatedAnnealingImprovement(param_knownbest, param_minpercent, param_tempfactor, param_sizefactor, recorder);
+                break;
+            case ImprovementStrategyCode::SAe:
+                improvementStrategy = new SaloExtendedImprovement(param_knownbest, param_minpercent, param_tempfactor, param_sizefactor, recorder);
+                break;
+        }
+
         CrossoverStrategy* mergeDevideCrossover = new MergeDivideCrossover(param_shrink);
-        InitialPoolStrategy* initialPoolstrategy = new RCLInitStrategy();
-        
-        EvolutionStrategy* evolutionStrategy = new FixedSetEvolution(mergeDevideCrossover, initialPoolstrategy, improvementStrategy, &graph, param_max_generations, param_time);
+
+        InitialPoolStrategy* initialPoolstrategy = nullptr;
+        switch (initialPoolStrategyCode) {
+        case InitialPoolStrategyCode::RCL:
+            initialPoolstrategy = new RCLInitStrategy(recorder);
+            break;
+        case InitialPoolStrategyCode::Std:
+            initialPoolstrategy = new InitialPoolBuilder(recorder);
+            break;
+        }
+
+        EvolutionStrategy* evolutionStrategy = nullptr;
+        switch (evolutionStrategyCode) {
+        case EvolutionStrategyCode::Sol:
+            evolutionStrategy = new SolutionEvolution(mergeDevideCrossover, initialPoolstrategy, improvementStrategy, &graph, recorder, param_max_generations, param_time);
+            break;
+        case EvolutionStrategyCode::FSS:
+            evolutionStrategy = new FixedSetEvolution(mergeDevideCrossover, initialPoolstrategy, improvementStrategy, &graph, recorder, param_max_generations, param_time);
+            break;
+        }
+
         evolutionStrategy->run(&finalBest, &totalgen, param_pool_size);
 
         // MemeticRun memeticRun(mergeDevideCrossover, initialPoolstrategy, improvementStrategy, param_max_generations, param_time);
         // memeticRun.run(&finalBest, graph, &totalgen, param_pool_size);
 
         totaltime = (double)(clock() - starttime) / CLOCKS_PER_SEC;
-        fprintf(fout, "%-d\t %-d\t %-d\t %-.2f\t %-d\t %-.2f\t %-d\n", run_cnt + 1, finalBest.best_val, finalBest.best_partition->getBucketSize() - 1,
-            finalBest.best_foundtime, finalBest.best_generation, totaltime, totalgen);
+
+        recorder->writeLine("idx\t best_v\t npat\t find_t\t find_i\t ttl_t\t  ttl_i");
+        recorder->writeLine(std::to_string(run_cnt + 1) + "\t" + std::to_string(finalBest.best_val) + "\t" + std::to_string(finalBest.best_partition->getBucketSize() - 1) + "\t"
+            + std::to_string(finalBest.best_foundtime) + "\t" + std::to_string(finalBest.best_generation) + "\t" + std::to_string(totaltime) + "\t" + std::to_string(totalgen));
+        /*fprintf(fout, "%-d\t %-d\t %-d\t %-.2f\t %-d\t %-.2f\t %-d\n", run_cnt + 1, finalBest.best_val, finalBest.best_partition->getBucketSize() - 1,
+            finalBest.best_foundtime, finalBest.best_generation, totaltime, totalgen);*/
 
         if (finalBest.best_val > bestInAll) {
             bestInAll = finalBest.best_val;
@@ -217,13 +315,26 @@ int normal_run(int argc, char** argv) {
         reportResult();
 
         run_cnt++;
+
+        delete improvementStrategy;
+        delete mergeDevideCrossover;
+        delete initialPoolstrategy;
+        delete evolutionStrategy;
     }
+
+    recorder->writeLine("best result: " + std::to_string(bestInAll));
+    recorder->writeLine("average time: " + std::to_string(sumtime / run_cnt));
+    recorder->writeLine("average result: " + std::to_string(sumres / run_cnt));
+    recorder->writeLine("average best iteration: " + std::to_string(sumiter / run_cnt));
+    recorder->writeTimeResults();
+    /*
     fprintf(fout, "best result: %d\n", bestInAll);
     fprintf(fout, "average time: %.2f\n", sumtime / run_cnt);
     fprintf(fout, "average result: %.2f\n", (float)sumres / run_cnt);
     fprintf(fout, "average best iteration: %d\n", sumiter / run_cnt);
-    fclose(fout);
+    fclose(fout);*/
     delete[] bestInAlllPartition;
+    delete recorder;
 
     return 0;
 }

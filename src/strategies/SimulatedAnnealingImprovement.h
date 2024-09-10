@@ -25,7 +25,7 @@ typedef struct SA_RT_Data {
 
 class SimulatedAnnealingImprovement : public ImprovementStrategy {
 public:
-    SimulatedAnnealingImprovement(int knownbest, double minpercent, double tempfactor, int sizefactor);
+    SimulatedAnnealingImprovement(int knownbest_, double minpercent_, double tempfactor_, int sizefactor_, Recorder* recorder_) : ImprovementStrategy(knownbest_, minpercent_, tempfactor_, sizefactor_, recorder_), lsdata(nullptr) {};
     ~SimulatedAnnealingImprovement();
 
     void improveSolution(Partition& solution, clock_t startTime, int maxSeconds, BestSolutionInfo* frt, int generation_cnt) override;
@@ -47,11 +47,6 @@ private:
     int changeCurSolution(int u, int dest);
 
     SA_RT_Data* lsdata;
-    double temp;
-    int knownbest;
-    double minpercent;
-    double tempfactor;
-    int sizefactor;
 };
 
 #endif // SIMULATEDANNEALINGIMPROVEMENT_H

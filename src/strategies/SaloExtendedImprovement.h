@@ -14,7 +14,7 @@
 
 class SaloExtendedImprovement : public ImprovementStrategy {
 public:
-    SaloExtendedImprovement(int knownbest, double minpercent, double tempfactor, int sizefactor);
+    SaloExtendedImprovement(int knownbest_, double minpercent_, double tempfactor_, int sizefactor_, Recorder* recorder_) : ImprovementStrategy(knownbest_, minpercent_, tempfactor_, sizefactor_, recorder_), problem(nullptr), instance(nullptr) {};
     ~SaloExtendedImprovement();
 
     void improveSolution(Partition& solution, clock_t startTime, int maxSeconds, BestSolutionInfo* frt, int generation_cnt) override;
@@ -29,11 +29,6 @@ public:
 
 private:
 
-    double temp;
-    int knownbest;
-    double minpercent;
-    double tempfactor;
-    int sizefactor;
     CPPProblem* problem;
     CPPInstance* instance;
 };

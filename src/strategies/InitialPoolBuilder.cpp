@@ -12,7 +12,9 @@ void InitialPoolBuilder::buildInitialPool(BestSolutionInfo *frt, Population& pop
 
     while (population.partitionCount() < population.getPoolSize()) {
         printf("population size: %d\n", population.partitionCount());
+        recorder->enter("build_solution");
         generateInitialSolution(childPartition, graph);
+        recorder->exit("build_solution");
         improvementStrategy->improveSolution(childPartition, startTime, maxSeconds, frt, *generation_cnt);
 
         recorder->recordSolution(&childPartition, clock());

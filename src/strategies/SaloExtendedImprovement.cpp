@@ -28,18 +28,16 @@ std::vector<std::vector<int>> convertPvertexToMcliques(int* pvertex, int numVert
     return groups;
 }
 
-SaloExtendedImprovement::SaloExtendedImprovement(int knownbest, double minpercent, double tempfactor, int sizefactor) : knownbest(knownbest), minpercent(minpercent), tempfactor(tempfactor), sizefactor(sizefactor), temp(0), problem(nullptr), instance(nullptr) {
-    
-}
-
 SaloExtendedImprovement::~SaloExtendedImprovement() {
     disposeEnvironment();
 }
 
 void SaloExtendedImprovement::improveSolution(Partition& solution, clock_t startTime, int maxSeconds, BestSolutionInfo* frt, int generation_cnt) {
+    recorder->enter("improve_solution");
     setStart(solution);
     search(startTime, maxSeconds);
     selectBetter(frt, startTime, generation_cnt);
+    recorder->exit("improve_solution");
     printf("Child has been raised to by SA %d\n", frt->best_val);
 }
 

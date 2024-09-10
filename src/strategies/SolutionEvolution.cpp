@@ -23,7 +23,9 @@ void SolutionEvolution::run(BestSolutionInfo* frt_, int* totalGen, int poolSize)
 
     printf("Run evolution.\n");
     while (generationCnt < maxGenerations && (double)(clock() - startTime) / CLOCKS_PER_SEC < maxSeconds && frt->best_val < graph->getKnownbest()) {
+        recorder->enter("run_generation");
         runGeneration();
+        recorder->exit("run_generation");
 
         generationCnt++;
     }

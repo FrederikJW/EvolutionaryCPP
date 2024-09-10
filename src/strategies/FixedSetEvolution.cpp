@@ -141,6 +141,8 @@ void FixedSetEvolution::run(BestSolutionInfo* frt_, int* totalGen, int poolSize)
 
         if (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - mStartTime).count() > iTimeLimit) break;
 
+        recorder->enter("run_generation");
+
         FixSize = 1 - std::pow(2, -1 * (FixSetSizeIndex + 1));
         FixSet = problem->GetFix(mFixN, mFixK, FixSize);
 
@@ -170,6 +172,8 @@ void FixedSetEvolution::run(BestSolutionInfo* frt_, int* totalGen, int poolSize)
             StagCounter = 0;
         }
         
+        recorder->exit("run_generation");
+
         printf("Generation %d, best value: %d",
             generationCnt, frt->best_val);
         generationCnt++;

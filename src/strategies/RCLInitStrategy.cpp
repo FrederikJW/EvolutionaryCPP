@@ -18,10 +18,13 @@ void RCLInitStrategy::buildInitialPool(BestSolutionInfo* frt, Population& popula
 
     while (population.partitionCount() < population.getPoolSize()) {
         printf("population size: %d\n", population.partitionCount());
+
+        recorder->enter("build_solution");
         problem->SolveGreedy();
 
         // convert to partition
         convertCPPSolutionToPartition(childPartition, problem->getSolution());
+        recorder->exit("build_solution");
         
         improvementStrategy->improveSolution(childPartition, startTime, maxSeconds, frt, *generation_cnt);
 
