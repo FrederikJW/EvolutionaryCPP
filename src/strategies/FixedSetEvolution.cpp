@@ -153,9 +153,13 @@ void FixedSetEvolution::run(BestSolutionInfo* frt_, int* totalGen, int poolSize)
  
         improvementStrategy->improveSolution(*childPartition, startTime, maxSeconds, frt, generationCnt);
 
-        recorder->recordSolution(childPartition, clock());
+        recorder->recordSolution(frt->best_partition, clock());
 
-        CPPSolutionBase* mSolution = new CPPSolutionBase(childPartition->getPvertex(), nnode, childPartition->getValue(), instance);
+        Partition* bestPartition = &(improvementStrategy->getBestPartition());
+        // population->addPopulation(&(improvementStrategy->getBestPartition()), improvementStrategy->getBestObjective());
+        // TODO: childPartition is not altered in improveSolution
+        CPPSolutionBase* mSolution = new CPPSolutionBase(bestPartition->getPvertex(), nnode, bestPartition->getValue(), instance);
+        delete bestPartition;
 
         problem->AddToSolutionHolder(*mSolution);
         mNumberOfSolutionsGenerated++;

@@ -20,14 +20,17 @@ public:
 
     // Method to write a line to the file
     void writeLine(const std::string& line);
+    void writeLineTo(std::ofstream* file, const std::string& line);
     void setStartTime(clock_t time);
     clock_t getCurrentTime(clock_t time);
     void recordSolution(Partition* partition, clock_t time);
     void enter(const std::string& method);
     void exit(const std::string& method);
     void writeTimeResults();
+    void createTimeResultsFiles();
 
 private:
+    std::string baseFilePath;
     std::ofstream file;
     clock_t startTime;
     int bestScore;

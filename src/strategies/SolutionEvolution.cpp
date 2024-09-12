@@ -50,7 +50,7 @@ void SolutionEvolution::runGeneration() {
 
     improvementStrategy->improveSolution(*childPartition, startTime, maxSeconds, frt, generationCnt);
 
-    recorder->recordSolution(childPartition, clock());
+    recorder->recordSolution(frt->best_partition, clock());
 
     population->addPopulation(&(improvementStrategy->getBestPartition()), improvementStrategy->getBestObjective());
     printf("Generation %d, best value: %d, avg value: %.2f, min distance: %d\n",

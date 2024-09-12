@@ -28,7 +28,7 @@ void RCLInitStrategy::buildInitialPool(BestSolutionInfo* frt, Population& popula
         
         improvementStrategy->improveSolution(childPartition, startTime, maxSeconds, frt, *generation_cnt);
 
-        recorder->recordSolution(&childPartition, clock());
+        recorder->recordSolution(frt->best_partition, clock());
 
         (*generation_cnt)++;
         if ((double)(clock() - startTime) / CLOCKS_PER_SEC >= maxSeconds)

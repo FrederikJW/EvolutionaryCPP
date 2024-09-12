@@ -9,6 +9,7 @@ Recorder::Recorder(char* graphFilePath, std::string configCode) {
 
     char path_cwd[PATH_MAX];
     char file_name[PATH_MAX];
+    char base_file_path[PATH_MAX];
     char config_code[100];
     std::strcpy(config_code, configCode.c_str());
 
@@ -19,12 +20,14 @@ Recorder::Recorder(char* graphFilePath, std::string configCode) {
     char ext[_MAX_EXT];
     _splitpath(graphFilePath, drive, dir, fname, ext);
     sprintf(file_name, "%s/rec/%s_%s_%d.rec", _getcwd(path_cwd, PATH_MAX), fname, config_code, param_seed);
+    sprintf(base_file_path, "%s/rec/%s_%s_%d", _getcwd(path_cwd, PATH_MAX), fname, config_code, param_seed);
 #else
     char* graph_name = basename(graphFilePath);
     getcwd(path_cwd, PATH_MAX);
     sprintf(file_name, "%s/rec/%s_%s_%d.rec", path_cwd, graph_name, config_code, param_seed);
+    sprintf(base_file_path, "%s/rec/%s_%s_%d", path_cwd, graph_name, config_code, param_seed);
 #endif
-
+    baseFilePath = base_file_path;
     const std::string filename = file_name;
     file.open(filename, std::ios::out | std::ios::app);
     if (!file.is_open()) {
@@ -41,6 +44,15 @@ Recorder::~Recorder() {
 void Recorder::writeLine(const std::string& line) {
     if (file.is_open()) {
         file << line << std::endl;
+    }
+    else {
+        std::cerr << "Error: File is not open." << std::endl;
+    }
+}
+
+void Recorder::writeLineTo(std::ofstream* fileToWrite, const std::string& line) {
+    if (fileToWrite->is_open()) {
+        *fileToWrite << line << std::endl;
     }
     else {
         std::cerr << "Error: File is not open." << std::endl;
@@ -96,5 +108,19 @@ void Recorder::writeTimeResults() {
         writeLine("\tmax: " + to_string(max));
         writeLine("\tmin: " + to_string(min));
         writeLine("\tavg: " + to_string(avg));
+    }
+}
+
+void Recorder::createTimeResultsFiles() {
+    for (const auto& pair : timeRecord) {
+        std::ofstream timeFile;
+        std::string filename = baseFilePath + "_" + pair.first + ".rec";
+        timeFile.open(filename, std::ios::out | std::ios::app);
+        
+        for (const auto& time : pair.second) {
+            writeLineTo(&timeFile, to_string(time));
+        }
+
+        timeFile.close();
     }
 }

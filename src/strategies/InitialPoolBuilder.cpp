@@ -17,7 +17,7 @@ void InitialPoolBuilder::buildInitialPool(BestSolutionInfo *frt, Population& pop
         recorder->exit("build_solution");
         improvementStrategy->improveSolution(childPartition, startTime, maxSeconds, frt, *generation_cnt);
 
-        recorder->recordSolution(&childPartition, clock());
+        recorder->recordSolution(frt->best_partition, clock());
 
         (*generation_cnt)++;
         if ((double)(clock() - startTime) / CLOCKS_PER_SEC >= maxSeconds)

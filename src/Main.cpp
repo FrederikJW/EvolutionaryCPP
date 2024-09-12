@@ -24,8 +24,8 @@ int nedge;
 int** matrix;
 
 // char param_filename[1000] = "instance/rand500-100.txt";
-char param_filename[1000] = "instance/Small Set (38 instances)/rand100-5.txt";
-int param_knownbest = 1407;
+char param_filename[1000] = "instance/Medium Set (25 instances)/p1000-1.txt";
+int param_knownbest = 10000000;
 int param_time = 500;
 int param_seed = 123456;
 int param_max_generations = 100000;
@@ -173,6 +173,24 @@ FILE* setupRecordFile() {
         return 0;
     }
     return f;
+}
+
+void verifySolution(Partition* partition, Graph* graph) {
+    int score = 0;
+    for (int i = 0; i < graph->getNodeCount(); i++) {
+        for (int j = i; j < graph->getNodeCount(); j++) {
+            if (partition->getPvertex()[i] == partition->getPvertex()[j]) {
+                score += graph->getMatrix()[i][j];
+            }
+        }
+    }
+
+    if (partition->getValue() == score) {
+        printf("The score of %d has been successfully verified", score);
+    }
+    else {
+        printf("The given score of %d does not equal the verification score of %d", partition->getValue(), score);
+    }
 }
 
 void reportResult() {
@@ -327,12 +345,16 @@ int normal_run(int argc, char** argv) {
     recorder->writeLine("average result: " + std::to_string(sumres / run_cnt));
     recorder->writeLine("average best iteration: " + std::to_string(sumiter / run_cnt));
     recorder->writeTimeResults();
+    recorder->createTimeResultsFiles();
     /*
     fprintf(fout, "best result: %d\n", bestInAll);
     fprintf(fout, "average time: %.2f\n", sumtime / run_cnt);
     fprintf(fout, "average result: %.2f\n", (float)sumres / run_cnt);
     fprintf(fout, "average best iteration: %d\n", sumiter / run_cnt);
     fclose(fout);*/
+
+    verifySolution(finalBest.best_partition, &graph);
+
     delete[] bestInAlllPartition;
     delete recorder;
 
