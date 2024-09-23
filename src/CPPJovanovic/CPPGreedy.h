@@ -19,6 +19,7 @@ public:
 
     CPPGreedy(CPPInstance* nInstance);
     CPPGreedy(const std::string& fileName);
+    ~CPPGreedy();
 
     void InitAvailable(const std::vector<std::vector<int>>& FixedSet);
     void SolveGreedy(const std::vector<std::vector<int>>& FixedSet = {});

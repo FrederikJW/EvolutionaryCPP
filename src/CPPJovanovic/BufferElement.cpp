@@ -20,6 +20,10 @@ BufferElement::BufferElement(const BufferElement& other) {
 BufferElement::~BufferElement() {
     delete[] mNewLocations;
     delete[] mOldLocations;
+    for (auto& ptr : mRelocations) {
+        delete[] ptr;
+    }
+    mRelocations.clear();
 }
 
 // Initializes the arrays

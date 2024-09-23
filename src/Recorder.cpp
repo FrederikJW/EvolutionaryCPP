@@ -3,7 +3,7 @@
 #include <string>
 #include <cstring>
 
-Recorder::Recorder(char* graphFilePath, std::string configCode) {
+Recorder::Recorder(char* graphFilePath, std::string configCode, bool _makeFile) {
     bestScore = 0;
     clock_t currentTime = clock();
 
@@ -29,9 +29,13 @@ Recorder::Recorder(char* graphFilePath, std::string configCode) {
 #endif
     baseFilePath = base_file_path;
     const std::string filename = file_name;
-    file.open(filename, std::ios::out | std::ios::app);
-    if (!file.is_open()) {
-        std::cerr << "Error: Could not open file " << filename << std::endl;
+
+    makeFile = _makeFile;
+    if (makeFile) {
+        file.open(filename, std::ios::out | std::ios::app);
+        if (!file.is_open()) {
+            std::cerr << "Error: Could not open file " << filename << std::endl;
+        }
     }
 }
 
@@ -42,20 +46,24 @@ Recorder::~Recorder() {
 }
 
 void Recorder::writeLine(const std::string& line) {
-    if (file.is_open()) {
-        file << line << std::endl;
-    }
-    else {
-        std::cerr << "Error: File is not open." << std::endl;
+    if (makeFile) {
+        if (file.is_open()) {
+            file << line << std::endl;
+        }
+        else {
+            std::cerr << "Error: File is not open." << std::endl;
+        }
     }
 }
 
 void Recorder::writeLineTo(std::ofstream* fileToWrite, const std::string& line) {
-    if (fileToWrite->is_open()) {
-        *fileToWrite << line << std::endl;
-    }
-    else {
-        std::cerr << "Error: File is not open." << std::endl;
+    if (makeFile) {
+        if (fileToWrite->is_open()) {
+            *fileToWrite << line << std::endl;
+        }
+        else {
+            std::cerr << "Error: File is not open." << std::endl;
+        }
     }
 }
 
@@ -112,15 +120,17 @@ void Recorder::writeTimeResults() {
 }
 
 void Recorder::createTimeResultsFiles() {
-    for (const auto& pair : timeRecord) {
-        std::ofstream timeFile;
-        std::string filename = baseFilePath + "_" + pair.first + ".rec";
-        timeFile.open(filename, std::ios::out | std::ios::app);
-        
-        for (const auto& time : pair.second) {
-            writeLineTo(&timeFile, to_string(time));
-        }
+    if (makeFile) {
+        for (const auto& pair : timeRecord) {
+            std::ofstream timeFile;
+            std::string filename = baseFilePath + "_" + pair.first + ".rec";
+            timeFile.open(filename, std::ios::out | std::ios::app);
 
-        timeFile.close();
+            for (const auto& time : pair.second) {
+                writeLineTo(&timeFile, to_string(time));
+            }
+
+            timeFile.close();
+        }
     }
 }

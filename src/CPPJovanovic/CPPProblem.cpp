@@ -14,6 +14,12 @@ CPPProblem::CPPProblem(const std::string& FileName, const std::string& InstanceN
     CPPSolution::Init(mInstance->getNumberOfNodes());
     mSAParams.InitGeometric();
 }
+
+CPPProblem::~CPPProblem() {
+    delete mRCL;
+    delete mSolution;
+}
+
 /*
 CPPProblem::CPPProblem(const std::string& FileName, const std::string& InstanceName)
     : mRCLSize(2), mFileName(FileName), mInstanceName(InstanceName), mGenerator(2), mMetaHeuristic(FSS), mGreedyHeuristic(MaxIncrease) {
@@ -128,7 +134,7 @@ void CPPProblem::InitAvailable(const std::vector<std::vector<int>>& FixedSet) {
     }
 
     for (size_t i = 0; i < FixedSet.size(); ++i) {
-        AddToSolution(new CPPCandidate(FixedSet[i], i, 0));
+        AddToSolution(CPPCandidate(FixedSet[i], i, 0));
     }
 }
 
@@ -285,6 +291,7 @@ std::vector<std::vector<int>> CPPProblem::GetFixEdge(int N, int K, double FixSiz
             SuperNodes.push_back(superClique);
         }
     }
+    delete[] tNodeClique;
 
     return Res;
 }
@@ -502,7 +509,8 @@ void CPPProblem::SolveGreedy(const std::vector<std::vector<int>>& FixedSet) {
     while (true) {
         Select = GetHeuristic();
         if (Select == nullptr) break;
-        AddToSolution(Select);
+        AddToSolution(CPPCandidate(*Select));
+        delete Select;
     }
 
     mSolution->FixCliques();
@@ -517,18 +525,17 @@ CPPCandidate* CPPProblem::GetHeuristicMaxIncrease() {
 
     delete mRCL;
     mRCL = new RCL<CPPCandidate>(mRCLSize);
-    // TODO: check mRCL and candidates for memory leak
 
     if (mSolution->getCliques().empty()) {
         Select = mGenerator() % mAvailableNodes.size();
-        AddToSolution(new CPPCandidate(mAvailableNodes[Select], 0, Select));
+        AddToSolution(CPPCandidate(mAvailableNodes[Select], 0, Select));
     }
 
     int counter = 0;
     for (const auto& n : mAvailableNodes) {
         for (int c = 0; c < mSolution->getNumberOfCliques(); ++c) {
             cValue = mSolution->GetChange(n, c);
-            mRCL->add(*(new CPPCandidate(n, c, counter)), cValue);
+            mRCL->add(CPPCandidate(n, c, counter), cValue);
         }
         counter++;
     }
@@ -538,7 +545,7 @@ CPPCandidate* CPPProblem::GetHeuristicMaxIncrease() {
         return new CPPCandidate(mAvailableNodes[index], mSolution->getNumberOfCliques(), index);
     }
 
-    return mRCL->getCandidate(mGenerator() % mRCL->getCurrentSize());
+    return new CPPCandidate(mRCL->getCandidate(mGenerator() % mRCL->getCurrentSize()));
 }
 
 CPPCandidate* CPPProblem::GetHeuristic() {
@@ -549,9 +556,9 @@ CPPCandidate* CPPProblem::GetHeuristic() {
     return nullptr;
 }
 
-bool CPPProblem::AddToSolution(CPPCandidate* N) {
+bool CPPProblem::AddToSolution(const CPPCandidate& N) {
     if (mGreedyHeuristic == MaxIncrease) RemoveFromAvailable(N);
-    mSolution->AddCandidate(*N);
+    mSolution->AddCandidate(N);
     return true;
 }
 
@@ -560,6 +567,6 @@ bool CPPProblem::AddToSolutionHolder(CPPSolutionBase& iSolution) {
     return true;
 }
 
-void CPPProblem::RemoveFromAvailable(CPPCandidate* N) {
-    mAvailableNodes.erase(mAvailableNodes.begin() + N->getCandidateIndex());
+void CPPProblem::RemoveFromAvailable(const CPPCandidate& N) {
+    mAvailableNodes.erase(mAvailableNodes.begin() + N.getCandidateIndex());
 }

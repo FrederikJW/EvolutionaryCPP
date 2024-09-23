@@ -54,6 +54,7 @@ private:
 public:
     CPPProblem(const std::string& FileName, const std::string& InstanceName, CPPInstance* nInstance);
     CPPProblem(const std::string& FileName, const std::string& InstanceName);
+    ~CPPProblem();
 
     std::string GetMethodFileName();
     void SetID(int iID);
@@ -100,9 +101,9 @@ public:
     void SolveGreedy(const std::vector<std::vector<int>>& FixedSet = {});
     CPPCandidate* GetHeuristicMaxIncrease();
     CPPCandidate* GetHeuristic();
-    bool AddToSolution(CPPCandidate* N);
+    bool AddToSolution(const CPPCandidate& N);
     bool AddToSolutionHolder(CPPSolutionBase& iSolution);
-    void RemoveFromAvailable(CPPCandidate* N);
+    void RemoveFromAvailable(const CPPCandidate& N);
 };
 
 #endif // CPP_PROBLEM_H

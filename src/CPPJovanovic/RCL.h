@@ -23,10 +23,11 @@ private:
 public:
     RCL() {};
     RCL(int iSize);
+    ~RCL() {};
 
     int getCurrentSize() const;
 
-    T* getCandidate(int index);
+    T getCandidate(int index);
 
     double getValue(int index) const;
 

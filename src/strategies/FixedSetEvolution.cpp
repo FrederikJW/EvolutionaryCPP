@@ -20,53 +20,13 @@ void convertCPPSolutionToPartition(Partition& partition, CPPSolutionBase& soluti
     delete[] initpart;
 }
 
+FixedSetEvolution::~FixedSetEvolution() {
+    delete population;
+    delete problem;
+    delete childPartition;
+}
+
 void FixedSetEvolution::run(BestSolutionInfo* frt_, int* totalGen, int poolSize) {
-    /*
-	frt = frt_;
-
-	CPPInstance* instance = new CPPInstance("instance/rand500-100.txt");
-	problem = new CPPProblem("file1", "rand500-100", instance);
-	problem->SetID(2);
-
-    // TODO: move this param somewehere else
-    int param_knownbest = 310000;
-
-    frt = frt_;
-    bestTime = 0.0;
-    startTime = clock();
-    generationCnt = 0;
-
-    // TODO: could be created inside initial pool builder
-    population = new Population(poolSize);
-    childPartition = new Partition(graph->getNodeCount());
-
-    improvementStrategy->setEnvironment(*graph);
-
-    // calibrating initial temperature
-    printf("Calibrate the initial temperature.\n");
-    initialPoolStrategy->generateInitialSolution(*childPartition, *graph);
-    improvementStrategy->setStart(*childPartition);
-    improvementStrategy->calibrateTemp();
-
-    printf("Build initial pool.\n");
-    initialPoolStrategy->buildInitialPool(frt, *population, *graph, improvementStrategy, maxSeconds, &generationCnt);
-
-    printf("Run evolution.\n");
-    while (generationCnt < maxGenerations && (double)(clock() - startTime) / CLOCKS_PER_SEC < maxSeconds) {
-        runGeneration();
-
-        if (frt->best_val >= param_knownbest) {
-            break;
-        }
-
-        generationCnt++;
-    }
-    *totalGen = generationCnt;
-    improvementStrategy->disposeEnvironment();
-    printf("Best solution found with value %d at generation %d\n", frt->best_val, frt->best_generation);
-    */
-    // #########################################################################################################
-
     frt = frt_;
     generationCnt = 0;
     startTime = clock();
@@ -76,13 +36,17 @@ void FixedSetEvolution::run(BestSolutionInfo* frt_, int* totalGen, int poolSize)
     // graph?
     CPPInstance* instance = new CPPInstance(graph->getNodeCount(), graph->getMatrix());
     int nnode = instance->getNumberOfNodes();
+    delete problem;
     problem = new CPPProblem("file1", "rand500-100", instance);
     problem->SetID(2);
 
     problem->AllocateSolution();
 
+    delete population;
+    
     population = new Population(poolSize);
-    Partition* childPartition = new Partition(nnode);
+    delete childPartition;
+    childPartition = new Partition(nnode);
 
     int mFixN = 50;
     int mFixStagnation = 20;
@@ -146,22 +110,22 @@ void FixedSetEvolution::run(BestSolutionInfo* frt_, int* totalGen, int poolSize)
         FixSize = 1 - std::pow(2, -1 * (FixSetSizeIndex + 1));
         FixSet = problem->GetFix(mFixN, mFixK, FixSize);
 
-        problem->SolveGreedy(FixSet);
+        problem->SolveGreedy(FixSet); // memory increase
 
         // TODO this could be optimized by no conversion and using the same solution/partition structure
         convertCPPSolutionToPartition(*childPartition, problem->GetSolution());
- 
+
         improvementStrategy->improveSolution(*childPartition, startTime, maxSeconds, frt, generationCnt);
 
         recorder->recordSolution(frt->best_partition, clock());
 
+        // optimize this; is it necessary to create Partition and CPPSolution?
         Partition* bestPartition = &(improvementStrategy->getBestPartition());
-        // population->addPopulation(&(improvementStrategy->getBestPartition()), improvementStrategy->getBestObjective());
-        // TODO: childPartition is not altered in improveSolution
         CPPSolutionBase* mSolution = new CPPSolutionBase(bestPartition->getPvertex(), nnode, bestPartition->getValue(), instance);
         delete bestPartition;
 
         problem->AddToSolutionHolder(*mSolution);
+        delete mSolution;
         mNumberOfSolutionsGenerated++;
 
         if (!problem->CheckBest(FixSize)) {
@@ -183,9 +147,41 @@ void FixedSetEvolution::run(BestSolutionInfo* frt_, int* totalGen, int poolSize)
         generationCnt++;
     }
 
+    delete instance;
     printf("Best solution found with value %d at generation %d\n", frt->best_val, frt->best_generation);
 }
 
 void FixedSetEvolution::runGeneration() {
+    // not finished yet; finish if necessary to split run and runGeneration
+    /*
+    FixSize = 1 - std::pow(2, -1 * (FixSetSizeIndex + 1));
+    FixSet = problem->GetFix(mFixN, mFixK, FixSize);
+    int nnode = graph->getNodeCount();
+    problem->SolveGreedy(FixSet);
 
+    // TODO this could be optimized by no conversion and using the same solution/partition structure
+    convertCPPSolutionToPartition(*childPartition, problem->GetSolution());
+
+    improvementStrategy->improveSolution(*childPartition, startTime, maxSeconds, frt, generationCnt);
+
+    recorder->recordSolution(frt->best_partition, clock());
+
+    Partition* bestPartition = &(improvementStrategy->getBestPartition());
+    CPPSolutionBase* mSolution = new CPPSolutionBase(bestPartition->getPvertex(), nnode, bestPartition->getValue(), instance);
+    delete bestPartition;
+
+    problem->AddToSolutionHolder(*mSolution);
+    mNumberOfSolutionsGenerated++;
+
+    if (!problem->CheckBest(FixSize)) {
+        StagCounter++;
+        if (StagCounter >= mFixStagnation) {
+            FixSetSizeIndex++;
+            FixSetSizeIndex %= MaxDiv;
+            StagCounter = 0;
+        }
+    }
+    else {
+        StagCounter = 0;
+    }*/
 }

@@ -14,10 +14,12 @@ Population::~Population() {
 }
 
 void Population::disposePopulation() {
-    for (Partition* partition : partitions) {
-        delete partition;
+    if (partitions.size() > 0) {
+        for (Partition* partition : partitions) {
+            delete partition;
+        }
+        partitions.clear();
     }
-    partitions.clear();
 }
 
 void Population::updatePopulation() {

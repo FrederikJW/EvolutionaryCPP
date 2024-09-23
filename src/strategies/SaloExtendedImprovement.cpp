@@ -42,7 +42,9 @@ void SaloExtendedImprovement::improveSolution(Partition& solution, clock_t start
 }
 
 void SaloExtendedImprovement::setEnvironment(Graph& graph) {
+    delete instance;
     instance = new CPPInstance(graph.getNodeCount(), graph.getMatrix());
+    delete problem;
     problem = new CPPProblem("file1", "rand500-100", instance);
     problem->SetID(2);
     problem->SetSASelect(SASelectType::Dual);

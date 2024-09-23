@@ -7,7 +7,9 @@ void SolutionEvolution::run(BestSolutionInfo* frt_, int* totalGen, int poolSize)
     generationCnt = 0;
 
     // TODO: could be created inside initial pool builder
+    delete population;
     population = new Population(poolSize);
+    delete childPartition;
     childPartition = new Partition(graph->getNodeCount());
 
     improvementStrategy->setEnvironment(*graph);

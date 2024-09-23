@@ -12,6 +12,7 @@ private:
 public:
     CPPCandidate();
     CPPCandidate(const std::vector<int>& nNodes, int nClique, int nCandidateIndex);
+    ~CPPCandidate();
 
     int getClique() const;
     void setClique(int value);

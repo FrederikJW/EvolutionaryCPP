@@ -38,6 +38,12 @@ CPPGreedy::CPPGreedy(const std::string& fileName):
     // mSAParams.InitGeometric();
 }
 
+CPPGreedy::~CPPGreedy() {
+    delete mInstance;
+    delete mSolution;
+    delete mRCL;
+}
+
     /*
     std::string GetMethodFileName() const {
         std::string result;
@@ -113,10 +119,9 @@ void CPPGreedy::SolveGreedy(const std::vector<std::vector<int>>& FixedSet) {
         Select = GetHeuristic();
         if (Select == nullptr)
             break;
-        AddToSolution(*Select);
+        AddToSolution(CPPCandidate(*Select));
+        delete Select;
     }
-    // mSolution->FixCliques();
-    int Test = mSolution->CalculateObjective();
 }
 
 CPPCandidate* CPPGreedy::GetHeuristicMaxIncrease() {
@@ -145,7 +150,7 @@ CPPCandidate* CPPGreedy::GetHeuristicMaxIncrease() {
         return new CPPCandidate(mAvailableNodes[index], mSolution->NumberOfCliques(), index);
     }
 
-    return new CPPCandidate(*mRCL->getCandidate(mGenerator() % mRCL->getCurrentSize()));
+    return new CPPCandidate(mRCL->getCandidate(mGenerator() % mRCL->getCurrentSize()));
 }
 
 CPPCandidate* CPPGreedy::GetHeuristic() {

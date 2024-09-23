@@ -15,8 +15,8 @@ int RCL<T>::getCurrentSize() const {
 }
 
 template <typename T>
-T* RCL<T>::getCandidate(int index) {
-    return &mCandidates[index];
+T RCL<T>::getCandidate(int index) {
+    return mCandidates[index];
 }
 
 template <typename T>

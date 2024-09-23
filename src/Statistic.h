@@ -1,6 +1,7 @@
 #ifndef STATISTIC
 #define STATISTIC
 #include "partition/Partition.h"
+#include "Defines.h"
 
 /***************************Statistic***************************/
 typedef struct ST_Stats {
@@ -11,6 +12,8 @@ typedef struct ST_Stats {
 	int best_generation;    //The iteration when best_obj was found
 
 }BestSolutionInfo;
+
+void clearResult(BestSolutionInfo* sts);
 
 //extern void clearResult(BestSolutionInfo* sts);
 //extern void printResult(BestSolutionInfo *sts, int index);

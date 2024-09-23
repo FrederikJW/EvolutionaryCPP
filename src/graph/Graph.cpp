@@ -3,13 +3,15 @@
 #include <iostream>
 #include <cstring>
 
-Graph::Graph() : nnode(0), matrix(nullptr) {}
+Graph::Graph() : nnode(0), matrix(nullptr), knownbest(1000000) {}
 
 Graph::~Graph() {
     deallocateMatrix();
 }
 
 void Graph::load(const std::string& filename) {
+    deallocateMatrix();
+
     std::ifstream fin(filename);
     if (fin.fail()) {
         std::cerr << "Cannot open file " << filename << std::endl;
@@ -17,7 +19,6 @@ void Graph::load(const std::string& filename) {
     }
     fin >> nnode;
 
-    deallocateMatrix();
     allocateMatrix();
 
     int val;

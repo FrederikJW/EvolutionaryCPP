@@ -13,7 +13,7 @@
 class Recorder {
 public:
     // Constructor that opens the file
-    Recorder(char* graphFilePath, std::string configCode);
+    Recorder(char* graphFilePath, std::string configCode, bool _makeFile);
 
     // Destructor that closes the file
     ~Recorder();
@@ -36,6 +36,7 @@ private:
     int bestScore;
     std::map<std::string, std::vector<clock_t>> timeRecord;
     std::map<std::string, clock_t> enteredTime;
+    bool makeFile;
 };
 
 #endif // RECORDER_H
