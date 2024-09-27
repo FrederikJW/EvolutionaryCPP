@@ -92,12 +92,12 @@ void FixedSetEvolution::run(BestSolutionInfo* frt_, int* totalGen, int poolSize)
     std::vector<std::vector<int>> SuperNodes;
     int cObj;
 
-    // TODO: if partitions have different number of cliques, getFix can fail
     for (auto partition : population->getPartitions()) {
         CPPSolutionBase* mSolution = new CPPSolutionBase(partition->getPvertex(), nnode, partition->getValue(), instance);
         problem->AddToSolutionHolder(*mSolution);
     }
     
+    //return;
     printf("Run evolution.\n");
     // for (int i = 0; i < MaxGenerated - mFixInitPopulation; ++i) {
     while (generationCnt < maxGenerations && (double)(clock() - startTime) / CLOCKS_PER_SEC < maxSeconds && frt->best_val < graph->getKnownbest()) {
@@ -115,7 +115,9 @@ void FixedSetEvolution::run(BestSolutionInfo* frt_, int* totalGen, int poolSize)
         // TODO this could be optimized by no conversion and using the same solution/partition structure
         convertCPPSolutionToPartition(*childPartition, problem->GetSolution());
 
+        clock_t start = clock();
         improvementStrategy->improveSolution(*childPartition, startTime, maxSeconds, frt, generationCnt);
+        printf("time: %d\n", clock() - start);
 
         recorder->recordSolution(frt->best_partition, clock());
 

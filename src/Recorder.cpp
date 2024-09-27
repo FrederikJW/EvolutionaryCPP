@@ -19,16 +19,16 @@ Recorder::Recorder(char* graphFilePath, std::string configCode, bool _makeFile) 
     char fname[_MAX_FNAME];
     char ext[_MAX_EXT];
     _splitpath(graphFilePath, drive, dir, fname, ext);
-    sprintf(file_name, "%s/rec/%s_%s_%d.rec", _getcwd(path_cwd, PATH_MAX), fname, config_code, param_seed);
-    sprintf(base_file_path, "%s/rec/%s_%s_%d", _getcwd(path_cwd, PATH_MAX), fname, config_code, param_seed);
+    sprintf(file_name, "/rec/%s_%s_%d.rec", fname, config_code, param_seed);
+    sprintf(base_file_path, "/rec/%s_%s_%d", fname, config_code, param_seed);
 #else
     char* graph_name = basename(graphFilePath);
     getcwd(path_cwd, PATH_MAX);
-    sprintf(file_name, "%s/rec/%s_%s_%d.rec", path_cwd, graph_name, config_code, param_seed);
-    sprintf(base_file_path, "%s/rec/%s_%s_%d", path_cwd, graph_name, config_code, param_seed);
+    sprintf(file_name, "/rec/%s_%s_%d.rec", graph_name, config_code, param_seed);
+    sprintf(base_file_path, "/rec/%s_%s_%d", graph_name, config_code, param_seed);
 #endif
-    baseFilePath = base_file_path;
-    const std::string filename = file_name;
+    baseFilePath = std::string(PROJECT_ROOT_PATH) + base_file_path;
+    const std::string filename = std::string(PROJECT_ROOT_PATH) + file_name;
 
     makeFile = _makeFile;
     if (makeFile) {
@@ -79,7 +79,7 @@ void Recorder::recordSolution(Partition* partition, clock_t time) {
     if (partition->getValue() > bestScore) {
         bestScore = partition->getValue();
         clock_t currentTime = getCurrentTime(time);
-        std::string line = std::to_string(bestScore) + ";" + std::to_string(currentTime);
+        std::string line = std::to_string(bestScore) + ";" + std::to_string(clockToSeconds(currentTime));
         writeLine(line);
     }
 }
@@ -113,9 +113,9 @@ void Recorder::writeTimeResults() {
             if (time < min) min = time;
         }
         avg /= pair.second.size();
-        writeLine("\tmax: " + to_string(max));
-        writeLine("\tmin: " + to_string(min));
-        writeLine("\tavg: " + to_string(avg));
+        writeLine("\tmax: " + to_string(clockToSeconds(max)));
+        writeLine("\tmin: " + to_string(clockToSeconds(min)));
+        writeLine("\tavg: " + to_string(clockToSeconds(avg)));
     }
 }
 
@@ -127,10 +127,14 @@ void Recorder::createTimeResultsFiles() {
             timeFile.open(filename, std::ios::out | std::ios::app);
 
             for (const auto& time : pair.second) {
-                writeLineTo(&timeFile, to_string(time));
+                writeLineTo(&timeFile, to_string(clockToSeconds(time)));
             }
 
             timeFile.close();
         }
     }
+}
+
+double Recorder::clockToSeconds(clock_t time) {
+    return (double)time / CLOCKS_PER_SEC;
 }

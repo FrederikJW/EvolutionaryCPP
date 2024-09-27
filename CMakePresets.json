@@ -28,7 +28,7 @@
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug"
             },
-            "toolchainFile": "D:/vcpkg/scripts/buildsystems/vcpkg.cmake"
+          "toolchainFile": "D:/vcpkg/scripts/buildsystems/vcpkg.cmake"
         },
         {
             "name": "x64-release",

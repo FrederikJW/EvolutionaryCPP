@@ -26,9 +26,10 @@ int nedge;
 int** matrix;
 
 // char param_filename[1000] = "instance/rand500-100.txt";
-char param_filename[1000] = "instance/Medium Set (25 instances)/p1000-1.txt";
+std::string param_filename_string = std::string(PROJECT_ROOT_PATH) + "/instance/Medium Set (25 instances)/p1000-1.txt";
+char param_filename[1000];
 int param_knownbest = 10000000;
-int param_time = 5000;
+int param_time = 500;
 int param_seed = 123456;
 int param_max_generations = 100000;
 int param_sizefactor = 8;
@@ -102,6 +103,9 @@ std::string getAlgorithmConfigCode(EvolutionStrategyCode evol, ImprovementStrate
 }
 
 void readParameters(int argc, char** argv) {
+    const char* cstr = param_filename_string.c_str();
+    std::strcpy(param_filename, cstr);
+
     for (int i = 1; i < argc; i += 2) {
         if (argv[i][0] != '-' || argv[i][2] != 0) {
             showUsage();
@@ -219,6 +223,7 @@ int test_run(int argc, char** argv) {
 
 int rcl_test(int argc, char** argv) {
     // loading graph
+
     Graph graph;
     graph.load(param_filename);
 
@@ -241,6 +246,7 @@ int rcl_test(int argc, char** argv) {
 }
 
 int bulk_run(int argc, char** argv) {
+
     Graph graph;
     readParameters(argc, argv);
     srand(param_seed);
@@ -257,36 +263,37 @@ int bulk_run(int argc, char** argv) {
     // file name, known best, improvement strategy, initial pool strategy, evolution strategy
     /*
     std::vector<std::tuple<std::string, int, ImprovementStrategyCode, InitialPoolStrategyCode, EvolutionStrategyCode>> list_of_run_settings = {
-        std::make_tuple("instance/Small Set (38 instances)/rand100-5.txt", 1407, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
-        std::make_tuple("instance/Small Set (38 instances)/rand100-100.txt", 24296, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
-        std::make_tuple("instance/Small Set (38 instances)/rand200-5.txt", 4079, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
-        std::make_tuple("instance/Small Set (38 instances)/rand200-100.txt", 74924, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
-        std::make_tuple("instance/Small Set (38 instances)/rand300-5.txt", 7732, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
-        std::make_tuple("instance/Small Set (38 instances)/rand300-100.txt", 152709, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
-        std::make_tuple("instance/Small Set (38 instances)/rand400-5.txt", 12133, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
-        std::make_tuple("instance/Small Set (38 instances)/rand400-100.txt", 222757, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
-    };*/
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/rand100-5.txt", 1407, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/rand100-100.txt", 24296, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/rand200-5.txt", 4079, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/rand200-100.txt", 74924, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/rand300-5.txt", 7732, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/rand300-100.txt", 152709, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/rand400-5.txt", 12133, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/rand400-100.txt", 222757, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
+    };
+    */
     std::vector<std::tuple<std::string, int, ImprovementStrategyCode, InitialPoolStrategyCode, EvolutionStrategyCode>> list_of_run_settings = {
-        std::make_tuple("instance/Small Set (38 instances)/p500-5-1.txt", 17691, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
-        std::make_tuple("instance/Small Set (38 instances)/p500-5-2.txt", 17169, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
-        std::make_tuple("instance/Small Set (38 instances)/p500-5-3.txt", 16816, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
-        std::make_tuple("instance/Small Set (38 instances)/p500-5-4.txt", 16808, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
-        std::make_tuple("instance/Small Set (38 instances)/p500-5-5.txt", 16957, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
-        std::make_tuple("instance/Small Set (38 instances)/p500-5-6.txt", 16615, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
-        std::make_tuple("instance/Small Set (38 instances)/p500-5-7.txt", 16649, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
-        std::make_tuple("instance/Small Set (38 instances)/p500-5-8.txt", 16756, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
-        std::make_tuple("instance/Small Set (38 instances)/p500-5-9.txt", 16629, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
-        std::make_tuple("instance/Small Set (38 instances)/p500-5-10.txt", 17360, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
-        std::make_tuple("instance/Small Set (38 instances)/p500-100-1.txt", 308896, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
-        std::make_tuple("instance/Small Set (38 instances)/p500-100-2.txt", 310241, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
-        std::make_tuple("instance/Small Set (38 instances)/p500-100-3.txt", 310477, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
-        std::make_tuple("instance/Small Set (38 instances)/p500-100-4.txt", 309567, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
-        std::make_tuple("instance/Small Set (38 instances)/p500-100-5.txt", 309135, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
-        std::make_tuple("instance/Small Set (38 instances)/p500-100-6.txt", 310280, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
-        std::make_tuple("instance/Small Set (38 instances)/p500-100-7.txt", 310063, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
-        std::make_tuple("instance/Small Set (38 instances)/p500-100-8.txt", 303148, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
-        std::make_tuple("instance/Small Set (38 instances)/p500-100-9.txt", 305305, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
-        std::make_tuple("instance/Small Set (38 instances)/p500-100-10.txt", 314864, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/p500-5-1.txt", 17691, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/p500-5-2.txt", 17169, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/p500-5-3.txt", 16816, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/p500-5-4.txt", 16808, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/p500-5-5.txt", 16957, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/p500-5-6.txt", 16615, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/p500-5-7.txt", 16649, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/p500-5-8.txt", 16756, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/p500-5-9.txt", 16629, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/p500-5-10.txt", 17360, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/p500-100-1.txt", 308896, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/p500-100-2.txt", 310241, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/p500-100-3.txt", 310477, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/p500-100-4.txt", 309567, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/p500-100-5.txt", 309135, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/p500-100-6.txt", 310280, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/p500-100-7.txt", 310063, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/p500-100-8.txt", 303148, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/p500-100-9.txt", 305305, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/p500-100-10.txt", 314864, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
     };
 
     Recorder* bulkRecorder = new Recorder("p500.txt", "BulkRun", true);
@@ -303,6 +310,7 @@ int bulk_run(int argc, char** argv) {
         std::strcpy(filename_charlist, filename.c_str());
 
         Recorder* recorder = new Recorder(filename_charlist, getAlgorithmConfigCode(evolutionStrategyCode, improvementStrategyCode, initialPoolStrategyCode), false);
+        bulkRecorder->writeLine("\n" + filename + ":");
 
         graph.load(filename_charlist);
         graph.setKnownbest(knownbest);
@@ -364,6 +372,17 @@ int bulk_run(int argc, char** argv) {
 
             totaltime = (double)(clock() - starttime) / CLOCKS_PER_SEC;
 
+            if (finalBest.best_val < knownbest) {
+                bulkRecorder->writeLine("Did not find known best: " + std::to_string(finalBest.best_val) + " < " + std::to_string(knownbest));
+            }
+            else {
+                bulkRecorder->writeLine("Found known best: " + std::to_string(finalBest.best_val) + " = " + std::to_string(knownbest));
+            }
+
+            bulkRecorder->writeLine("idx\t best_v\t npat\t find_t\t find_i\t ttl_t\t  ttl_i");
+            bulkRecorder->writeLine(std::to_string(run_cnt + 1) + "\t" + std::to_string(finalBest.best_val) + "\t" + std::to_string(finalBest.best_partition->getBucketSize() - 1) + "\t"
+                + std::to_string(finalBest.best_foundtime) + "\t" + std::to_string(finalBest.best_generation) + "\t" + std::to_string(totaltime) + "\t" + std::to_string(totalgen));
+
             recorder->writeLine("idx\t best_v\t npat\t find_t\t find_i\t ttl_t\t  ttl_i");
             recorder->writeLine(std::to_string(run_cnt + 1) + "\t" + std::to_string(finalBest.best_val) + "\t" + std::to_string(finalBest.best_partition->getBucketSize() - 1) + "\t"
                 + std::to_string(finalBest.best_foundtime) + "\t" + std::to_string(finalBest.best_generation) + "\t" + std::to_string(totaltime) + "\t" + std::to_string(totalgen));
@@ -404,7 +423,6 @@ int bulk_run(int argc, char** argv) {
 }
 
 int normal_run(int argc, char** argv) {
-    // fout = NULL;
 
     Graph graph;
 

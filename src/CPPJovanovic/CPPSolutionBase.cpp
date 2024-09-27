@@ -7,6 +7,7 @@
 #include <sstream>
 #include <unordered_map>
 #include <cmath>
+#include <Dense>
 #include "CPPSolutionBase.h"
 
 // does not work correctly
@@ -23,6 +24,7 @@ void parallelAddSse(std::vector<int>& a, const std::vector<int>& b) {
         });
 }
 
+// too slow
 void parallelAddSse2(std::vector<int>& a, const std::vector<int>& b) {
     size_t size = a.size();
 
@@ -42,6 +44,108 @@ void parallelAddSse2(std::vector<int>& a, const std::vector<int>& b) {
         // Store the result back to vector a
         _mm_storeu_si128((__m128i*) & a[i], vresult);
     }
+}
+
+// too slow
+void parallelAddSse3(std::vector<int>& a, const std::vector<int>& b) {
+    Eigen::VectorXi vec_a = Eigen::Map<Eigen::VectorXi>(a.data(), a.size());
+    Eigen::VectorXi vec_b = Eigen::Map<const Eigen::VectorXi>(b.data(), b.size());
+
+    vec_a += vec_b;
+}
+
+// fastest, but can only be used py processors that support AVX-512. Use parallelAddSse5 if yours does not.
+void parallelAddSse4(std::vector<int>& a, const std::vector<int>& b) {
+    const size_t size = a.size();
+
+    // Ensure both vectors are the same size
+    if (b.size() != size) {
+        throw std::invalid_argument("Vectors must be the same size");
+    }
+
+    size_t i = 0;
+
+    // Process 16 integers at a time using AVX-512 intrinsics
+    for (; i + 16 <= size; i += 16) {
+        // Load 16 integers from each vector
+        __m512i vec_a = _mm512_loadu_si512(reinterpret_cast<const __m512i*>(&a[i]));
+        __m512i vec_b = _mm512_loadu_si512(reinterpret_cast<const __m512i*>(&b[i]));
+
+        // Add the vectors
+        __m512i vec_result = _mm512_add_epi32(vec_a, vec_b);
+
+        // Store the result back into vector 'a'
+        _mm512_storeu_si512(reinterpret_cast<__m512i*>(&a[i]), vec_result);
+    }
+
+    // Handle any remaining elements
+    for (; i < size; ++i) {
+        a[i] += b[i];
+    }
+}
+
+void parallelAddSse5(std::vector<int>& a, const std::vector<int>& b) {
+    const size_t size = a.size();
+
+    // Ensure both vectors are the same size
+    if (b.size() != size) {
+        throw std::invalid_argument("Vectors must be the same size");
+    }
+
+    size_t i = 0;
+
+    // Process 8 integers at a time using AVX2 intrinsics
+    for (; i + 8 <= size; i += 8) {
+        // Load 8 integers from each vector
+        __m256i vec_a = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(&a[i]));
+        __m256i vec_b = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(&b[i]));
+
+        // Add the vectors
+        __m256i vec_result = _mm256_add_epi32(vec_a, vec_b);
+
+        // Store the result back into vector 'a'
+        _mm256_storeu_si256(reinterpret_cast<__m256i*>(&a[i]), vec_result);
+    }
+
+    // Handle any remaining elements
+    for (; i < size; ++i) {
+        a[i] += b[i];
+    }
+}
+
+// also fast, but not worth it for vectors that only have a size of 1000
+void parallelAddSse6(std::vector<int>& a, const std::vector<int>& b) {
+    const size_t size = a.size();
+
+    // Ensure both vectors are the same size
+    if (b.size() != size) {
+        throw std::invalid_argument("Vectors must be the same size");
+    }
+
+    // Define the grain size (the chunk size for each thread)
+    const size_t grain_size = 1024; // Adjust as needed for optimal performance
+
+    tbb::parallel_for(tbb::blocked_range<size_t>(0, size, grain_size),
+        [&a, &b](const tbb::blocked_range<size_t>& range) {
+            size_t i = range.begin();
+            size_t end = range.end();
+
+            // Process 16 integers at a time using AVX-512 intrinsics
+            for (; i + 16 <= end; i += 16) {
+                __m512i vec_a = _mm512_loadu_si512(reinterpret_cast<const __m512i*>(&a[i]));
+                __m512i vec_b = _mm512_loadu_si512(reinterpret_cast<const __m512i*>(&b[i]));
+
+                __m512i vec_result = _mm512_add_epi32(vec_a, vec_b);
+
+                _mm512_storeu_si512(reinterpret_cast<__m512i*>(&a[i]), vec_result);
+            }
+
+            // Handle any remaining elements in the current range
+            for (; i < end; ++i) {
+                a[i] += b[i];
+            }
+        }
+    );
 }
 
 void shuffle(std::vector<int>& list, std::default_random_engine& iGenerator) {
@@ -293,8 +397,8 @@ void CPPSolutionBase::UpdateAllConnections(int nNode, int nClique)
     const std::vector<int>& NodeWeights = mInstance->getWeights()[nNode];
     const std::vector<int>& NodeNegativeWeights = mInstance->getNegativeWeights()[nNode];
 
-    parallelAddSse2(newAllConnectedNode, NodeWeights);
-    parallelAddSse2(oldAllConnectedNode, NodeNegativeWeights);
+    parallelAddSse4(newAllConnectedNode, NodeWeights);
+    parallelAddSse4(oldAllConnectedNode, NodeNegativeWeights);
 }
 
 void CPPSolutionBase::UpdateAllConnectionsRestricted(int nNodeIndex, int nClique)
@@ -458,25 +562,18 @@ void CPPSolutionBase::SimulatedAnnealingSelectTrio(int n1, int n2, int n3, int& 
 
 void CPPSolutionBase::SASelectDual(SARelocation& Relocation)
 {
-    std::vector<int> CliqueConnections;
-
     int n0Clique = mNodeClique[Relocation.mN0];
     int n1Clique = mNodeClique[Relocation.mN1];
-    int n0RemoveChange;
-    int n1RemoveChange;
-    int RemoveChange;
 
-    int bWeight;
-    int cChange0;
-    int cChange1;
-    int cChange;
-    int swapChange;
-    int Size = mCliqueSizes.size();
+    int n0RemoveChange = -mAllConnections[n0Clique][Relocation.mN0];
+    int n1RemoveChange = -mAllConnections[n1Clique][Relocation.mN1];
 
-    n0RemoveChange = -mAllConnections[n0Clique][Relocation.mN0];
-    n1RemoveChange = -mAllConnections[n1Clique][Relocation.mN1];
+    const auto& weights = mInstance->getWeights();
+    int bWeight = weights[Relocation.mN0][Relocation.mN1];
 
-    bWeight = mInstance->getWeights()[Relocation.mN0][Relocation.mN1];
+    const int Size = static_cast<int>(mCliqueSizes.size());
+    int mAllConn_n0Clique_n1 = mAllConnections[n0Clique][Relocation.mN1];
+    bool sameCliques = (n1Clique == n0Clique);
 
     if (mCliqueSizes[n0Clique] > Relocation.mChange)
     {
@@ -487,30 +584,22 @@ void CPPSolutionBase::SASelectDual(SARelocation& Relocation)
 
     for (int c = 0; c < Size; c++)
     {
-        CliqueConnections = mAllConnections[c];
+        const std::vector<int>& CliqueConnections = mAllConnections[c];
 
-        cChange0 = n0RemoveChange + CliqueConnections[Relocation.mN0];
-        if (n0Clique != c)
+        int cChange0 = n0RemoveChange + CliqueConnections[Relocation.mN0];
+
+        if (n0Clique != c && cChange0 > Relocation.mChange)
         {
-            if (cChange0 > Relocation.mChange)
-            {
-                Relocation.mChange = cChange0;
-                Relocation.mC0 = c;
-                Relocation.mMoveType = SAMoveType::N0;
-            }
+            Relocation.mChange = cChange0;
+            Relocation.mC0 = c;
+            Relocation.mMoveType = SAMoveType::N0;
         }
-        cChange1 = n1RemoveChange + CliqueConnections[Relocation.mN1];
 
-        if ((n1Clique != c) && (n0Clique != c))
+        int cChange1 = n1RemoveChange + CliqueConnections[Relocation.mN1];
+
+        if (n1Clique != c && n0Clique != c)
         {
-            if (n1Clique == n0Clique)
-            {
-                cChange = cChange1 + cChange0 + 2 * bWeight;
-            }
-            else
-            {
-                cChange = cChange1 + cChange0 + bWeight;
-            }
+            int cChange = cChange1 + cChange0 + (sameCliques ? 2 * bWeight : bWeight);
 
             if (cChange > Relocation.mChange)
             {
@@ -521,30 +610,30 @@ void CPPSolutionBase::SASelectDual(SARelocation& Relocation)
             }
         }
 
-        if (n0Clique != n1Clique)
+        if (n0Clique != n1Clique && c != n0Clique)
         {
-            if (c != n0Clique)
-            {
-                if (c != n1Clique)
-                {
-                    cChange = cChange0 + n1RemoveChange + mAllConnections[n0Clique][Relocation.mN1] - bWeight;
-                }
-                else
-                {
-                    cChange = cChange0 + n1RemoveChange + mAllConnections[n0Clique][Relocation.mN1] - 2 * bWeight;
-                }
+            int cChange;
 
-                if (cChange > Relocation.mChange)
-                {
-                    Relocation.mChange = cChange;
-                    Relocation.mC0 = c;
-                    Relocation.mC1 = n0Clique;
-                    Relocation.mMoveType = SAMoveType::Slide;
-                }
+            if (c != n1Clique)
+            {
+                cChange = cChange0 + n1RemoveChange + mAllConn_n0Clique_n1 - bWeight;
+            }
+            else
+            {
+                cChange = cChange0 + n1RemoveChange + mAllConn_n0Clique_n1 - 2 * bWeight;
+            }
+
+            if (cChange > Relocation.mChange)
+            {
+                Relocation.mChange = cChange;
+                Relocation.mC0 = c;
+                Relocation.mC1 = n0Clique;
+                Relocation.mMoveType = SAMoveType::Slide;
             }
         }
     }
 }
+
 
 void CPPSolutionBase::SASelectDualPrev(SARelocation& Relocation)
 {
@@ -933,18 +1022,24 @@ bool CPPSolutionBase::SimulatedAnnealing(std::default_random_engine& iGenerator,
     cSolObjective = StartObjective;
     AcceptTotal = 0;
     int sumNodeChange;
+
+    
+
     while (true)
     {   
+        
         // gets caught in an endless loop here?
         counter++;
         Accept = 0;
         waste = 0;
 
         for (int i = 0; i < NeiborhoodSize * iSAParameters.mSizeRepeat; i++)
-        {
+        {   
+            // clock_t start = clock();
             cRelocation.mChange = INT_MIN;
             SASelect(cRelocation, iGenerator);
             Prob = FastExp(cRelocation.mChange / T);
+            // clock_t checkpoint1 = clock();
             // printf("  Prob=%.3f x=%.3f T=%.3f mchange=%d\n", Prob, cRelocation.mChange / T, T, cRelocation.mChange);
             /*if (cRelocation.mChange / T > 900 || cRelocation.mChange / T < -900)
                 printf("  Prob=%.3f x=%.3f T=%.3f mchange=%d\n", Prob, cRelocation.mChange / T, T, cRelocation.mChange);*/
@@ -962,8 +1057,8 @@ bool CPPSolutionBase::SimulatedAnnealing(std::default_random_engine& iGenerator,
                     std::copy(mNodeClique.begin(), mNodeClique.end(), tNodeClique.begin());
                 }
             }
+            // printf("%d ; %d\n", checkpoint1 - start, clock() - checkpoint1);
         }
-
         counterCool++;
 
         if (iSAParameters.mCooling == CPPCooling::Geometric)
@@ -991,6 +1086,8 @@ bool CPPSolutionBase::SimulatedAnnealing(std::default_random_engine& iGenerator,
             break;
         // printf("Stag=%d T=%.3f\n", Stag, T);
     }
+
+    
 
     CreateFromNodeClique(tNodeClique);
 

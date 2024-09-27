@@ -28,6 +28,7 @@ public:
     void exit(const std::string& method);
     void writeTimeResults();
     void createTimeResultsFiles();
+    double clockToSeconds(clock_t time);
 
 private:
     std::string baseFilePath;
