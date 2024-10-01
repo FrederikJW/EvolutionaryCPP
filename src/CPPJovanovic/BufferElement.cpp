@@ -51,6 +51,7 @@ bool BufferElement::HasRelocation(int* r) {
 }
 
 // Takes a random relocation
+/*
 int* BufferElement::TakeRandomRelocation(std::mt19937& generator) {
     std::uniform_int_distribution<> dist(0, mRelocations.size() - 1);
     int select = dist(generator);
@@ -60,7 +61,7 @@ int* BufferElement::TakeRandomRelocation(std::mt19937& generator) {
     mRelocations.erase(mRelocations.begin() + select);
 
     return result;
-}
+}*/
 
 // Removes a relocation
 void BufferElement::RemoveRelocation(int iNode) {

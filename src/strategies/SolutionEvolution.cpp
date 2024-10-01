@@ -42,13 +42,13 @@ void SolutionEvolution::runGeneration() {
     double param_shrink = 0.6;
 
     int poolSize = population->getPoolSize();
-    int idx1 = rand() % poolSize;
-    int idx2 = rand() % poolSize;
+    int idx1 = (*mGenerator)() % poolSize;
+    int idx2 = (*mGenerator)() % poolSize;
     while (idx1 == idx2) {
-        idx2 = rand() % poolSize;
+        idx2 = (*mGenerator)() % poolSize;
     }
 
-    crossoverStrategy->crossover(*graph, population->getPartition(idx1), population->getPartition(idx2), *childPartition);
+    crossoverStrategy->crossover(*graph, population->getPartition(idx1), population->getPartition(idx2), *childPartition, mGenerator);
 
     improvementStrategy->improveSolution(*childPartition, startTime, maxSeconds, frt, generationCnt);
 

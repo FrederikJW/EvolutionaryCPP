@@ -226,6 +226,7 @@ int rcl_test(int argc, char** argv) {
 
     Graph graph;
     graph.load(param_filename);
+    std::mt19937* randomGenerator = new std::mt19937(param_seed);
 
     nnode = graph.getNodeCount();
 
@@ -238,8 +239,8 @@ int rcl_test(int argc, char** argv) {
 
     int generationCnt = 0;
 
-    ImprovementStrategy* improvementStrategy = new SimulatedAnnealingImprovement(param_knownbest, param_minpercent, param_tempfactor, param_sizefactor, recorder);
-    InitialPoolStrategy* RCLStrategy = new RCLInitStrategy(recorder);
+    ImprovementStrategy* improvementStrategy = new SimulatedAnnealingImprovement(param_knownbest, param_minpercent, param_tempfactor, param_sizefactor, recorder, randomGenerator);
+    InitialPoolStrategy* RCLStrategy = new RCLInitStrategy(recorder, randomGenerator);
     RCLStrategy->buildInitialPool(&finalBest, population, graph, improvementStrategy, param_time, &generationCnt);
 
     return 0;
@@ -249,7 +250,6 @@ int bulk_run(int argc, char** argv) {
 
     Graph graph;
     readParameters(argc, argv);
-    srand(param_seed);
 
     // rand100-5 1407
     // rand100-100 24296
@@ -273,30 +273,35 @@ int bulk_run(int argc, char** argv) {
         std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/rand400-100.txt", 222757, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
     };
     */
-    std::vector<std::tuple<std::string, int, ImprovementStrategyCode, InitialPoolStrategyCode, EvolutionStrategyCode>> list_of_run_settings = {
-        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/p500-5-1.txt", 17691, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
-        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/p500-5-2.txt", 17169, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
-        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/p500-5-3.txt", 16816, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
-        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/p500-5-4.txt", 16808, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
-        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/p500-5-5.txt", 16957, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
-        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/p500-5-6.txt", 16615, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
-        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/p500-5-7.txt", 16649, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
-        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/p500-5-8.txt", 16756, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
-        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/p500-5-9.txt", 16629, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
-        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/p500-5-10.txt", 17360, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
-        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/p500-100-1.txt", 308896, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
-        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/p500-100-2.txt", 310241, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
-        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/p500-100-3.txt", 310477, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
-        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/p500-100-4.txt", 309567, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
-        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/p500-100-5.txt", 309135, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
-        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/p500-100-6.txt", 310280, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
-        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/p500-100-7.txt", 310063, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
-        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/p500-100-8.txt", 303148, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
-        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/p500-100-9.txt", 305305, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
-        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/p500-100-10.txt", 314864, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS),
+    /*
+    std::vector<std::tuple<std::string, int, ImprovementStrategyCode, InitialPoolStrategyCode, EvolutionStrategyCode, int>> list_of_run_settings = {
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/p500-5-1.txt", 17691, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 20),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/p500-5-2.txt", 17169, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 20),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/p500-5-3.txt", 16816, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 20),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/p500-5-4.txt", 16808, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 20),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/p500-5-5.txt", 16957, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 20),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/p500-5-6.txt", 16615, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 20),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/p500-5-7.txt", 16649, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 20),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/p500-5-8.txt", 16756, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 20),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/p500-5-9.txt", 16629, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 20),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/p500-5-10.txt", 17360, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 20),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/p500-100-1.txt", 308896, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 20),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/p500-100-2.txt", 310241, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 20),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/p500-100-3.txt", 310477, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 20),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/p500-100-4.txt", 309567, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 20),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/p500-100-5.txt", 309135, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 20),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/p500-100-6.txt", 310280, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 20),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/p500-100-7.txt", 310063, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 20),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/p500-100-8.txt", 303148, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 20),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/p500-100-9.txt", 305305, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 20),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/p500-100-10.txt", 314864, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 20),
+    };*/
+
+    std::vector<std::tuple<std::string, int, ImprovementStrategyCode, InitialPoolStrategyCode, EvolutionStrategyCode, int>> list_of_run_settings = {
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/p500-5-3.txt", 16816, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 20),
     };
 
-    Recorder* bulkRecorder = new Recorder("p500.txt", "BulkRun", true);
+    Recorder* bulkRecorder = new Recorder("p500-5-3.txt", "Bulk20", true);
 
     for (const auto& run_settings : list_of_run_settings) {
         std::string filename;
@@ -304,8 +309,9 @@ int bulk_run(int argc, char** argv) {
         ImprovementStrategyCode improvementStrategyCode;
         InitialPoolStrategyCode initialPoolStrategyCode;
         EvolutionStrategyCode evolutionStrategyCode;
+        int total_runs;
 
-        std::tie(filename, knownbest, improvementStrategyCode, initialPoolStrategyCode, evolutionStrategyCode) = run_settings;
+        std::tie(filename, knownbest, improvementStrategyCode, initialPoolStrategyCode, evolutionStrategyCode, total_runs) = run_settings;
         char filename_charlist[1000];
         std::strcpy(filename_charlist, filename.c_str());
 
@@ -330,8 +336,11 @@ int bulk_run(int argc, char** argv) {
         int sumiter = 0;
         int bestInAll = -MAX_VAL;
         int* bestInAlllPartition = new int[nnode];
+        int found_best = 0;
 
-        while (run_cnt < 1) {
+        // TODO: correct generator and seeds for bulk runs
+        while (run_cnt < total_runs) {
+            std::mt19937* randomGenerator = new std::mt19937(param_seed + run_cnt);
             clearResult(&finalBest);
             clock_t starttime = clock();
             recorder->setStartTime(starttime);
@@ -339,10 +348,10 @@ int bulk_run(int argc, char** argv) {
             ImprovementStrategy* improvementStrategy = nullptr;
             switch (improvementStrategyCode) {
             case ImprovementStrategyCode::SA:
-                improvementStrategy = new SimulatedAnnealingImprovement(knownbest, param_minpercent, param_tempfactor, param_sizefactor, recorder);
+                improvementStrategy = new SimulatedAnnealingImprovement(knownbest, param_minpercent, param_tempfactor, param_sizefactor, recorder, randomGenerator);
                 break;
             case ImprovementStrategyCode::SAe:
-                improvementStrategy = new SaloExtendedImprovement(knownbest, param_minpercent, param_tempfactor, param_sizefactor, recorder);
+                improvementStrategy = new SaloExtendedImprovement(knownbest, param_minpercent, param_tempfactor, param_sizefactor, recorder, randomGenerator);
                 break;
             }
 
@@ -351,20 +360,20 @@ int bulk_run(int argc, char** argv) {
             InitialPoolStrategy* initialPoolstrategy = nullptr;
             switch (initialPoolStrategyCode) {
             case InitialPoolStrategyCode::RCL:
-                initialPoolstrategy = new RCLInitStrategy(recorder);
+                initialPoolstrategy = new RCLInitStrategy(recorder, randomGenerator);
                 break;
             case InitialPoolStrategyCode::Std:
-                initialPoolstrategy = new InitialPoolBuilder(recorder);
+                initialPoolstrategy = new InitialPoolBuilder(recorder, randomGenerator);
                 break;
             }
 
             EvolutionStrategy* evolutionStrategy = nullptr;
             switch (evolutionStrategyCode) {
             case EvolutionStrategyCode::Sol:
-                evolutionStrategy = new SolutionEvolution(mergeDevideCrossover, initialPoolstrategy, improvementStrategy, &graph, recorder, param_max_generations, param_time);
+                evolutionStrategy = new SolutionEvolution(mergeDevideCrossover, initialPoolstrategy, improvementStrategy, &graph, recorder, param_max_generations, param_time, randomGenerator);
                 break;
             case EvolutionStrategyCode::FSS:
-                evolutionStrategy = new FixedSetEvolution(mergeDevideCrossover, initialPoolstrategy, improvementStrategy, &graph, recorder, param_max_generations, param_time);
+                evolutionStrategy = new FixedSetEvolution(mergeDevideCrossover, initialPoolstrategy, improvementStrategy, &graph, recorder, param_max_generations, param_time, randomGenerator);
                 break;
             }
 
@@ -373,15 +382,18 @@ int bulk_run(int argc, char** argv) {
             totaltime = (double)(clock() - starttime) / CLOCKS_PER_SEC;
 
             if (finalBest.best_val < knownbest) {
-                bulkRecorder->writeLine("Did not find known best: " + std::to_string(finalBest.best_val) + " < " + std::to_string(knownbest));
+                // bulkRecorder->writeLine("Did not find known best: " + std::to_string(finalBest.best_val) + " < " + std::to_string(knownbest));
             }
             else {
-                bulkRecorder->writeLine("Found known best: " + std::to_string(finalBest.best_val) + " = " + std::to_string(knownbest));
+                found_best++;
+                // bulkRecorder->writeLine("Found known best: " + std::to_string(finalBest.best_val) + " = " + std::to_string(knownbest));
             }
 
+            /*
             bulkRecorder->writeLine("idx\t best_v\t npat\t find_t\t find_i\t ttl_t\t  ttl_i");
             bulkRecorder->writeLine(std::to_string(run_cnt + 1) + "\t" + std::to_string(finalBest.best_val) + "\t" + std::to_string(finalBest.best_partition->getBucketSize() - 1) + "\t"
                 + std::to_string(finalBest.best_foundtime) + "\t" + std::to_string(finalBest.best_generation) + "\t" + std::to_string(totaltime) + "\t" + std::to_string(totalgen));
+            */
 
             recorder->writeLine("idx\t best_v\t npat\t find_t\t find_i\t ttl_t\t  ttl_i");
             recorder->writeLine(std::to_string(run_cnt + 1) + "\t" + std::to_string(finalBest.best_val) + "\t" + std::to_string(finalBest.best_partition->getBucketSize() - 1) + "\t"
@@ -402,7 +414,10 @@ int bulk_run(int argc, char** argv) {
             delete mergeDevideCrossover;
             delete initialPoolstrategy;
             delete evolutionStrategy;
+            delete randomGenerator;
         }
+
+        bulkRecorder->writeLine("Found best: " + std::to_string(found_best) + "/" + std::to_string(total_runs));
 
         recorder->writeLine("best result: " + std::to_string(bestInAll));
         recorder->writeLine("average time: " + std::to_string(sumtime / run_cnt));
@@ -458,6 +473,7 @@ int normal_run(int argc, char** argv) {
     int* bestInAlllPartition = new int[nnode];
 
     while (run_cnt < 1) {
+        std::mt19937* randomGenerator = new std::mt19937(param_seed + run_cnt);
         clearResult(&finalBest);
         clock_t starttime = clock();
         recorder->setStartTime(starttime);
@@ -465,10 +481,10 @@ int normal_run(int argc, char** argv) {
         ImprovementStrategy* improvementStrategy = nullptr;
         switch (improvementStrategyCode) {
             case ImprovementStrategyCode::SA:
-                improvementStrategy = new SimulatedAnnealingImprovement(param_knownbest, param_minpercent, param_tempfactor, param_sizefactor, recorder);
+                improvementStrategy = new SimulatedAnnealingImprovement(param_knownbest, param_minpercent, param_tempfactor, param_sizefactor, recorder, randomGenerator);
                 break;
             case ImprovementStrategyCode::SAe:
-                improvementStrategy = new SaloExtendedImprovement(param_knownbest, param_minpercent, param_tempfactor, param_sizefactor, recorder);
+                improvementStrategy = new SaloExtendedImprovement(param_knownbest, param_minpercent, param_tempfactor, param_sizefactor, recorder, randomGenerator);
                 break;
         }
 
@@ -477,20 +493,20 @@ int normal_run(int argc, char** argv) {
         InitialPoolStrategy* initialPoolstrategy = nullptr;
         switch (initialPoolStrategyCode) {
         case InitialPoolStrategyCode::RCL:
-            initialPoolstrategy = new RCLInitStrategy(recorder);
+            initialPoolstrategy = new RCLInitStrategy(recorder, randomGenerator);
             break;
         case InitialPoolStrategyCode::Std:
-            initialPoolstrategy = new InitialPoolBuilder(recorder);
+            initialPoolstrategy = new InitialPoolBuilder(recorder, randomGenerator);
             break;
         }
 
         EvolutionStrategy* evolutionStrategy = nullptr;
         switch (evolutionStrategyCode) {
         case EvolutionStrategyCode::Sol:
-            evolutionStrategy = new SolutionEvolution(mergeDevideCrossover, initialPoolstrategy, improvementStrategy, &graph, recorder, param_max_generations, param_time);
+            evolutionStrategy = new SolutionEvolution(mergeDevideCrossover, initialPoolstrategy, improvementStrategy, &graph, recorder, param_max_generations, param_time, randomGenerator);
             break;
         case EvolutionStrategyCode::FSS:
-            evolutionStrategy = new FixedSetEvolution(mergeDevideCrossover, initialPoolstrategy, improvementStrategy, &graph, recorder, param_max_generations, param_time);
+            evolutionStrategy = new FixedSetEvolution(mergeDevideCrossover, initialPoolstrategy, improvementStrategy, &graph, recorder, param_max_generations, param_time, randomGenerator);
             break;
         }
 
@@ -522,6 +538,7 @@ int normal_run(int argc, char** argv) {
         delete mergeDevideCrossover;
         delete initialPoolstrategy;
         delete evolutionStrategy;
+        delete randomGenerator;
     }
 
     recorder->writeLine("best result: " + std::to_string(bestInAll));

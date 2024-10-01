@@ -3,12 +3,9 @@
 
 #include <thread>
 
-CPPProblem::CPPProblem(const std::string& FileName, const std::string& InstanceName, CPPInstance* nInstance)
-    : mInstance(nInstance), mRCLSize(2), mFileName(FileName), mInstanceName(InstanceName), mGenerator(2), mMetaHeuristic(FSS), mGreedyHeuristic(MaxIncrease), mRCL(nullptr) {
+CPPProblem::CPPProblem(CPPInstance* nInstance, std::mt19937* generator)
+    : mInstance(nInstance), mRCLSize(2), mGenerator(generator), mMetaHeuristic(FSS), mGreedyHeuristic(MaxIncrease), mRCL(nullptr) {
     mSolution = new CPPSolution(mInstance);
-    mLogFileName = "./Log" + mInstanceName;
-    std::ofstream S(mLogFileName);
-    S.close();
     mSolutionHolder = CPPSolutionHolder();
     InitFSS();
     CPPSolution::Init(mInstance->getNumberOfNodes());
@@ -75,20 +72,6 @@ std::string CPPProblem::GetMethodFileName() {
     return Result;
 }
 
-void CPPProblem::SetID(int iID) {
-    mID = iID;
-    mLogFileName = "Log_" + std::to_string(mID) + "_" + mInstanceName;
-    std::ofstream S(mLogFileName);
-    mGenerator = std::mt19937(mID + 10);
-    S.close();
-}
-
-void CPPProblem::InitLogFileName() {
-    mLogFileName = GetMethodFileName() + "_Log_" + std::to_string(mID) + "_" + mInstanceName;
-    std::ofstream S(mLogFileName);
-    S.close();
-}
-
 long CPPProblem::GetBestTime() {
     return mIntermediateSolutionsTimes.back();
 }
@@ -149,10 +132,6 @@ void CPPProblem::InitFSS() {
     mFixK = 10;
     mFixInitPopulation = 10;
     mFixN = 50;
-}
-
-void CPPProblem::Shuffle(std::vector<int>& list, std::mt19937& iGenerator) {
-    std::shuffle(list.begin(), list.end(), iGenerator);
 }
 
 void CPPProblem::AllocateSolution() {
@@ -244,7 +223,7 @@ void CPPProblem::UpdateFrequency(CPPSolutionBase* Base, CPPSolutionBase* Test, s
 
 std::vector<std::vector<int>> CPPProblem::GetFixEdge(int N, int K, double FixSize, std::vector<std::vector<int>>& SuperNodes) {
     std::vector<std::vector<int>> resultCliques;
-    auto Freq = GetFrequencyEdge(mGenerator() % std::min(N, static_cast<int>(mSolutionHolder.Solutions().size())), WeightedRandomSampling::GetWeightedRandomSampling(std::min(N, static_cast<int>(mSolutionHolder.Solutions().size())), std::min(K, static_cast<int>(mSolutionHolder.Solutions().size())), std::vector<double>(N, 1.0 / N), mGenerator));
+    auto Freq = GetFrequencyEdge((*mGenerator)() % std::min(N, static_cast<int>(mSolutionHolder.Solutions().size())), WeightedRandomSampling::GetWeightedRandomSampling(std::min(N, static_cast<int>(mSolutionHolder.Solutions().size())), std::min(K, static_cast<int>(mSolutionHolder.Solutions().size())), std::vector<double>(N, 1.0 / N), *mGenerator));
     int numberOfNodes = mInstance->getNumberOfNodes();
     int* tNodeClique = new int[numberOfNodes];
     std::iota(tNodeClique, tNodeClique + mInstance->getNumberOfNodes(), 0);
@@ -306,7 +285,7 @@ bool CPPProblem::ContainsList(const std::vector<std::vector<int>>& Container, co
 }
 
 std::vector<std::vector<int>> CPPProblem::GetFix(int N, int K, double FixSize) {
-    std::vector<double> Freq = GetFrequency(mGenerator() % std::min(N, static_cast<int>(mSolutionHolder.Solutions().size())), WeightedRandomSampling::GetWeightedRandomSampling(std::min(N, static_cast<int>(mSolutionHolder.Solutions().size())), std::min(K, static_cast<int>(mSolutionHolder.Solutions().size())), std::vector<double>(N, 1.0 / N), mGenerator));
+    std::vector<double> Freq = GetFrequency((*mGenerator)() % std::min(N, static_cast<int>(mSolutionHolder.Solutions().size())), WeightedRandomSampling::GetWeightedRandomSampling(std::min(N, static_cast<int>(mSolutionHolder.Solutions().size())), std::min(K, static_cast<int>(mSolutionHolder.Solutions().size())), std::vector<double>(N, 1.0 / N), *mGenerator));
     std::vector<double*> Elem;
     for (int i = 0; i < mInstance->getNumberOfNodes(); ++i) {
         double* TElem = new double[2] { static_cast<double>(i), Freq[i] };
@@ -324,7 +303,7 @@ std::vector<std::vector<int>> CPPProblem::GetFix(int N, int K, double FixSize) {
 
     for (int i = 0; i < FixSize * mInstance->getNumberOfNodes(); ++i) {
         int cNode = static_cast<int>(Elem[i][0]);
-        resultCliques[mSolutionHolder.Solutions()[mGenerator() % std::min(N, static_cast<int>(mSolutionHolder.Solutions().size()))].getNodeClique()[cNode]].push_back(cNode);
+        resultCliques[mSolutionHolder.Solutions()[(*mGenerator)() % std::min(N, static_cast<int>(mSolutionHolder.Solutions().size()))].getNodeClique()[cNode]].push_back(cNode);
     }
 
     std::vector<std::vector<int>> cResultCliques;
@@ -337,16 +316,6 @@ std::vector<std::vector<int>> CPPProblem::GetFix(int N, int K, double FixSize) {
     for (auto* elem : Elem) delete[] elem;
 
     return cResultCliques;
-}
-
-void CPPProblem::LogResult() {
-    std::ofstream S(mLogFileName, std::ios::app);
-    S << mBestSolutionValue << " " << mNumberOfSolutionsGenerated << " " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - mStartTime).count() << "\n";
-}
-
-void CPPProblem::LogString(const std::string& OutText) {
-    std::ofstream S(mLogFileName, std::ios::app);
-    S << OutText << "\n";
 }
 
 void CPPProblem::InitGreedy() {
@@ -363,11 +332,12 @@ bool CPPProblem::CheckBest(double Size) {
         mIntermediateSolutions.push_back(mBestSolutionValue);
         mIntermediateSolutionsIterations.push_back(mNumberOfSolutionsGenerated);
         mIntermediateSolutionsTimes.push_back(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - mStartTime).count());
+        /*
         LogResult();
         if (Size == -1)
             std::cout << "Value :" << mBestSolutionValue << "  Thread :" << std::this_thread::get_id() << "\n";
         else
-            std::cout << "Value :" << mBestSolutionValue << "  Thread :" << std::this_thread::get_id() << "  Fixed : " << Size << "\n";
+            std::cout << "Value :" << mBestSolutionValue << "  Thread :" << std::this_thread::get_id() << "  Fixed : " << Size << "\n";*/
         return true;
     }
     return false;
@@ -408,7 +378,7 @@ void CPPProblem::SolveFixSetSearch(int MaxGenerated, double iTimeLimit) {
         cObj = mSolution->CalculateObjective();
         mSolution->LocalSearch();
         cObj = mSolution->CalculateObjective();
-        mSolution->SimulatedAnnealing(mGenerator, mSAParams, Accept);
+        mSolution->SimulatedAnnealing(mSAParams, Accept);
         cObj = mSolution->CalculateObjective();
 
         mSolutionHolder.Add(*mSolution);
@@ -447,7 +417,7 @@ void CPPProblem::Calibrate(double iTimeLimit) {
     while (true) {
         // TODO: this erases the solution partially
         SolveGreedy();
-        mSolution->CalibrateSA(mGenerator, mSAParams, Accept);
+        mSolution->CalibrateSA(mSAParams, Accept);
         cSolutionValue = mSolution->CalculateObjective();
         mSolution->setObjective(cSolutionValue);
         mSolutionHolder.Add(*mSolution);
@@ -475,7 +445,7 @@ void CPPProblem::Calibrate(double iTimeLimit) {
 void CPPProblem::SASearch() {
     double Accept;
     mSolution->LocalSearch();
-    mSolution->SimulatedAnnealing(mGenerator, mSAParams, Accept);
+    mSolution->SimulatedAnnealing(mSAParams, Accept);
     mSolution->CalculateObjective();
 }
 
@@ -490,7 +460,7 @@ void CPPProblem::SolveGRASP(int MaxIterations, double iTimeLimit) {
         cSolutionValue = mSolution->CalculateObjective();
         mSolution->LocalSearch();
         cSolutionValue = mSolution->CalculateObjective();
-        mSolution->SimulatedAnnealing(mGenerator, mSAParams, Accept);
+        mSolution->SimulatedAnnealing(mSAParams, Accept);
         cSolutionValue = mSolution->CalculateObjective();
         mNumberOfSolutionsGenerated++;
 
@@ -527,7 +497,7 @@ CPPCandidate* CPPProblem::GetHeuristicMaxIncrease() {
     mRCL = new RCL<CPPCandidate>(mRCLSize);
 
     if (mSolution->getCliques().empty()) {
-        Select = mGenerator() % mAvailableNodes.size();
+        Select = (*mGenerator)() % mAvailableNodes.size();
         AddToSolution(CPPCandidate(mAvailableNodes[Select], 0, Select));
     }
 
@@ -541,11 +511,11 @@ CPPCandidate* CPPProblem::GetHeuristicMaxIncrease() {
     }
 
     if (mRCL->getMaxValue() <= 0 || mRCL->getCurrentSize() == 0) {
-        int index = mGenerator() % mAvailableNodes.size();
+        int index = (*mGenerator)() % mAvailableNodes.size();
         return new CPPCandidate(mAvailableNodes[index], mSolution->getNumberOfCliques(), index);
     }
 
-    return new CPPCandidate(mRCL->getCandidate(mGenerator() % mRCL->getCurrentSize()));
+    return new CPPCandidate(mRCL->getCandidate((*mGenerator)() % mRCL->getCurrentSize()));
 }
 
 CPPCandidate* CPPProblem::GetHeuristic() {

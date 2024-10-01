@@ -16,6 +16,7 @@ void StrategyTests::testSAImprovement() {
     graph.load(filename);
     graph.setKnownbest(knownbest);
     int nnode = graph.getNodeCount();
+    std::mt19937* randomGenerator = new std::mt19937(param_seed);
 
     finalBest.best_partition = new Partition(nnode);
     clearResult(&finalBest);
@@ -23,7 +24,7 @@ void StrategyTests::testSAImprovement() {
     Recorder* recorder = new Recorder(filename, "SATest", false);
     Partition* childPartition = new Partition(graph.getNodeCount());
 
-    ImprovementStrategy* improvementStrategy = new SimulatedAnnealingImprovement(knownbest, minpercent, tempfactor, sizefactor, recorder);
+    ImprovementStrategy* improvementStrategy = new SimulatedAnnealingImprovement(knownbest, minpercent, tempfactor, sizefactor, recorder, randomGenerator);
     improvementStrategy->setEnvironment(graph);
 
     // build Partition
@@ -41,6 +42,11 @@ void StrategyTests::testSAImprovement() {
     improvementStrategy->calibrateTemp();
 
     improvementStrategy->improveSolution(*childPartition, clock(), time, &finalBest, generationCnt);
+
+    delete improvementStrategy;
+    delete recorder;
+    delete childPartition;
+    delete randomGenerator;
 }
 
 void StrategyTests::testSAeImprovement() {
@@ -59,6 +65,7 @@ void StrategyTests::testSAeImprovement() {
     graph.load(filename);
     graph.setKnownbest(knownbest);
     int nnode = graph.getNodeCount();
+    std::mt19937* randomGenerator = new std::mt19937(param_seed);
 
     finalBest.best_partition = new Partition(nnode);
     clearResult(&finalBest);
@@ -66,7 +73,7 @@ void StrategyTests::testSAeImprovement() {
     Recorder* recorder = new Recorder(filename, "SATest", false);
     Partition* childPartition = new Partition(graph.getNodeCount());
 
-    ImprovementStrategy* improvementStrategy = new SaloExtendedImprovement(knownbest, minpercent, tempfactor, sizefactor, recorder);
+    ImprovementStrategy* improvementStrategy = new SaloExtendedImprovement(knownbest, minpercent, tempfactor, sizefactor, recorder, randomGenerator);
     improvementStrategy->setEnvironment(graph);
 
     // build Partition
@@ -84,6 +91,11 @@ void StrategyTests::testSAeImprovement() {
     improvementStrategy->calibrateTemp();
 
     improvementStrategy->improveSolution(*childPartition, clock(), time, &finalBest, generationCnt);
+
+    delete improvementStrategy;
+    delete recorder;
+    delete childPartition;
+    delete randomGenerator;
 }
 
 void StrategyTests::testStdInitStrategy() {
@@ -103,6 +115,7 @@ void StrategyTests::testStdInitStrategy() {
     graph.load(filename);
     graph.setKnownbest(knownbest);
     int nnode = graph.getNodeCount();
+    std::mt19937* randomGenerator = new std::mt19937(param_seed);
 
     Partition* childPartition = new Partition(graph.getNodeCount());
     Recorder* recorder = new Recorder(filename, "StdInitTest", false);
@@ -113,14 +126,20 @@ void StrategyTests::testStdInitStrategy() {
     Population population(pool_size);
 
     // assuming SimulatedAnnealingImprovement works correctly; needs to be testet previously in a full test execution
-    ImprovementStrategy* improvementStrategy = new SimulatedAnnealingImprovement(knownbest, minpercent, tempfactor, sizefactor, recorder);
-    InitialPoolStrategy* poolBuilder = new InitialPoolBuilder(recorder);
+    ImprovementStrategy* improvementStrategy = new SimulatedAnnealingImprovement(knownbest, minpercent, tempfactor, sizefactor, recorder, randomGenerator);
+    InitialPoolStrategy* poolBuilder = new InitialPoolBuilder(recorder, randomGenerator);
 
     improvementStrategy->setEnvironment(graph);
     poolBuilder->generateInitialSolution(*childPartition, graph);
     improvementStrategy->setStart(*childPartition);
     improvementStrategy->calibrateTemp();
     poolBuilder->buildInitialPool(&finalBest, population, graph, improvementStrategy, time, &generationCnt);
+
+    delete improvementStrategy;
+    delete poolBuilder;
+    delete recorder;
+    delete childPartition;
+    delete randomGenerator;
 }
 
 void StrategyTests::testRCLInitStrategy() {
@@ -140,6 +159,7 @@ void StrategyTests::testRCLInitStrategy() {
     graph.load(filename);
     graph.setKnownbest(knownbest);
     int nnode = graph.getNodeCount();
+    std::mt19937* randomGenerator = new std::mt19937(param_seed);
 
     Partition* childPartition = new Partition(graph.getNodeCount());
     Recorder* recorder = new Recorder(filename, "RCLTest", false);
@@ -150,14 +170,20 @@ void StrategyTests::testRCLInitStrategy() {
     Population population(pool_size);
 
     // assuming SimulatedAnnealingImprovement works correctly; needs to be testet previously in a full test execution
-    ImprovementStrategy* improvementStrategy = new SimulatedAnnealingImprovement(knownbest, minpercent, tempfactor, sizefactor, recorder);
-    InitialPoolStrategy* RCLStrategy = new RCLInitStrategy(recorder);
+    ImprovementStrategy* improvementStrategy = new SimulatedAnnealingImprovement(knownbest, minpercent, tempfactor, sizefactor, recorder, randomGenerator);
+    InitialPoolStrategy* RCLStrategy = new RCLInitStrategy(recorder, randomGenerator);
 
     improvementStrategy->setEnvironment(graph);
     RCLStrategy->generateInitialSolution(*childPartition, graph);
     improvementStrategy->setStart(*childPartition);
     improvementStrategy->calibrateTemp();
     RCLStrategy->buildInitialPool(&finalBest, population, graph, improvementStrategy, time, &generationCnt);
+
+    delete improvementStrategy;
+    delete RCLStrategy;
+    delete recorder;
+    delete childPartition;
+    delete randomGenerator;
 }
 
 void StrategyTests::testSolEvolution() {
@@ -192,11 +218,12 @@ void StrategyTests::testSolEvolution() {
 
     while (run_cnt < 1) {
         clearResult(&finalBest);
+        std::mt19937* randomGenerator = new std::mt19937(param_seed + run_cnt);
 
-        ImprovementStrategy* improvementStrategy = new SimulatedAnnealingImprovement(param_knownbest, param_minpercent, param_tempfactor, param_sizefactor, recorder);
+        ImprovementStrategy* improvementStrategy = new SimulatedAnnealingImprovement(param_knownbest, param_minpercent, param_tempfactor, param_sizefactor, recorder, randomGenerator);
         CrossoverStrategy* mergeDevideCrossover = new MergeDivideCrossover(param_shrink);
-        InitialPoolStrategy* initialPoolstrategy = new InitialPoolBuilder(recorder);
-        EvolutionStrategy* evolutionStrategy = new SolutionEvolution(mergeDevideCrossover, initialPoolstrategy, improvementStrategy, &graph, recorder, param_max_generations, param_time);
+        InitialPoolStrategy* initialPoolstrategy = new InitialPoolBuilder(recorder, randomGenerator);
+        EvolutionStrategy* evolutionStrategy = new SolutionEvolution(mergeDevideCrossover, initialPoolstrategy, improvementStrategy, &graph, recorder, param_max_generations, param_time, randomGenerator);
 
         evolutionStrategy->run(&finalBest, &totalgen, param_pool_size);
 
@@ -213,6 +240,7 @@ void StrategyTests::testSolEvolution() {
         delete mergeDevideCrossover;
         delete initialPoolstrategy;
         delete evolutionStrategy;
+        delete randomGenerator;
     }
 
     // verifySolution(finalBest.best_partition, &graph);
@@ -253,11 +281,12 @@ void StrategyTests::testFSSEvolution() {
 
     while (run_cnt < 1) {
         clearResult(&finalBest);
+        std::mt19937* randomGenerator = new std::mt19937(param_seed + run_cnt);
 
-        ImprovementStrategy* improvementStrategy = new SimulatedAnnealingImprovement(param_knownbest, param_minpercent, param_tempfactor, param_sizefactor, recorder);
+        ImprovementStrategy* improvementStrategy = new SimulatedAnnealingImprovement(param_knownbest, param_minpercent, param_tempfactor, param_sizefactor, recorder, randomGenerator);
         CrossoverStrategy* mergeDevideCrossover = new MergeDivideCrossover(param_shrink);
-        InitialPoolStrategy* initialPoolstrategy = new InitialPoolBuilder(recorder);
-        EvolutionStrategy* evolutionStrategy = new FixedSetEvolution(mergeDevideCrossover, initialPoolstrategy, improvementStrategy, &graph, recorder, param_max_generations, param_time);
+        InitialPoolStrategy* initialPoolstrategy = new InitialPoolBuilder(recorder, randomGenerator);
+        EvolutionStrategy* evolutionStrategy = new FixedSetEvolution(mergeDevideCrossover, initialPoolstrategy, improvementStrategy, &graph, recorder, param_max_generations, param_time, randomGenerator);
 
         evolutionStrategy->run(&finalBest, &totalgen, param_pool_size);
 
@@ -274,6 +303,7 @@ void StrategyTests::testFSSEvolution() {
         delete mergeDevideCrossover;
         delete initialPoolstrategy;
         delete evolutionStrategy;
+        delete randomGenerator;
     }
 
     // verifySolution(finalBest.best_partition, &graph);

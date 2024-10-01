@@ -17,8 +17,8 @@ public:
     enum class CPPMetaheuristic { GRASP, FSS };
     enum class CPPCooling { Geometric, LinearMultiplicative };
 
-    CPPGreedy(CPPInstance* nInstance);
-    CPPGreedy(const std::string& fileName);
+    CPPGreedy(CPPInstance* nInstance, std::default_random_engine* generator);
+    CPPGreedy(const std::string& fileName, std::default_random_engine* generator);
     ~CPPGreedy();
 
     void InitAvailable(const std::vector<std::vector<int>>& FixedSet);
@@ -30,7 +30,7 @@ private:
     CPPSolution* mSolution;
     RCL<CPPCandidate>* mRCL;
     int mRCLSize;
-    std::mt19937 mGenerator;
+    std::default_random_engine* mGenerator;
     std::vector<std::vector<int>> mAvailableNodes;
     GreedyHeuristicType mGreedyHeuristic;
 

@@ -148,11 +148,11 @@ void parallelAddSse6(std::vector<int>& a, const std::vector<int>& b) {
     );
 }
 
-void shuffle(std::vector<int>& list, std::default_random_engine& iGenerator) {
+void shuffle(std::vector<int>& list, std::mt19937* iGenerator) {
     int n = list.size(); // The number of items left to shuffle (loop invariant).
     while (n > 1) {
         std::uniform_int_distribution<int> distribution(0, n - 1);
-        int k = distribution(iGenerator); // 0 <= k < n.
+        int k = distribution(*iGenerator); // 0 <= k < n.
         n--; // n is now the last pertinent index;
         int temp = list[n]; // swap array[n] with array[k] (does nothing if k == n).
         list[n] = list[k];
@@ -469,7 +469,7 @@ void CPPSolutionBase::CreateRelocations(int n1, int n2, int c, std::vector<std::
     BestRelocations.push_back({ n2, c });
 }
 
-void CPPSolutionBase::SimulatedAnnealingSelectTrio(int n1, int n2, int n3, int& BestChange, std::vector<std::array<int, 2>>& BestRelocations, std::default_random_engine& iGenerator)
+void CPPSolutionBase::SimulatedAnnealingSelectTrio(int n1, int n2, int n3, int& BestChange, std::vector<std::array<int, 2>>& BestRelocations)
 {
     int n1Clique, n2Clique, n3Clique;
     int cChange;
@@ -912,12 +912,12 @@ void CPPSolutionBase::SASelectSingle(SARelocation& Relocation)
     }
 }
 
-void CPPSolutionBase::SASelectDual(SARelocation& Relocation, std::default_random_engine& iGenerator)
+void CPPSolutionBase::SASelectDualR(SARelocation& Relocation)
 {
     int n0, n1;
 
     std::uniform_int_distribution<int> distribution(0, mInstance->getNumberOfNodes() - 1);
-    n0 = distribution(iGenerator);
+    n0 = distribution(*mGenerator);
 
     Relocation.mN1 = Relocation.mN0;
     Relocation.mN0 = n0;
@@ -928,30 +928,30 @@ void CPPSolutionBase::SASelectDual(SARelocation& Relocation, std::default_random
         SASelectSingle(Relocation);
 }
 
-void CPPSolutionBase::SASelectSingle(SARelocation& Relocation, std::default_random_engine& iGenerator)
+void CPPSolutionBase::SASelectSingleR(SARelocation& Relocation)
 {
     int n0, n1;
 
     std::uniform_int_distribution<int> distribution(0, mInstance->getNumberOfNodes() - 1);
-    n0 = distribution(iGenerator);
+    n0 = distribution(*mGenerator);
 
     Relocation.mN0 = n0;
 
     SASelectSingle(Relocation);
 }
 
-void CPPSolutionBase::SASelect(SARelocation& Relocations, std::default_random_engine& iGenerator)
+void CPPSolutionBase::SASelectR(SARelocation& Relocations)
 {
     switch (mSASelectType)
     {
     case SASelectType::Single:
-        SASelectSingle(Relocations, iGenerator);
+        SASelectSingleR(Relocations);
         break;
     case SASelectType::Dual:
-        SASelectDual(Relocations, iGenerator);
+        SASelectDualR(Relocations);
         break;
     default:
-        SASelectDual(Relocations, iGenerator);
+        SASelectDualR(Relocations);
         break;
     }
 }
@@ -993,7 +993,7 @@ void CPPSolutionBase::ApplyRelocation(SARelocation Relocation)
     while (RemoveEmptyCliqueSA(true, true));
 }
 
-bool CPPSolutionBase::SimulatedAnnealing(std::default_random_engine& iGenerator, SAParameters& iSAParameters, double& AcceptRelative)
+bool CPPSolutionBase::SimulatedAnnealing(SAParameters& iSAParameters, double& AcceptRelative)
 {   
     // printf("enter SA");
     int NeiborhoodSize = mInstance->getNumberOfNodes() * getNumberOfCliques();
@@ -1037,13 +1037,13 @@ bool CPPSolutionBase::SimulatedAnnealing(std::default_random_engine& iGenerator,
         {   
             // clock_t start = clock();
             cRelocation.mChange = INT_MIN;
-            SASelect(cRelocation, iGenerator);
+            SASelectR(cRelocation);
             Prob = FastExp(cRelocation.mChange / T);
             // clock_t checkpoint1 = clock();
             // printf("  Prob=%.3f x=%.3f T=%.3f mchange=%d\n", Prob, cRelocation.mChange / T, T, cRelocation.mChange);
             /*if (cRelocation.mChange / T > 900 || cRelocation.mChange / T < -900)
                 printf("  Prob=%.3f x=%.3f T=%.3f mchange=%d\n", Prob, cRelocation.mChange / T, T, cRelocation.mChange);*/
-            if (Prob * 1000 > 1 + iGenerator() % 1000)
+            if (Prob * 1000 > 1 + (*mGenerator)() % 1000)
             {
                 Accept++;
                 ApplyRelocation(cRelocation);
@@ -1096,7 +1096,7 @@ bool CPPSolutionBase::SimulatedAnnealing(std::default_random_engine& iGenerator,
     return true;
 }
 
-bool CPPSolutionBase::CalibrateSA(std::default_random_engine& iGenerator, SAParameters& iSAParameters, double& Accept)
+bool CPPSolutionBase::CalibrateSA(SAParameters& iSAParameters, double& Accept)
 {
     int MaxStep = mInstance->getNumberOfNodes() * getNumberOfCliques() * iSAParameters.mSizeRepeat;
     int n;
@@ -1120,12 +1120,12 @@ bool CPPSolutionBase::CalibrateSA(std::default_random_engine& iGenerator, SAPara
         NoImprove++;
 
         Relocation.mChange = INT_MIN;
-        SASelect(Relocation, iGenerator);
+        SASelectR(Relocation);
         T = iSAParameters.mInitTemperature;
 
         Prob = std::exp(Relocation.mChange / T);
 
-        if (Prob * 1000 > iGenerator() % 1000)
+        if (Prob * 1000 > (*mGenerator)() % 1000)
         {
             Accept++;
 

@@ -14,7 +14,7 @@ void RCLInitStrategy::buildInitialPool(BestSolutionInfo* frt, Population& popula
     Partition childPartition(nnode);
 
     CPPInstance* instance = new CPPInstance(nnode, graph.getMatrix());;
-    CPPGreedy* problem = new CPPGreedy(instance);
+    CPPGreedy* problem = new CPPGreedy(instance, mGenerator);
 
     while (population.partitionCount() < population.getPoolSize()) {
         printf("population size: %d\n", population.partitionCount());
@@ -55,6 +55,7 @@ void RCLInitStrategy::buildInitialPool(BestSolutionInfo* frt, Population& popula
         population.addPopulation(&(improvementStrategy->getBestPartition()), improvementStrategy->getBestObjective());
     }
     */
+    delete problem;
 }
 
 void RCLInitStrategy::convertCPPSolutionToPartition(Partition& partition, CPPSolution& solution) {
@@ -73,9 +74,10 @@ void RCLInitStrategy::convertCPPSolutionToPartition(Partition& partition, CPPSol
 
 void RCLInitStrategy::generateInitialSolution(Partition& partition, Graph& graph) {
     CPPInstance* instance = new CPPInstance(graph.getNodeCount(), graph.getMatrix());
-    CPPGreedy* problem = new CPPGreedy(instance);
+    CPPGreedy* problem = new CPPGreedy(instance, mGenerator);
 
     problem->SolveGreedy();
 
     convertCPPSolutionToPartition(partition, problem->getSolution());
+    delete problem;
 }

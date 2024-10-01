@@ -37,8 +37,7 @@ void FixedSetEvolution::run(BestSolutionInfo* frt_, int* totalGen, int poolSize)
     CPPInstance* instance = new CPPInstance(graph->getNodeCount(), graph->getMatrix());
     int nnode = instance->getNumberOfNodes();
     delete problem;
-    problem = new CPPProblem("file1", "rand500-100", instance);
-    problem->SetID(2);
+    problem = new CPPProblem(instance, mGenerator);
 
     problem->AllocateSolution();
 

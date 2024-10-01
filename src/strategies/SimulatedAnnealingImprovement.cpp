@@ -92,7 +92,7 @@ void SimulatedAnnealingImprovement::calibrateTemp() {
         pureDescent();
         int L = lsdata->gnnode * lsdata->ppt->getBucketSize() * sizefactor;
         while (true) {
-            int i = rand() % lsdata->gnnode;
+            int i = (*mGenerator)() % lsdata->gnnode;
             int bestpid = -1;
             int bestdelta = -MAX_VAL;
             for (int k = 0; k < lsdata->ppt->getBucketSize(); ++k) {
@@ -112,7 +112,7 @@ void SimulatedAnnealingImprovement::calibrateTemp() {
             }
             else {
                 double prob = std::exp((double)bestdelta / _temp);
-                if (rand() % 1000 < prob * 1000) {
+                if ((*mGenerator)() % 1000 < prob * 1000) {
                     changeCurSolution(i, bestpid);
                     lsdata->fcurrent += bestdelta;
                     accpCnt++;
@@ -140,7 +140,7 @@ void SimulatedAnnealingImprovement::calibrateTemp() {
     temp = _temp;
 }
 
-void generateRandList(int* randlist, int len) {
+void generateRandList(int* randlist, int len, std::mt19937* generator) {
     int idx = 0;
     assert(randlist != NULL);
 
@@ -148,7 +148,7 @@ void generateRandList(int* randlist, int len) {
         randlist[idx] = idx;
     }
     for (idx = 0; idx < len; idx++) {//swap
-        int randid = rand() % len;
+        int randid = (*generator)() % len;
         int tmp = randlist[idx];
         randlist[idx] = randlist[randid];
         randlist[randid] = tmp;
@@ -161,7 +161,7 @@ void SimulatedAnnealingImprovement::pureDescent() {
 
     while (improved) {
         improved = false;
-        generateRandList(randlst, lsdata->gnnode);
+        generateRandList(randlst, lsdata->gnnode, mGenerator);
 
         for (int i = 0; i < lsdata->gnnode; ++i) {
             int currentnode = randlst[i];
@@ -196,7 +196,7 @@ void SimulatedAnnealingImprovement::search(clock_t startTime, int maxSeconds) {
     std::memcpy(vecTmpBest, lsdata->ppt->getPvertex(), sizeof(int) * lsdata->gnnode);
 
     while ((double)(clock() - startTime) / CLOCKS_PER_SEC < maxSeconds) {
-        int i = rand() % lsdata->gnnode;
+        int i = (*mGenerator)() % lsdata->gnnode;
         int bestpid = -1;
         int bestdelta = -MAX_VAL;
         for (int k = 0; k < lsdata->ppt->getBucketSize(); ++k) {
@@ -216,7 +216,7 @@ void SimulatedAnnealingImprovement::search(clock_t startTime, int maxSeconds) {
         }
         else {
             double prob = std::exp((double)bestdelta / T);
-            if (rand() % 1000 < prob * 1000) {
+            if ((*mGenerator)() % 1000 < prob * 1000) {
                 changeCurSolution(i, bestpid);
                 lsdata->fcurrent += bestdelta;
                 accpCnt++;

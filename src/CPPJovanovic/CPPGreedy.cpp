@@ -1,9 +1,8 @@
 #include "CPPGreedy.h"
 
 
-CPPGreedy::CPPGreedy(CPPInstance* nInstance):
-    mInstance(nInstance),
-    mGenerator(2), mRCLSize(2) {      
+CPPGreedy::CPPGreedy(CPPInstance* nInstance, std::mt19937* generator):
+    mInstance(nInstance), mGenerator(generator), mRCLSize(2) {
 
     // mFileName(fileName),
     // mInstanceName(instanceName), 
@@ -21,9 +20,9 @@ CPPGreedy::CPPGreedy(CPPInstance* nInstance):
     // mSAParams.InitGeometric();
 }
 
-CPPGreedy::CPPGreedy(const std::string& fileName):
-    mGenerator(2), mRCLSize(2) {
-        
+CPPGreedy::CPPGreedy(const std::string& fileName, std::mt19937* generator):
+    mGenerator(generator), mRCLSize(2) {
+    
     // mFileName(fileName),
     // mInstanceName(instanceName), 
     // mSolutionHolder(new CPPSolutionHolder()), mMetaHeuristic(CPPMetaheuristic::FSS),
@@ -132,7 +131,7 @@ CPPCandidate* CPPGreedy::GetHeuristicMaxIncrease() {
     mRCL->reset();
 
     if (mSolution->getCliques().empty()) {
-        Select = mGenerator() % mAvailableNodes.size();
+        Select = (*mGenerator)() % mAvailableNodes.size();
         AddToSolution(CPPCandidate(mAvailableNodes[Select], 0, Select));
     }
 
@@ -146,11 +145,11 @@ CPPCandidate* CPPGreedy::GetHeuristicMaxIncrease() {
     }
 
     if ((mRCL->getMaxValue() <= 0) || (mRCL->getCurrentSize() == 0)) {
-        int index = mGenerator() % mAvailableNodes.size();
+        int index = (*mGenerator)() % mAvailableNodes.size();
         return new CPPCandidate(mAvailableNodes[index], mSolution->NumberOfCliques(), index);
     }
 
-    return new CPPCandidate(mRCL->getCandidate(mGenerator() % mRCL->getCurrentSize()));
+    return new CPPCandidate(mRCL->getCandidate((*mGenerator)() % mRCL->getCurrentSize()));
 }
 
 CPPCandidate* CPPGreedy::GetHeuristic() {

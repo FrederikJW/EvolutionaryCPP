@@ -4,6 +4,7 @@
 #include <set>
 #include <cstdio>
 #include <cassert>
+#include <random>
 
 
 int findSet(int* s, int i) {
@@ -32,11 +33,11 @@ int unionSet(int* s, int i, int j) {
 
 MergeDivideCrossover::MergeDivideCrossover(float shrink) : shrink(shrink) {}
 
-void MergeDivideCrossover::crossover(Graph& graph, const Partition& parent1, const Partition& parent2, Partition& child) {
+void MergeDivideCrossover::crossover(Graph& graph, const Partition& parent1, const Partition& parent2, Partition& child, std::mt19937* generator) {
     const int nnode = graph.getNodeCount();
-    int scale = nnode * shrink + rand() % 100;
+    int scale = nnode * shrink + (*generator)() % 100;
     while (scale >= nnode)
-        scale = nnode * shrink + rand() % 100;
+        scale = nnode * shrink + (*generator)() % 100;
 
     int** mergeSol = new int* [nnode];
     int* root = new int[nnode];
@@ -50,10 +51,10 @@ void MergeDivideCrossover::crossover(Graph& graph, const Partition& parent1, con
     int vrest = nnode;
     int fixcnt = 0;
     while (vrest > scale) {
-        int i = rand() % nnode;
-        int j = rand() % nnode;
+        int i = (*generator)() % nnode;
+        int j = (*generator)() % nnode;
         while (i == j)
-            j = rand() % nnode;
+            j = (*generator)() % nnode;
         if (i > j)
             std::swap(i, j);
         if (mergeSol[i][j] == -1) {

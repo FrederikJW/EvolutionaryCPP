@@ -7,7 +7,7 @@
 class MergeDivideCrossover : public CrossoverStrategy {
 public:
     MergeDivideCrossover(float shrink);
-    void crossover(Graph& graph, const Partition& parent1, const Partition& parent2, Partition& child) override;
+    void crossover(Graph& graph, const Partition& parent1, const Partition& parent2, Partition& child, std::mt19937* generator) override;
 
 private:
     float shrink;

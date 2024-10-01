@@ -27,13 +27,10 @@ private:
     RCL<CPPCandidate>* mRCL;
 
     int mRCLSize;
-    std::mt19937 mGenerator;
+    std::mt19937* mGenerator;
     std::vector<std::vector<int>> mAvailableNodes;
     GreedyHeuristicType mGreedyHeuristic;
     int mBestSolutionValue;
-    std::string mLogFileName;
-    std::string mFileName;
-    std::string mInstanceName;
 
     CPPMetaheuristic mMetaHeuristic;
     std::chrono::steady_clock::time_point mStartTime;
@@ -44,7 +41,6 @@ private:
     int mFixInitPopulation;
     int mFixN;
     SAParameters mSAParams;
-    int mID;
 
     std::vector<int> mIntermediateSolutions;
     std::vector<long> mIntermediateSolutionsTimes;
@@ -52,14 +48,10 @@ private:
     int mNumberOfSolutionsGenerated;
 
 public:
-    CPPProblem(const std::string& FileName, const std::string& InstanceName, CPPInstance* nInstance);
-    CPPProblem(const std::string& FileName, const std::string& InstanceName);
+    CPPProblem(CPPInstance* nInstance, std::mt19937* generator);
     ~CPPProblem();
 
     std::string GetMethodFileName();
-    void SetID(int iID);
-    void InitLogFileName();
-    int GetID() const { return mID; }
     int GetBestSolution() const { return mBestSolutionValue; }
     GreedyHeuristicType GetGreedyHeuristic() const { return mGreedyHeuristic; }
     void SetGreedyHeuristic(GreedyHeuristicType value) { mGreedyHeuristic = value; }
@@ -79,7 +71,6 @@ public:
     void InitTracking();
     void InitFSS();
 
-    static void Shuffle(std::vector<int>& list, std::mt19937& iGenerator);
     void AllocateSolution();
     void AllocateSolution(CPPSolutionBase* solution);
     void AllocateSolution(int* pvertex, int numVertices, int objective);
@@ -90,8 +81,6 @@ public:
     std::vector<std::vector<int>> GetFixEdge(int N, int K, double FixSize, std::vector<std::vector<int>>& SuperNodes);
     bool ContainsList(const std::vector<std::vector<int>>& Container, const std::vector<int>& Test);
     std::vector<std::vector<int>> GetFix(int N, int K, double FixSize);
-    void LogResult();
-    void LogString(const std::string& OutText);
     void InitGreedy();
     bool CheckBest(double Size = -1);
     void SolveFixSetSearch(int MaxGenerated, double iTimeLimit);

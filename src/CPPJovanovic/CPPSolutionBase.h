@@ -24,7 +24,7 @@ protected:
     std::vector<std::vector<int>> mAllConnections;
     SASelectType mSASelectType;
     std::vector<int> mRestricted;
-    std::default_random_engine mGenerator;
+    std::mt19937* mGenerator;
 
 public:
     CPPSolutionBase();
@@ -36,8 +36,7 @@ public:
     CPPInstance* getInstance() { return mInstance; }
     void setSASType(SASelectType value) { mSASelectType = value; }
 
-    std::default_random_engine getGenerator() const { return mGenerator; }
-    void setGenerator(const std::default_random_engine& value) { mGenerator = value; }
+    void setGenerator(std::mt19937* value) { mGenerator = value; }
 
     void InitRestricted(int Size);
     virtual void Clear();
@@ -86,17 +85,17 @@ public:
     void CreateFromNodeClique(const std::vector<int>& iNodeClique);
 
     // Simulated Annealing Methods
-    void SimulatedAnnealingSelectTrio(int n1, int n2, int n3, int& BestChange, std::vector<std::array<int, 2>>& BestRelocations, std::default_random_engine& iGenerator);
+    void SimulatedAnnealingSelectTrio(int n1, int n2, int n3, int& BestChange, std::vector<std::array<int, 2>>& BestRelocations);
     void SASelectDual(SARelocation& Relocation);
     void SASelectDualPrev(SARelocation& Relocation);
     void SASelectDualExt(SARelocation& Relocation);
     void SASelectSingle(SARelocation& Relocation);
-    void SASelectDual(SARelocation& Relocation, std::default_random_engine& iGenerator);
-    void SASelectSingle(SARelocation& Relocation, std::default_random_engine& iGenerator);
-    void SASelect(SARelocation& Relocations, std::default_random_engine& iGenerator);
+    void SASelectDualR(SARelocation& Relocation);
+    void SASelectSingleR(SARelocation& Relocation);
+    void SASelectR(SARelocation& Relocations);
     void ApplyRelocation(SARelocation Relocation);
-    bool SimulatedAnnealing(std::default_random_engine& iGenerator, SAParameters& iSAParameters, double& AcceptRelative);
-    bool CalibrateSA(std::default_random_engine& iGenerator, SAParameters& iSAParameters, double& Accept);
+    bool SimulatedAnnealing(SAParameters& iSAParameters, double& AcceptRelative);
+    bool CalibrateSA(SAParameters& iSAParameters, double& Accept);
     double FastExp(double x);
 
     int CalculateMoveChange(const std::vector<int>& iNodes, int iClique);

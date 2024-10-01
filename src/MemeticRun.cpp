@@ -55,7 +55,7 @@ void MemeticRun::runGeneration(BestSolutionInfo* frt, Graph& graph, Population& 
         idx2 = rand() % poolSize;
     }
 
-    crossoverStrategy->crossover(graph, population.getPartition(idx1), population.getPartition(idx2), childPartition);
+    // crossoverStrategy->crossover(graph, population.getPartition(idx1), population.getPartition(idx2), childPartition, mGenerator);
 
     improvementStrategy->improveSolution(childPartition, startTime, maxSeconds, frt, generationCnt);
 
