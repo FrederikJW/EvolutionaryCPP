@@ -70,7 +70,10 @@ void BufferElement::RemoveRelocation(int iNode) {
 
     std::vector<int*> tRelocations;
     for (auto& t : mRelocations) {
-        if (t[0] != iNode) {
+        if (t[0] == iNode) {
+            delete[] t;
+        }
+        else {
             tRelocations.push_back(t);
         }
     }

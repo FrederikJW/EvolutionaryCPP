@@ -31,8 +31,6 @@ void FixedSetEvolution::run(BestSolutionInfo* frt_, int* totalGen, int poolSize)
     generationCnt = 0;
     startTime = clock();
 
-    double iTimeLimit = 2000;
-
     // graph?
     CPPInstance* instance = new CPPInstance(graph->getNodeCount(), graph->getMatrix());
     int nnode = instance->getNumberOfNodes();
@@ -101,8 +99,6 @@ void FixedSetEvolution::run(BestSolutionInfo* frt_, int* totalGen, int poolSize)
     // for (int i = 0; i < MaxGenerated - mFixInitPopulation; ++i) {
     while (generationCnt < maxGenerations && (double)(clock() - startTime) / CLOCKS_PER_SEC < maxSeconds && frt->best_val < graph->getKnownbest()) {
         printf("\n------------The %dth generation-----------\n", generationCnt);
-
-        if (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - mStartTime).count() > iTimeLimit) break;
 
         recorder->enter("run_generation");
 

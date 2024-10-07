@@ -61,10 +61,16 @@ void Partition::buildPartition(int* vpart) {
 
 void Partition::copyPartition(const Partition& source) {
     pbkt_size = source.pbkt_size;
+    if (nnode != source.nnode) {
+        printf("Partitions are incompatible and cannot be copied.\n");
+        exit(0);
+    }
+
     std::memcpy(pbkt, source.pbkt, sizeof(int) * (nnode + 1));
     std::memcpy(pcnt, source.pcnt, sizeof(int) * (nnode + 1));
     std::memcpy(ppos, source.ppos, sizeof(int) * (nnode + 1));
     std::memcpy(pvertex, source.pvertex, sizeof(int) * nnode);
+    
     value = source.getValue();
 }
 
@@ -146,19 +152,28 @@ int Partition::getNnode() {
     return nnode;
 }
 
-int Partition::sizeIntersection(std::vector<int>* v1, std::vector<int>* v2) {
-    std::sort(v1->begin(), v1->end());
-    std::sort(v2->begin(), v2->end());
+int Partition::sizeIntersection(const std::vector<int>& v1, const std::vector<int>& v2) {
+    std::vector<int> sorted_v1 = v1;
+    std::vector<int> sorted_v2 = v2;
+    std::sort(sorted_v1.begin(), sorted_v1.end());
+    std::sort(sorted_v2.begin(), sorted_v2.end());
 
-    std::vector<int> rt(v1->size() + v2->size());
-    auto it = std::set_intersection(v1->begin(), v1->end(), v2->begin(), v2->end(), rt.begin());
-    rt.resize(it - rt.begin());
-    return rt.size();
+    std::vector<int> intersection_result((std::min)(sorted_v1.size(), sorted_v2.size()));
+
+    auto it = std::set_intersection(
+        sorted_v1.begin(), sorted_v1.end(),
+        sorted_v2.begin(), sorted_v2.end(),
+        intersection_result.begin()
+    );
+
+    intersection_result.resize(it - intersection_result.begin());
+
+    return intersection_result.size();
 }
 
 int Partition::calculateMaxMatch(int* p1, int n_part1, int* p2, int n_part2) {
-    std::vector<std::vector<int>*> group1(n_part1);
-    std::vector<std::vector<int>*> group2(n_part2);
+    std::vector<std::vector<int>> group1(n_part1);
+    std::vector<std::vector<int>> group2(n_part2);
     int* par2idx = new int[nnode + 1];
     std::memset(par2idx, -1, sizeof(int) * (nnode + 1));
 
@@ -166,9 +181,8 @@ int Partition::calculateMaxMatch(int* p1, int n_part1, int* p2, int n_part2) {
     for (int i = 0; i < nnode; i++) {
         if (par2idx[p1[i]] == -1) {
             par2idx[p1[i]] = order_cnt++;
-            group1[par2idx[p1[i]]] = new std::vector<int>();
         }
-        group1[par2idx[p1[i]]]->push_back(i);
+        group1[par2idx[p1[i]]].push_back(i);
     }
     assert(order_cnt == n_part1);
 
@@ -177,9 +191,8 @@ int Partition::calculateMaxMatch(int* p1, int n_part1, int* p2, int n_part2) {
     for (int i = 0; i < nnode; ++i) {
         if (par2idx[p2[i]] == -1) {
             par2idx[p2[i]] = order_cnt++;
-            group2[par2idx[p2[i]]] = new std::vector<int>();
         }
-        group2[par2idx[p2[i]]]->push_back(i);
+        group2[par2idx[p2[i]]].push_back(i);
     }
     assert(order_cnt == n_part2);
 
@@ -211,8 +224,6 @@ int Partition::calculateMaxMatch(int* p1, int n_part1, int* p2, int n_part2) {
     hungarian_free(&p);
     delete[] par2idx;
     for (int i = 0; i < row; ++i) {
-        if (i < n_part1) delete group1[i];
-        if (i < n_part2) delete group2[i];
         delete[] cost_mat[i];
     }
     delete[] cost_mat;

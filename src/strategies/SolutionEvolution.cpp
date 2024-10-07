@@ -32,7 +32,6 @@ void SolutionEvolution::run(BestSolutionInfo* frt_, int* totalGen, int poolSize)
         generationCnt++;
     }
     *totalGen = generationCnt;
-    improvementStrategy->disposeEnvironment();
     printf("Best solution found with value %d at generation %d\n", frt->best_val, frt->best_generation);
 }
 

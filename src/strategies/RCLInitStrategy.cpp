@@ -16,7 +16,7 @@ void RCLInitStrategy::buildInitialPool(BestSolutionInfo* frt, Population& popula
     CPPInstance* instance = new CPPInstance(nnode, graph.getMatrix());;
     CPPGreedy* problem = new CPPGreedy(instance, mGenerator);
 
-    while (population.partitionCount() < population.getPoolSize()) {
+    while (population.partitionCount() < population.getPoolSize() && frt->best_val < graph.getKnownbest()) {
         printf("population size: %d\n", population.partitionCount());
 
         recorder->enter("build_solution");

@@ -24,7 +24,7 @@ public:
     void setBucketSize(int bucket_size);
     int getBucketSize();
     int* getBucket();
-    int sizeIntersection(std::vector<int>* v1, std::vector<int>* v2);
+    int sizeIntersection(const std::vector<int>& v1, const std::vector<int>& v2);
     int calculateMaxMatch(int* p1, int n_part1, int* p2, int n_part2);
     int getNnode();
 

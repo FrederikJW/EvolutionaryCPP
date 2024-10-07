@@ -72,6 +72,14 @@ void SimulatedAnnealingImprovement::buildCurGamma(const int* pvertex) {
             test_sum += lsdata->gmatrix[i][j];
         }
     }
+
+    /*
+    for (int i = 0; i < lsnnode; ++i) {
+        for (int j = 0; j < lsnnode; ++j) {
+            std::cout << lsdata->gammatbl[i][j] << " ";
+        }
+        std::cout << std::endl;
+    }*/
 }
 
 void SimulatedAnnealingImprovement::updateCurGamma(int u, int src, int dest) {
@@ -79,6 +87,13 @@ void SimulatedAnnealingImprovement::updateCurGamma(int u, int src, int dest) {
         lsdata->gammatbl[i][src] -= lsdata->gmatrix[u][i];
         lsdata->gammatbl[i][dest] += lsdata->gmatrix[u][i];
     }
+    /*
+    for (int i = 0; i < lsdata->gnnode; ++i) {
+        for (int j = 0; j < lsdata->gnnode; ++j) {
+            std::cout << lsdata->gammatbl[i][j] << " ";
+        }
+        std::cout << std::endl;
+    }*/
 }
 
 void SimulatedAnnealingImprovement::calibrateTemp() {
@@ -201,7 +216,7 @@ void SimulatedAnnealingImprovement::search(clock_t startTime, int maxSeconds) {
         int bestdelta = -MAX_VAL;
         for (int k = 0; k < lsdata->ppt->getBucketSize(); ++k) {
             int pid = lsdata->ppt->getBucket()[k];
-            if (pid == lsdata->ppt->getPvertex()[i])
+            if (pid == lsdata->ppt->getPvertex()[i] || (lsdata->ppt->getPcount()[lsdata->ppt->getPvertex()[i]] == 1 && pid == EMPTY_IDX))
                 continue;
             int delta = lsdata->gammatbl[i][pid] - lsdata->gammatbl[i][lsdata->ppt->getPvertex()[i]];
             if (delta > bestdelta) {
@@ -263,7 +278,9 @@ int SimulatedAnnealingImprovement::getBestObjective() {
 }
 
 Partition& SimulatedAnnealingImprovement::getBestPartition() {
-    return *lsdata->ppt_best;
+    Partition* bestPartition = new Partition(lsdata->gnnode);
+    bestPartition->copyPartition(*lsdata->ppt_best);
+    return *bestPartition;
 }
 
 int SimulatedAnnealingImprovement::decideTarget(int dest) {

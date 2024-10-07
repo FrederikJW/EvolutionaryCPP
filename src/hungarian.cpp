@@ -133,8 +133,8 @@ void hungarian_free(hungarian_problem_t* p) {
 		delete[] p->cost[i];
 		delete[] p->assignment[i];
 	}
-	delete p->cost;
-	delete p->assignment;
+	delete[] p->cost;
+	delete[] p->assignment;
 	p->cost = NULL;
 	p->assignment = NULL;
 }

@@ -119,6 +119,11 @@ void Recorder::writeTimeResults() {
     }
 }
 
+void Recorder::clearTimeResults() {
+    timeRecord.clear();
+    enteredTime.clear();
+}
+
 void Recorder::createTimeResultsFiles() {
     if (makeFile) {
         for (const auto& pair : timeRecord) {

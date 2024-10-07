@@ -10,7 +10,7 @@ void InitialPoolBuilder::buildInitialPool(BestSolutionInfo *frt, Population& pop
 
     Partition childPartition(nnode);
 
-    while (population.partitionCount() < population.getPoolSize()) {
+    while (population.partitionCount() < population.getPoolSize() && frt->best_val < graph.getKnownbest()) {
         printf("population size: %d\n", population.partitionCount());
         recorder->enter("build_solution");
         generateInitialSolution(childPartition, graph);

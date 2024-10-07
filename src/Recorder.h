@@ -27,6 +27,7 @@ public:
     void enter(const std::string& method);
     void exit(const std::string& method);
     void writeTimeResults();
+    void clearTimeResults();
     void createTimeResultsFiles();
     double clockToSeconds(clock_t time);
 

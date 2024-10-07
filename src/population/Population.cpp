@@ -163,6 +163,11 @@ float Population::getAvgDistance() {
             numPairs++;
         }
     }
+    if (numPartitions > 1) {
+        return distance / numPairs;
+    }
+    else {
+        return distance;
+    }
     
-    return distance / numPairs;
 }
