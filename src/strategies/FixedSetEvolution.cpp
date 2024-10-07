@@ -117,9 +117,8 @@ void FixedSetEvolution::run(BestSolutionInfo* frt_, int* totalGen, int poolSize)
         recorder->recordSolution(frt->best_partition, clock());
 
         // optimize this; is it necessary to create Partition and CPPSolution?
-        Partition* bestPartition = &(improvementStrategy->getBestPartition());
-        CPPSolutionBase* mSolution = new CPPSolutionBase(bestPartition->getPvertex(), nnode, bestPartition->getValue(), instance);
-        delete bestPartition;
+        const Partition bestPartition = improvementStrategy->getBestPartition();
+        CPPSolutionBase* mSolution = new CPPSolutionBase(bestPartition.getPvertex(), nnode, bestPartition.getValue(), instance);
 
         problem->AddToSolutionHolder(*mSolution);
         delete mSolution;

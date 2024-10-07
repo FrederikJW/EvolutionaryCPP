@@ -277,10 +277,8 @@ int SimulatedAnnealingImprovement::getBestObjective() {
     return lsdata->fbest;
 }
 
-Partition& SimulatedAnnealingImprovement::getBestPartition() {
-    Partition* bestPartition = new Partition(lsdata->gnnode);
-    bestPartition->copyPartition(*lsdata->ppt_best);
-    return *bestPartition;
+Partition SimulatedAnnealingImprovement::getBestPartition() {
+    return *lsdata->ppt_best;
 }
 
 int SimulatedAnnealingImprovement::decideTarget(int dest) {

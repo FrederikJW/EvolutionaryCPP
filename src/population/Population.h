@@ -11,8 +11,8 @@ public:
     ~Population();
 
     void updatePopulation();
-    int addPopulation(Partition* partition, int objval);
-    int insertPopulationWhenFull(Partition* partition, int objval);
+    int addPopulation(const Partition& partition, int objval);
+    int insertPopulationWhenFull(const Partition& partition, int objval);
 
     Partition& getPartition(int id);
     std::vector<Partition*>& getPartitions() { return partitions; }

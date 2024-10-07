@@ -26,6 +26,21 @@ void Partition::deallocate() {
     delete[] pvertex;
 }
 
+Partition::Partition(const Partition& other)
+    : nnode(other.getNnode()) {
+    allocate(nnode);
+    copyPartition(other);
+}
+
+Partition& Partition::operator=(const Partition& other) {
+    if (this != &other) {
+        deallocate();
+        nnode = other.getNnode();
+        copyPartition(other);
+    }
+    return *this;
+}
+
 void Partition::buildPartition(int* vpart) {
     for (int i = 0; i < nnode + 1; ++i) {
         ppos[i] = i;
@@ -140,7 +155,7 @@ void Partition::setBucketSize(int bucket_size) {
     pbkt_size = bucket_size;
 }
 
-int Partition::getBucketSize() {
+int Partition::getBucketSize() const {
     return pbkt_size;
 }
 
@@ -148,11 +163,11 @@ int* Partition::getBucket() {
     return pbkt;
 }
 
-int Partition::getNnode() {
+int Partition::getNnode() const {
     return nnode;
 }
 
-int Partition::sizeIntersection(const std::vector<int>& v1, const std::vector<int>& v2) {
+int Partition::sizeIntersection(const std::vector<int>& v1, const std::vector<int>& v2) const {
     std::vector<int> sorted_v1 = v1;
     std::vector<int> sorted_v2 = v2;
     std::sort(sorted_v1.begin(), sorted_v1.end());
@@ -171,7 +186,7 @@ int Partition::sizeIntersection(const std::vector<int>& v1, const std::vector<in
     return intersection_result.size();
 }
 
-int Partition::calculateMaxMatch(int* p1, int n_part1, int* p2, int n_part2) {
+int Partition::calculateMaxMatch(int* p1, int n_part1, int* p2, int n_part2) const {
     std::vector<std::vector<int>> group1(n_part1);
     std::vector<std::vector<int>> group2(n_part2);
     int* par2idx = new int[nnode + 1];

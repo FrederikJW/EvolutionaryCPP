@@ -49,15 +49,15 @@ void Population::updatePopulation() {
     obj_ave = ave_dis / partitions.size();
 }
 
-int Population::insertPopulationWhenFull(Partition* partition, int objval) {
+int Population::insertPopulationWhenFull(const Partition& partition, int objval) {
     int replace_indv = -1;
-    int minDst = partition->getNnode();
+    int minDst = partition.getNnode();
     int idxMinDst = -1;
     int worst_obj = MAX_VAL;
     int worst_obj_indv = -1;
 
     for (int i = 0; i < partitions.size(); ++i) {
-        int dist2p = partition->calculateMaxMatch(partition->getPvertex(), partition->getBucketSize() - 1,
+        int dist2p = partition.calculateMaxMatch(partition.getPvertex(), partition.getBucketSize() - 1,
             partitions[i]->getPvertex(), partitions[i]->getBucketSize() - 1);
         if (dist2p < minDst) {
             minDst = dist2p;
@@ -75,7 +75,7 @@ int Population::insertPopulationWhenFull(Partition* partition, int objval) {
     }
 
     if (replace_indv != -1) {
-        partitions[replace_indv]->copyPartition(*partition);
+        partitions[replace_indv]->copyPartition(partition);
         objValues[replace_indv] = objval;
         updatePopulation();
     }
@@ -83,14 +83,14 @@ int Population::insertPopulationWhenFull(Partition* partition, int objval) {
     return replace_indv;
 }
 
-int Population::addPopulation(Partition* partition, int objval) {
+int Population::addPopulation(const Partition& partition, int objval) {
     int index = -1;
     if (partitions.size() < static_cast<size_t>(poolSize)) {
         bool add = true;
         for (unsigned int i = 0; i < partitions.size(); i++) {
             Partition* existingPartition = partitions[i];
             int dis = existingPartition->calculateMaxMatch(existingPartition->getPvertex(), existingPartition->getBucketSize() - 1,
-                partition->getPvertex(), partition->getBucketSize() - 1);
+                partition.getPvertex(), partition.getBucketSize() - 1);
             if (dis == 0) {
                 printf("Solution %d is too close to the previous one %d, (dis %d)\n", objval, objValues[i], dis);
                 add = false;
@@ -99,8 +99,8 @@ int Population::addPopulation(Partition* partition, int objval) {
         }
         if (add) {
             index = partitions.size();
-            Partition* partitionCopy = new Partition(partition->getNnode());
-            partitionCopy->copyPartition(*partition);
+            Partition* partitionCopy = new Partition(partition.getNnode());
+            partitionCopy->copyPartition(partition);
             partitions.push_back(partitionCopy);
             objValues.push_back(objval);
             distances.push_back(MAX_VAL);

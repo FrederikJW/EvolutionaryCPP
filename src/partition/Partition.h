@@ -12,6 +12,9 @@ public:
     Partition(int n);
     ~Partition();
 
+    Partition(const Partition& other);
+    Partition& operator=(const Partition& other);
+
     void buildPartition(int* vpart);
     void copyPartition(const Partition& source);
     void updatePartition(int v, int target);
@@ -22,11 +25,11 @@ public:
     int* getPvertex() const;
     int* getPcount();
     void setBucketSize(int bucket_size);
-    int getBucketSize();
+    int getBucketSize() const;
     int* getBucket();
-    int sizeIntersection(const std::vector<int>& v1, const std::vector<int>& v2);
-    int calculateMaxMatch(int* p1, int n_part1, int* p2, int n_part2);
-    int getNnode();
+    int sizeIntersection(const std::vector<int>& v1, const std::vector<int>& v2) const;
+    int calculateMaxMatch(int* p1, int n_part1, int* p2, int n_part2) const;
+    int getNnode() const;
 
     // just for testing
     void checkIntegrity();

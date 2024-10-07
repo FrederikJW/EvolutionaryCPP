@@ -33,7 +33,7 @@ void RCLInitStrategy::buildInitialPool(BestSolutionInfo* frt, Population& popula
         (*generation_cnt)++;
         if ((double)(clock() - startTime) / CLOCKS_PER_SEC >= maxSeconds)
             break;
-        population.addPopulation(&(improvementStrategy->getBestPartition()), improvementStrategy->getBestObjective());
+        population.addPopulation(improvementStrategy->getBestPartition(), improvementStrategy->getBestObjective());
     }
     
     printf("Best/Average value in the init population %d/%.3f\n", population.getMaxObjective(), population.getAverageObjective());

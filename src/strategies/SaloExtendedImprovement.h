@@ -25,7 +25,7 @@ public:
     void calibrateTemp() override;
     void disposeEnvironment() override;
     int getBestObjective() override;
-    Partition& getBestPartition() override;
+    Partition getBestPartition() override;
 
 private:
 

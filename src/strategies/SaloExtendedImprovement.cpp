@@ -68,9 +68,7 @@ void SaloExtendedImprovement::search(clock_t startTime, int maxSeconds) {
 
 void SaloExtendedImprovement::selectBetter(BestSolutionInfo* frt, clock_t start_time, int generation_cnt) {
     if (getBestObjective() > frt->best_val) {
-        Partition* bestPartition = &getBestPartition();
-        frt->best_partition->copyPartition(*bestPartition);
-        delete bestPartition;
+        frt->best_partition->copyPartition(getBestPartition());
         frt->best_val = getBestObjective();
         frt->best_foundtime = (double)(clock() - start_time) / CLOCKS_PER_SEC;
         frt->best_generation = generation_cnt;
@@ -84,9 +82,9 @@ int SaloExtendedImprovement::getBestObjective() {
     return problem->GetSolution().getObjective();
 }
 
-Partition& SaloExtendedImprovement::getBestPartition() {
+Partition SaloExtendedImprovement::getBestPartition() {
     int nnode = problem->GetInstance()->getNumberOfNodes();
-    Partition *partition = new Partition(nnode);
+    Partition partition(nnode);
 
     int* vpart = new int[nnode];
 
@@ -95,9 +93,9 @@ Partition& SaloExtendedImprovement::getBestPartition() {
         vpart[i] = problem->GetSolution().getNodeClique()[i] + 1;
     }
 
-    partition->buildPartition(vpart);
-    partition->setValue(getBestObjective());
+    partition.buildPartition(vpart);
+    partition.setValue(getBestObjective());
 
     delete[] vpart;
-    return *partition;
+    return partition;
 }

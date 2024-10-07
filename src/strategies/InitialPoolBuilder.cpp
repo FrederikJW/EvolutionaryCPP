@@ -23,7 +23,7 @@ void InitialPoolBuilder::buildInitialPool(BestSolutionInfo *frt, Population& pop
         if ((double)(clock() - startTime) / CLOCKS_PER_SEC >= maxSeconds)
             break;
 
-        population.addPopulation(&(improvementStrategy->getBestPartition()), improvementStrategy->getBestObjective());
+        population.addPopulation(improvementStrategy->getBestPartition(), improvementStrategy->getBestObjective());
     }
     printf("Best/Average value in the init population %d/%.3f\n", population.getMaxObjective(), population.getAverageObjective());
     printf("Average distance in the init population %.3f\n", population.getAvgDistance());

@@ -19,7 +19,7 @@ public:
     virtual void calibrateTemp() = 0;
     virtual void disposeEnvironment() = 0;
     virtual int getBestObjective() = 0;
-    virtual Partition& getBestPartition() = 0;
+    virtual Partition getBestPartition() = 0;
     virtual ~ImprovementStrategy() = default;
 protected:
     Recorder* recorder;

@@ -35,7 +35,7 @@ public:
     void calibrateTemp() override;
     void disposeEnvironment() override;    
     int getBestObjective() override;
-    Partition& getBestPartition() override;
+    Partition getBestPartition() override;
 
     void selectBetter(BestSolutionInfo* frt, clock_t start_time, int generation_cnt);
 
