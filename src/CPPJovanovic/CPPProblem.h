@@ -17,6 +17,7 @@
 #include "SAParameters.h"
 #include "WeightedRandomSampling.h"
 #include "CPPTypes.h"
+#include "../RandomGenerator.h"
 
 class CPPProblem {
 private:
@@ -27,7 +28,7 @@ private:
     RCL<CPPCandidate>* mRCL;
 
     int mRCLSize;
-    std::mt19937* mGenerator;
+    RandomGenerator* mGenerator;
     std::vector<std::vector<int>> mAvailableNodes;
     GreedyHeuristicType mGreedyHeuristic;
     int mBestSolutionValue;
@@ -48,7 +49,7 @@ private:
     int mNumberOfSolutionsGenerated;
 
 public:
-    CPPProblem(CPPInstance* nInstance, std::mt19937* generator);
+    CPPProblem(CPPInstance* nInstance, RandomGenerator* generator);
     ~CPPProblem();
 
     std::string GetMethodFileName();
@@ -85,6 +86,7 @@ public:
     bool CheckBest(double Size = -1);
     void SolveFixSetSearch(int MaxGenerated, double iTimeLimit);
     void Calibrate(double iTimeLimit);
+    void SALOSearch();
     void SASearch();
     void SolveGRASP(int MaxIterations, double iTimeLimit);
     void SolveGreedy(const std::vector<std::vector<int>>& FixedSet = {});

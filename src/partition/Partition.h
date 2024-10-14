@@ -20,6 +20,7 @@ public:
     void updatePartition(int v, int target);
     void print(FILE* fout) const;
     int calculateDistance(const int* p1, const int* p2) const;
+    int calculateScore(int** matrix);
     void setValue(int new_value);
     int getValue() const;
     int* getPvertex() const;

@@ -1,4 +1,4 @@
-#include "SaloExtendedImprovement.h"
+#include "SaloImprovement.h"
 #include "../Defines.h"
 #include <cassert>
 #include <cstdio>
@@ -11,20 +11,20 @@
 // TODO: move these parameter to somewhere else
 #define EMPTY_IDX 0
 
-SaloExtendedImprovement::~SaloExtendedImprovement() {
+SaloImprovement::~SaloImprovement() {
     disposeEnvironment();
 }
 
-void SaloExtendedImprovement::improveSolution(Partition& solution, clock_t startTime, int maxSeconds, BestSolutionInfo* frt, int generation_cnt) {
+void SaloImprovement::improveSolution(Partition& solution, clock_t startTime, int maxSeconds, BestSolutionInfo* frt, int generation_cnt) {
     recorder->enter("improve_solution");
     setStart(solution);
     search(startTime, maxSeconds);
     selectBetter(frt, startTime, generation_cnt);
     recorder->exit("improve_solution");
-    printf("Child has been raised to by SA %d\n", getBestObjective());
+    printf("Child has been raised to by SA %d\n", frt->best_val);
 }
 
-void SaloExtendedImprovement::setEnvironment(Graph& graph) {
+void SaloImprovement::setEnvironment(Graph& graph) {
     delete instance;
     instance = new CPPInstance(graph.getNodeCount(), graph.getMatrix());
     delete problem;
@@ -32,24 +32,24 @@ void SaloExtendedImprovement::setEnvironment(Graph& graph) {
     problem->SetSASelect(selectType);
 }
 
-void SaloExtendedImprovement::setStart(Partition& startSol) {
+void SaloImprovement::setStart(Partition& startSol) {
     problem->AllocateSolution(startSol.getPvertex(), startSol.getNnode(), startSol.getValue());
 }
 
-void SaloExtendedImprovement::disposeEnvironment() {
+void SaloImprovement::disposeEnvironment() {
     delete instance;
     delete problem;
 }
 
-void SaloExtendedImprovement::calibrateTemp() {
+void SaloImprovement::calibrateTemp() {
     problem->Calibrate(10000);
 }
 
-void SaloExtendedImprovement::search(clock_t startTime, int maxSeconds) {
+void SaloImprovement::search(clock_t startTime, int maxSeconds) {
     problem->SALOSearch();
 }
 
-void SaloExtendedImprovement::selectBetter(BestSolutionInfo* frt, clock_t start_time, int generation_cnt) {
+void SaloImprovement::selectBetter(BestSolutionInfo* frt, clock_t start_time, int generation_cnt) {
     if (getBestObjective() > frt->best_val) {
         frt->best_partition->copyPartition(getBestPartition());
         frt->best_val = getBestObjective();
@@ -61,11 +61,11 @@ void SaloExtendedImprovement::selectBetter(BestSolutionInfo* frt, clock_t start_
     }
 }
 
-int SaloExtendedImprovement::getBestObjective() {
+int SaloImprovement::getBestObjective() {
     return problem->GetSolution().getObjective();
 }
 
-Partition SaloExtendedImprovement::getBestPartition() {
+Partition SaloImprovement::getBestPartition() {
     int nnode = problem->GetInstance()->getNumberOfNodes();
     Partition partition(nnode);
 

@@ -12,12 +12,14 @@ public:
 
     int getNodeCount() const;
     int** getMatrix();
+    int** getNegativeMatrix();
     void setKnownbest(int value);
     int getKnownbest();
 
 private:
     int nnode;
     int** matrix;
+    int** negativeMatrix;
     int knownbest;
 
     void allocateMatrix();

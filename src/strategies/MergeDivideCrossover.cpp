@@ -33,7 +33,7 @@ int unionSet(int* s, int i, int j) {
 
 MergeDivideCrossover::MergeDivideCrossover(float shrink) : shrink(shrink) {}
 
-void MergeDivideCrossover::crossover(Graph& graph, const Partition& parent1, const Partition& parent2, Partition& child, std::mt19937* generator) {
+void MergeDivideCrossover::crossover(Graph& graph, const Partition& parent1, const Partition& parent2, Partition& child, RandomGenerator* generator) {
     const int nnode = graph.getNodeCount();
     int scale = nnode * shrink + (*generator)() % 100;
     while (scale >= nnode)

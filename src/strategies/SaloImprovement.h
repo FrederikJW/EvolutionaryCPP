@@ -1,5 +1,5 @@
-#ifndef SALOEXTENDEDIMPROVEMENT_H
-#define SALOEXTENDEDIMPROVEMENT_H
+#ifndef SALOIMPROVEMENT_H
+#define SALOIMPROVEMENT_H
 
 #include "ImprovementStrategy.h"
 #include "../partition/Partition.h"
@@ -12,10 +12,10 @@
 #include <ctime>
 
 
-class SaloExtendedImprovement : public ImprovementStrategy {
+class SaloImprovement : public ImprovementStrategy {
 public:
-    SaloExtendedImprovement(int knownbest_, double minpercent_, double tempfactor_, int sizefactor_, Recorder* recorder_, RandomGenerator* generator) : ImprovementStrategy(knownbest_, minpercent_, tempfactor_, sizefactor_, recorder_, generator), problem(nullptr), instance(nullptr), selectType(SASelectType::Dual) {};
-    ~SaloExtendedImprovement();
+    SaloImprovement(int knownbest_, double minpercent_, double tempfactor_, int sizefactor_, Recorder* recorder_, RandomGenerator* generator) : ImprovementStrategy(knownbest_, minpercent_, tempfactor_, sizefactor_, recorder_, generator), problem(nullptr), instance(nullptr), selectType(SASelectType::Single) {};
+    ~SaloImprovement();
 
     void improveSolution(Partition& solution, clock_t startTime, int maxSeconds, BestSolutionInfo* frt, int generation_cnt) override;
     void search(clock_t startTime, int maxSeconds) override;
@@ -34,4 +34,4 @@ private:
     SASelectType selectType;
 };
 
-#endif // SALOEXTENDEDIMPROVEMENT_H
+#endif // SALOIMPROVEMENT_H

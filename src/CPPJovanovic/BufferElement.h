@@ -17,7 +17,6 @@ public:
     ~BufferElement();
 
     bool HasRelocation(int* r);
-    int* TakeRandomRelocation(std::mt19937& generator);
     void RemoveRelocation(int iNode);
     bool CanAdd(int nNode, int nClique) const;
     bool Contains(int nNode);

@@ -7,6 +7,7 @@
 #include "SAParameters.h"
 #include "BufferElement.h"
 #include "CPPTypes.h"
+#include "../RandomGenerator.h"
 
 #include <vector>
 #include <random>
@@ -24,7 +25,7 @@ protected:
     std::vector<std::vector<int>> mAllConnections;
     SASelectType mSASelectType;
     std::vector<int> mRestricted;
-    std::mt19937* mGenerator;
+    RandomGenerator* mGenerator;
 
 public:
     CPPSolutionBase();
@@ -36,7 +37,7 @@ public:
     CPPInstance* getInstance() { return mInstance; }
     void setSASType(SASelectType value) { mSASelectType = value; }
 
-    void setGenerator(std::mt19937* value) { mGenerator = value; }
+    void setGenerator(RandomGenerator* value) { mGenerator = value; }
 
     void InitRestricted(int Size);
     virtual void Clear();

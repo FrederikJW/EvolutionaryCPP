@@ -5,6 +5,7 @@
 #include "../partition/Partition.h"
 #include "../graph/Graph.h"
 #include "../Statistic.h"
+#include "../RandomGenerator.h"
 #include <ctime>
 
 typedef struct SA_RT_Data {
@@ -25,11 +26,12 @@ typedef struct SA_RT_Data {
 
 class SimulatedAnnealingImprovement : public ImprovementStrategy {
 public:
-    SimulatedAnnealingImprovement(int knownbest_, double minpercent_, double tempfactor_, int sizefactor_, Recorder* recorder_, std::mt19937* generator) : ImprovementStrategy(knownbest_, minpercent_, tempfactor_, sizefactor_, recorder_, generator), lsdata(nullptr) {};
+    SimulatedAnnealingImprovement(int knownbest_, double minpercent_, double tempfactor_, int sizefactor_, Recorder* recorder_, RandomGenerator* generator) : ImprovementStrategy(knownbest_, minpercent_, tempfactor_, sizefactor_, recorder_, generator), lsdata(nullptr) {};
     ~SimulatedAnnealingImprovement();
 
     void improveSolution(Partition& solution, clock_t startTime, int maxSeconds, BestSolutionInfo* frt, int generation_cnt) override;
     void search(clock_t startTime, int maxSeconds) override;
+    void search_original(clock_t startTime, int maxSeconds);
     void setEnvironment(Graph& graph) override;
     void setStart(Partition& startSol) override;
     void calibrateTemp() override;
@@ -38,6 +40,7 @@ public:
     Partition getBestPartition() override;
 
     void selectBetter(BestSolutionInfo* frt, clock_t start_time, int generation_cnt);
+    double fastExp(double x);
 
 private:
     void pureDescent();

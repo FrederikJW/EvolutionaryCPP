@@ -135,6 +135,22 @@ int Partition::calculateDistance(const int* p1, const int* p2) const {
     return sum;
 }
 
+int Partition::calculateScore(int** matrix) {
+    int score = 0;
+    const int* pvertex = getPvertex();
+
+    for (int i = 0; i < nnode; i++) {
+        for (int j = i + 1; j < nnode; j++) {
+            if (pvertex[i] == pvertex[j]) {
+                score += matrix[i][j];
+            }
+        }
+    }
+
+    return score;
+}
+
+
 void Partition::setValue(int new_value) {
     value = new_value;
 }

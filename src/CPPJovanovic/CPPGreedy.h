@@ -5,6 +5,7 @@
 #include "CPPInstance.h"
 #include "CPPSolution.h"
 #include "RCL.h"
+#include "../RandomGenerator.h"
 
 #include <string>
 #include <vector>
@@ -17,8 +18,8 @@ public:
     enum class CPPMetaheuristic { GRASP, FSS };
     enum class CPPCooling { Geometric, LinearMultiplicative };
 
-    CPPGreedy(CPPInstance* nInstance, std::default_random_engine* generator);
-    CPPGreedy(const std::string& fileName, std::default_random_engine* generator);
+    CPPGreedy(CPPInstance* nInstance, RandomGenerator* generator);
+    CPPGreedy(const std::string& fileName, RandomGenerator* generator);
     ~CPPGreedy();
 
     void InitAvailable(const std::vector<std::vector<int>>& FixedSet);
@@ -30,7 +31,7 @@ private:
     CPPSolution* mSolution;
     RCL<CPPCandidate>* mRCL;
     int mRCLSize;
-    std::default_random_engine* mGenerator;
+    RandomGenerator* mGenerator;
     std::vector<std::vector<int>> mAvailableNodes;
     GreedyHeuristicType mGreedyHeuristic;
 

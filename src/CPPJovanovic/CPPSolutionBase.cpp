@@ -9,6 +9,7 @@
 #include <cmath>
 #include <Dense>
 #include "CPPSolutionBase.h"
+#include "../RandomGenerator.h"
 
 // does not work correctly
 void parallelAddSse(std::vector<int>& a, const std::vector<int>& b) {
@@ -148,7 +149,7 @@ void parallelAddSse6(std::vector<int>& a, const std::vector<int>& b) {
     );
 }
 
-void shuffle(std::vector<int>& list, std::mt19937* iGenerator) {
+void shuffle(std::vector<int>& list, RandomGenerator* iGenerator) {
     int n = list.size(); // The number of items left to shuffle (loop invariant).
     while (n > 1) {
         std::uniform_int_distribution<int> distribution(0, n - 1);
@@ -879,7 +880,6 @@ void CPPSolutionBase::SASelectDualExt(SARelocation& Relocation)
 
 void CPPSolutionBase::SASelectSingle(SARelocation& Relocation)
 {
-    std::vector<int> CliqueConnections;
 
     int n0Clique = mNodeClique[Relocation.mN0];
     int n0RemoveChange;
@@ -897,7 +897,7 @@ void CPPSolutionBase::SASelectSingle(SARelocation& Relocation)
 
     for (int c = 0; c < Size; c++)
     {
-        CliqueConnections = mAllConnections[c];
+        const std::vector<int>& CliqueConnections = mAllConnections[c];
 
         cChange0 = n0RemoveChange + CliqueConnections[Relocation.mN0];
         if (n0Clique != c)
@@ -1023,8 +1023,6 @@ bool CPPSolutionBase::SimulatedAnnealing(SAParameters& iSAParameters, double& Ac
     AcceptTotal = 0;
     int sumNodeChange;
 
-    
-
     while (true)
     {   
         
@@ -1087,12 +1085,9 @@ bool CPPSolutionBase::SimulatedAnnealing(SAParameters& iSAParameters, double& Ac
         // printf("Stag=%d T=%.3f\n", Stag, T);
     }
 
-    
-
     CreateFromNodeClique(tNodeClique);
 
     AcceptRelative = static_cast<double>(AcceptTotal) / (NeiborhoodSize * iSAParameters.mSizeRepeat * counter);
-    // printf("exit SA");
     return true;
 }
 

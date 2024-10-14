@@ -3,6 +3,7 @@
 #include <string>
 #include <cstring>
 
+
 Recorder::Recorder(char* graphFilePath, std::string configCode, bool _makeFile) {
     bestScore = 0;
     clock_t currentTime = clock();
@@ -92,6 +93,7 @@ void Recorder::exit(const std::string& method) {
     if (enteredTime.find(method) != enteredTime.end()) {
         // Key exists
         timeRecord[method].push_back(clock() - enteredTime[method]);
+        // printf("\nexit %s: %d\n", method.c_str(), clock() - enteredTime[method]);
         enteredTime.erase(method);
     }
     else {

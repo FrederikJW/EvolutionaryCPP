@@ -1,7 +1,7 @@
 #include "CPPGreedy.h"
 
 
-CPPGreedy::CPPGreedy(CPPInstance* nInstance, std::mt19937* generator):
+CPPGreedy::CPPGreedy(CPPInstance* nInstance, RandomGenerator* generator):
     mInstance(nInstance), mGenerator(generator), mRCLSize(2) {
 
     // mFileName(fileName),
@@ -20,7 +20,7 @@ CPPGreedy::CPPGreedy(CPPInstance* nInstance, std::mt19937* generator):
     // mSAParams.InitGeometric();
 }
 
-CPPGreedy::CPPGreedy(const std::string& fileName, std::mt19937* generator):
+CPPGreedy::CPPGreedy(const std::string& fileName, RandomGenerator* generator):
     mGenerator(generator), mRCLSize(2) {
     
     // mFileName(fileName),

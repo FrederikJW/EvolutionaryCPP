@@ -4,18 +4,19 @@
 #include "../population/Population.h"
 #include "../Statistic.h"
 #include "../Recorder.h"
+#include "../RandomGenerator.h"
 #include "ImprovementStrategy.h"
 
 class InitialPoolStrategy {
 public:
-    InitialPoolStrategy(Recorder* recorder_, std::mt19937* generator) : recorder(recorder_), mGenerator(generator) {};
+    InitialPoolStrategy(Recorder* recorder_, RandomGenerator* generator) : recorder(recorder_), mGenerator(generator) {};
     virtual void buildInitialPool(BestSolutionInfo* frt, Population& population, Graph& graph, ImprovementStrategy* improvementStrategy, int maxSeconds, int* generation_cnt) = 0;
     virtual void generateInitialSolution(Partition& partition, Graph& graph) = 0;
     virtual ~InitialPoolStrategy() = default;
 
 protected:
     Recorder* recorder;
-    std::mt19937* mGenerator;
+    RandomGenerator* mGenerator;
 };
 
 #endif // INITIALPOOLSTRATEGY_H

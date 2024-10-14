@@ -5,10 +5,11 @@
 #include "InitialPoolStrategy.h"
 #include "ImprovementStrategy.h"
 #include "../Recorder.h"
+#include "../RandomGenerator.h"
 
 class EvolutionStrategy {
 public:
-    EvolutionStrategy(CrossoverStrategy* crossoverStrategy_, InitialPoolStrategy* initialPoolStrategy_, ImprovementStrategy* improvementStrategy_, Graph* graph_, Recorder* recorder_, int maxGenerations_, int maxSeconds_, std::mt19937* generator) :
+    EvolutionStrategy(CrossoverStrategy* crossoverStrategy_, InitialPoolStrategy* initialPoolStrategy_, ImprovementStrategy* improvementStrategy_, Graph* graph_, Recorder* recorder_, int maxGenerations_, int maxSeconds_, RandomGenerator* generator) :
         crossoverStrategy(crossoverStrategy_), initialPoolStrategy(initialPoolStrategy_), improvementStrategy(improvementStrategy_), population(nullptr), childPartition(nullptr), graph(graph_), recorder(recorder_), frt(nullptr), maxGenerations(maxGenerations_), maxSeconds(maxSeconds_), mGenerator(generator) {};
 
     virtual void run(BestSolutionInfo* frt_, int* totalGen, int poolSize) = 0;
@@ -26,7 +27,7 @@ protected:
     Graph* graph;
     Recorder* recorder;
     BestSolutionInfo* frt;
-    std::mt19937* mGenerator;
+    RandomGenerator* mGenerator;
 
     CrossoverStrategy* crossoverStrategy;
     InitialPoolStrategy* initialPoolStrategy;

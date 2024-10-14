@@ -7,10 +7,13 @@
 #include "strategies/MergeDivideCrossover.h"
 #include "strategies/SimulatedAnnealingImprovement.h"
 #include "strategies/RCLInitStrategy.h"
+#include "strategies/SaloImprovement.h"
 #include "strategies/SaloExtendedImprovement.h"
 #include "strategies/EvolutionStrategy.h"
 #include "strategies/FixedSetEvolution.h"
 #include "strategies/SolutionEvolution.h"
+#include "util/Util.h"
+#include "RandomGenerator.h"
 #include <fstream>
 #include <iostream>
 #include <cstring>
@@ -29,7 +32,7 @@ int** matrix;
 std::string param_filename_string = std::string(PROJECT_ROOT_PATH) + "/instance/Medium Set (25 instances)/p1000-1.txt";
 char param_filename[1000];
 int param_knownbest = 10000000;
-int param_time = 500;
+int param_time = 50000;
 int param_seed = 123456;
 int param_max_generations = 100000;
 int param_sizefactor = 8;
@@ -52,7 +55,8 @@ enum class EvolutionStrategyCode {
 // Enum for Improvement Strategy
 enum class ImprovementStrategyCode {
     SA,  // SA
-    SAe  // SAe
+    SALO,  // SAe
+    SALOe,
 };
 
 // Enum for Initial Pool Strategy
@@ -73,8 +77,11 @@ std::string getAlgorithmConfigCode(EvolutionStrategyCode evol, ImprovementStrate
     case ImprovementStrategyCode::SA:
         configCode += "SA-";
         break;
-    case ImprovementStrategyCode::SAe:
-        configCode += "SAe-";
+    case ImprovementStrategyCode::SALO:
+        configCode += "SALO-";
+        break;
+    case ImprovementStrategyCode::SALOe:
+        configCode += "SALOe-";
         break;
     }
 
@@ -175,24 +182,6 @@ FILE* setupRecordFile() {
     return f;
 }
 
-void verifySolution(Partition* partition, Graph* graph) {
-    int score = 0;
-    for (int i = 0; i < graph->getNodeCount(); i++) {
-        for (int j = i; j < graph->getNodeCount(); j++) {
-            if (partition->getPvertex()[i] == partition->getPvertex()[j]) {
-                score += graph->getMatrix()[i][j];
-            }
-        }
-    }
-
-    if (partition->getValue() == score) {
-        printf("The score of %d has been successfully verified", score);
-    }
-    else {
-        printf("The given score of %d does not equal the verification score of %d", partition->getValue(), score);
-    }
-}
-
 void reportResult() {
     printf("\n");
     printf("$seed=%d\n", param_seed);
@@ -226,7 +215,7 @@ int rcl_test(int argc, char** argv) {
 
     Graph graph;
     graph.load(param_filename);
-    std::mt19937* randomGenerator = new std::mt19937(param_seed);
+    RandomGenerator* randomGenerator = new RandomGenerator(param_seed);
 
     nnode = graph.getNodeCount();
 
@@ -306,21 +295,14 @@ int bulk_run(int argc, char** argv) {
 
     // file name, known best, improvement strategy, initial pool strategy, evolution strategy, number of runs
     std::vector<std::tuple<std::string, int, ImprovementStrategyCode, InitialPoolStrategyCode, EvolutionStrategyCode, int>> list_of_run_settings = {
-        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/rand200-5.txt", 4079, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 10),
-        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/rand200-5.txt", 4079, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::Sol, 10),
-        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/rand200-5.txt", 4079, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::Std, EvolutionStrategyCode::FSS, 10),
-        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/rand200-5.txt", 4079, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::Std, EvolutionStrategyCode::Sol, 10),
-        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/rand200-5.txt", 4079, ImprovementStrategyCode::SA, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 10),
-        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/rand200-5.txt", 4079, ImprovementStrategyCode::SA, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::Sol, 10),
-        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/rand200-5.txt", 4079, ImprovementStrategyCode::SA, InitialPoolStrategyCode::Std, EvolutionStrategyCode::FSS, 10),
-        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/rand200-5.txt", 4079, ImprovementStrategyCode::SA, InitialPoolStrategyCode::Std, EvolutionStrategyCode::Sol, 10),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/MCF/sul_91.txt", 10000000, ImprovementStrategyCode::SALOe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 1),
     };
     /*
     std::vector<std::tuple<std::string, int, ImprovementStrategyCode, InitialPoolStrategyCode, EvolutionStrategyCode, int>> list_of_run_settings = {
         std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/p500-5-3.txt", 16816, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 20),
     };*/
 
-    Recorder* bulkRecorder = new Recorder("comparison.txt", "Bulk20", true);
+    Recorder* bulkRecorder = new Recorder("Wang1150.txt", "long_run", true);
 
     for (const auto& run_settings : list_of_run_settings) {
         bulkRecorder->clearTimeResults();
@@ -360,7 +342,7 @@ int bulk_run(int argc, char** argv) {
 
         // TODO: correct generator and seeds for bulk runs
         while (run_cnt < total_runs) {
-            std::mt19937* randomGenerator = new std::mt19937(param_seed + run_cnt);
+            RandomGenerator* randomGenerator = new RandomGenerator(param_seed + run_cnt);
             printf("Seed: %d\n", param_seed + run_cnt);
             clearResult(&finalBest);
             clock_t starttime = clock();
@@ -372,7 +354,10 @@ int bulk_run(int argc, char** argv) {
             case ImprovementStrategyCode::SA:
                 improvementStrategy = new SimulatedAnnealingImprovement(knownbest, param_minpercent, param_tempfactor, param_sizefactor, bulkRecorder, randomGenerator);
                 break;
-            case ImprovementStrategyCode::SAe:
+            case ImprovementStrategyCode::SALO:
+                improvementStrategy = new SaloImprovement(knownbest, param_minpercent, param_tempfactor, param_sizefactor, bulkRecorder, randomGenerator);
+                break;
+            case ImprovementStrategyCode::SALOe:
                 improvementStrategy = new SaloExtendedImprovement(knownbest, param_minpercent, param_tempfactor, param_sizefactor, bulkRecorder, randomGenerator);
                 break;
             }
@@ -470,7 +455,7 @@ int normal_run(int argc, char** argv) {
     srand(param_seed);
 
     EvolutionStrategyCode evolutionStrategyCode = EvolutionStrategyCode::FSS; // Sol, FSS
-    ImprovementStrategyCode improvementStrategyCode = ImprovementStrategyCode::SAe; // SA, SAe
+    ImprovementStrategyCode improvementStrategyCode = ImprovementStrategyCode::SALOe; // SA, SAe
     InitialPoolStrategyCode initialPoolStrategyCode = InitialPoolStrategyCode::RCL; // RCL, Std
 
     // fout = setupRecordFile();
@@ -497,7 +482,7 @@ int normal_run(int argc, char** argv) {
     int* bestInAlllPartition = new int[nnode];
 
     while (run_cnt < 1) {
-        std::mt19937* randomGenerator = new std::mt19937(param_seed + run_cnt);
+        RandomGenerator* randomGenerator = new RandomGenerator(param_seed + run_cnt);
         clearResult(&finalBest);
         clock_t starttime = clock();
         recorder->setStartTime(starttime);
@@ -507,7 +492,10 @@ int normal_run(int argc, char** argv) {
             case ImprovementStrategyCode::SA:
                 improvementStrategy = new SimulatedAnnealingImprovement(param_knownbest, param_minpercent, param_tempfactor, param_sizefactor, recorder, randomGenerator);
                 break;
-            case ImprovementStrategyCode::SAe:
+            case ImprovementStrategyCode::SALO:
+                improvementStrategy = new SaloImprovement(param_knownbest, param_minpercent, param_tempfactor, param_sizefactor, recorder, randomGenerator);
+                break;
+            case ImprovementStrategyCode::SALOe:
                 improvementStrategy = new SaloExtendedImprovement(param_knownbest, param_minpercent, param_tempfactor, param_sizefactor, recorder, randomGenerator);
                 break;
         }

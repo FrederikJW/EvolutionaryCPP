@@ -83,19 +83,25 @@ void SimulatedAnnealingImprovement::buildCurGamma(const int* pvertex) {
 }
 
 void SimulatedAnnealingImprovement::updateCurGamma(int u, int src, int dest) {
-    for (int i = 0; i < lsdata->gnnode; ++i) {
-        lsdata->gammatbl[i][src] -= lsdata->gmatrix[u][i];
-        lsdata->gammatbl[i][dest] += lsdata->gmatrix[u][i];
+    // Alias pointers to reduce dereferencing and respect constness
+    int** gammatbl = lsdata->gammatbl;
+    const int* const* gmatrix = lsdata->gmatrix;
+    const int* gmatrix_row_u = gmatrix[u];
+
+    // Cache gnnode to avoid repeated access
+    int gnnode = lsdata->gnnode;
+
+    for (int i = 0; i < gnnode; ++i) {
+        int* gamma_row = gammatbl[i];
+        int delta = gmatrix_row_u[i];
+
+        gamma_row[src] -= delta;
+        gamma_row[dest] += delta;
     }
-    /*
-    for (int i = 0; i < lsdata->gnnode; ++i) {
-        for (int j = 0; j < lsdata->gnnode; ++j) {
-            std::cout << lsdata->gammatbl[i][j] << " ";
-        }
-        std::cout << std::endl;
-    }*/
 }
 
+
+// algorithm gets stuck on certain instances when trying to move nodes back and forth with gamma 0
 void SimulatedAnnealingImprovement::calibrateTemp() {
     double lt = 1.0, ut = 2000.0;
     double tempTolerate = 0.05;
@@ -155,7 +161,7 @@ void SimulatedAnnealingImprovement::calibrateTemp() {
     temp = _temp;
 }
 
-void generateRandList(int* randlist, int len, std::mt19937* generator) {
+void generateRandList(int* randlist, int len, RandomGenerator* generator) {
     int idx = 0;
     assert(randlist != NULL);
 
@@ -198,48 +204,88 @@ void SimulatedAnnealingImprovement::pureDescent() {
     delete[] randlst;
 }
 
+double SimulatedAnnealingImprovement::fastExp(double x)
+{
+    union {
+        long long int i;
+        double d;
+    } tmp;
+
+    tmp.i = static_cast<long long int>(1512775 * x + 1072632447);
+    tmp.i <<= 32;
+    return tmp.d;
+}
+
 void SimulatedAnnealingImprovement::search(clock_t startTime, int maxSeconds) {
     double T = temp;
     int frozenCounter = 0;
     int accpCnt = 0;
     int saitr = 0;
-    int* vecTmpBest = new int[lsdata->gnnode];
+    int test_counter = 0;
+
+    const size_t gnnode = lsdata->gnnode;
+    const size_t memSize = sizeof(int) * gnnode;
+
+    int* vecTmpBest = new int[gnnode];
     pureDescent();
 
-    int L = lsdata->gnnode * lsdata->ppt->getBucketSize() * sizefactor;
+    int L = gnnode * lsdata->ppt->getBucketSize() * sizefactor;
 
     std::memcpy(vecTmpBest, lsdata->ppt->getPvertex(), sizeof(int) * lsdata->gnnode);
 
-    while ((double)(clock() - startTime) / CLOCKS_PER_SEC < maxSeconds) {
-        int i = (*mGenerator)() % lsdata->gnnode;
+    const int TIME_CHECK_INTERVAL = 10000;
+    int time_check_counter = 0;
+
+    std::uniform_real_distribution<double> uni_dist(0.0, 1.0);
+    std::uniform_int_distribution<int> node_dist(0, lsdata->gnnode - 1);
+
+    while (true) {
+        int i = node_dist(*mGenerator);
+
+        int* pvertex = lsdata->ppt->getPvertex();
+        int* pcount = lsdata->ppt->getPcount();
+        size_t bucketSize = lsdata->ppt->getBucketSize();
+        int* const bucket = lsdata->ppt->getBucket();
+
+        int current_partition = pvertex[i];
+        int current_partition_count = pcount[current_partition];
+
         int bestpid = -1;
         int bestdelta = -MAX_VAL;
-        for (int k = 0; k < lsdata->ppt->getBucketSize(); ++k) {
-            int pid = lsdata->ppt->getBucket()[k];
-            if (pid == lsdata->ppt->getPvertex()[i] || (lsdata->ppt->getPcount()[lsdata->ppt->getPvertex()[i]] == 1 && pid == EMPTY_IDX))
+
+        int* const gamma_i = lsdata->gammatbl[i];
+        const int gamma_i_current = gamma_i[current_partition];
+        test_counter++;
+
+        for (int k = 0; k < bucketSize; ++k) {
+            int pid = bucket[k];
+            if (pid == current_partition || (current_partition_count == 1 && pid == EMPTY_IDX))
                 continue;
-            int delta = lsdata->gammatbl[i][pid] - lsdata->gammatbl[i][lsdata->ppt->getPvertex()[i]];
+            int delta = gamma_i[pid] - gamma_i_current;
             if (delta > bestdelta) {
                 bestdelta = delta;
                 bestpid = pid;
             }
         }
+
         if (bestdelta >= 0) {
             changeCurSolution(i, bestpid);
             lsdata->fcurrent += bestdelta;
             accpCnt++;
         }
         else {
-            double prob = std::exp((double)bestdelta / T);
-            if ((*mGenerator)() % 1000 < prob * 1000) {
+            double prob = fastExp((double)bestdelta / T);
+            if (uni_dist(*mGenerator) < prob) {
                 changeCurSolution(i, bestpid);
                 lsdata->fcurrent += bestdelta;
                 accpCnt++;
             }
         }
 
+        pvertex = lsdata->ppt->getPvertex();
+
         if (lsdata->fcurrent > lsdata->fbest) {
-            std::memcpy(vecTmpBest, lsdata->ppt->getPvertex(), sizeof(int) * lsdata->gnnode);
+            std::memcpy(vecTmpBest, pvertex, memSize);
             lsdata->fbest = lsdata->fcurrent;
         }
 
@@ -247,7 +293,7 @@ void SimulatedAnnealingImprovement::search(clock_t startTime, int maxSeconds) {
         if (saitr > L) {
             saitr = 0;
             T *= tempfactor;
-            if (accpCnt * 100 < (int)minpercent * L) {
+            if (accpCnt * 100 < static_cast<int>(minpercent * L)) {
                 frozenCounter++;
             }
             if (frozenCounter > 5) {
@@ -255,9 +301,21 @@ void SimulatedAnnealingImprovement::search(clock_t startTime, int maxSeconds) {
             }
             accpCnt = 0;
         }
+
+        time_check_counter++;
+        if (time_check_counter >= TIME_CHECK_INTERVAL) {
+            time_check_counter = 0;
+            if ((double)(clock() - startTime) / CLOCKS_PER_SEC >= maxSeconds) {
+                break;
+            }
+        }
     }
+
+    printf("SA iterations: %d", test_counter);
+
     // TODO: fix this: how to get value?
     lsdata->ppt_best->buildPartition(vecTmpBest);
+    lsdata->ppt_best->setValue(lsdata->fbest);
     delete[] vecTmpBest;
 }
 

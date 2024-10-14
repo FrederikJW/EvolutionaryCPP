@@ -2,6 +2,7 @@
 #include "../CPPJovanovic/CPPInstance.h"
 #include "../CPPJovanovic/CPPProblem.h"
 #include "../CPPJovanovic/CPPSolutionBase.h"
+#include "../util/Util.h"
 
 #include <chrono>
 #include <unordered_map>

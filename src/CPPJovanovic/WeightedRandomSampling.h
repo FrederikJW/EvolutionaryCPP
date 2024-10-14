@@ -10,7 +10,7 @@
 
 class WeightedRandomSampling {
 public:
-    static std::vector<int> GetWeightedRandomSampling(int mN, int mK, const std::vector<double>& mWeights, std::mt19937& mGenerator) {
+    static std::vector<int> GetWeightedRandomSampling(int mN, int mK, const std::vector<double>& mWeights, RandomGenerator& mGenerator) {
         std::vector<int> Result;
         std::vector<std::array<double, 2>> mUi;
         std::uniform_real_distribution<> dis(0.0, 1.0);
@@ -32,7 +32,7 @@ public:
         return Result;
     }
 
-    static std::vector<int> GetWeightedRandomSampling(int mN, int mK, const std::vector<int>& mWeights, std::mt19937& mGenerator) {
+    static std::vector<int> GetWeightedRandomSampling(int mN, int mK, const std::vector<int>& mWeights, RandomGenerator& mGenerator) {
         std::vector<double> dWeights(mN);
         double Sum = 0;
 

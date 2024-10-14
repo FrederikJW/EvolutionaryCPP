@@ -5,12 +5,13 @@
 #include "../graph/Graph.h"
 #include "../Statistic.h"
 #include "../Recorder.h"
+#include "../RandomGenerator.h"
 #include <random>
 #include <ctime>
 
 class ImprovementStrategy {
 public:
-    ImprovementStrategy(int knownbest_, double minpercent_, double tempfactor_, int sizefactor_, Recorder* recorder_, std::mt19937* generator) : knownbest(knownbest_), minpercent(minpercent_), tempfactor(tempfactor_), sizefactor(sizefactor_), recorder(recorder_), temp(0), mGenerator(generator) {};
+    ImprovementStrategy(int knownbest_, double minpercent_, double tempfactor_, int sizefactor_, Recorder* recorder_, RandomGenerator* generator) : knownbest(knownbest_), minpercent(minpercent_), tempfactor(tempfactor_), sizefactor(sizefactor_), recorder(recorder_), temp(0), mGenerator(generator) {};
 
     virtual void improveSolution(Partition& solution, clock_t startTime, int maxSeconds, BestSolutionInfo* frt, int generation_cnt) = 0;
     virtual void search(clock_t startTime, int maxSeconds) = 0;
@@ -23,7 +24,7 @@ public:
     virtual ~ImprovementStrategy() = default;
 protected:
     Recorder* recorder;
-    std::mt19937* mGenerator;
+    RandomGenerator* mGenerator;
     double temp;
     int knownbest;
     double minpercent;

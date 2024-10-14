@@ -16,6 +16,8 @@
 #include <limits.h>
 #ifdef _WIN32
 #include <windows.h>
+#undef min
+#undef max
 #include <direct.h>
 #define getcwd _getcwd
 #define PATH_MAX 260

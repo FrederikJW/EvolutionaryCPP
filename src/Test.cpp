@@ -16,7 +16,7 @@ void StrategyTests::testSAImprovement() {
     graph.load(filename);
     graph.setKnownbest(knownbest);
     int nnode = graph.getNodeCount();
-    std::mt19937* randomGenerator = new std::mt19937(param_seed);
+    RandomGenerator* randomGenerator = new RandomGenerator(param_seed);
 
     finalBest.best_partition = new Partition(nnode);
     clearResult(&finalBest);
@@ -65,7 +65,7 @@ void StrategyTests::testSAeImprovement() {
     graph.load(filename);
     graph.setKnownbest(knownbest);
     int nnode = graph.getNodeCount();
-    std::mt19937* randomGenerator = new std::mt19937(param_seed);
+    RandomGenerator* randomGenerator = new RandomGenerator(param_seed);
 
     finalBest.best_partition = new Partition(nnode);
     clearResult(&finalBest);
@@ -115,7 +115,7 @@ void StrategyTests::testStdInitStrategy() {
     graph.load(filename);
     graph.setKnownbest(knownbest);
     int nnode = graph.getNodeCount();
-    std::mt19937* randomGenerator = new std::mt19937(param_seed);
+    RandomGenerator* randomGenerator = new RandomGenerator(param_seed);
 
     Partition* childPartition = new Partition(graph.getNodeCount());
     Recorder* recorder = new Recorder(filename, "StdInitTest", false);
@@ -159,7 +159,7 @@ void StrategyTests::testRCLInitStrategy() {
     graph.load(filename);
     graph.setKnownbest(knownbest);
     int nnode = graph.getNodeCount();
-    std::mt19937* randomGenerator = new std::mt19937(param_seed);
+    RandomGenerator* randomGenerator = new RandomGenerator(param_seed);
 
     Partition* childPartition = new Partition(graph.getNodeCount());
     Recorder* recorder = new Recorder(filename, "RCLTest", false);
@@ -218,7 +218,7 @@ void StrategyTests::testSolEvolution() {
 
     while (run_cnt < 1) {
         clearResult(&finalBest);
-        std::mt19937* randomGenerator = new std::mt19937(param_seed + run_cnt);
+        RandomGenerator* randomGenerator = new RandomGenerator(param_seed + run_cnt);
 
         ImprovementStrategy* improvementStrategy = new SimulatedAnnealingImprovement(param_knownbest, param_minpercent, param_tempfactor, param_sizefactor, recorder, randomGenerator);
         CrossoverStrategy* mergeDevideCrossover = new MergeDivideCrossover(param_shrink);
@@ -281,7 +281,7 @@ void StrategyTests::testFSSEvolution() {
 
     while (run_cnt < 1) {
         clearResult(&finalBest);
-        std::mt19937* randomGenerator = new std::mt19937(param_seed + run_cnt);
+        RandomGenerator* randomGenerator = new RandomGenerator(param_seed + run_cnt);
 
         ImprovementStrategy* improvementStrategy = new SimulatedAnnealingImprovement(param_knownbest, param_minpercent, param_tempfactor, param_sizefactor, recorder, randomGenerator);
         CrossoverStrategy* mergeDevideCrossover = new MergeDivideCrossover(param_shrink);

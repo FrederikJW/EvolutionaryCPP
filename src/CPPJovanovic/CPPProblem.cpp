@@ -3,7 +3,7 @@
 
 #include <thread>
 
-CPPProblem::CPPProblem(CPPInstance* nInstance, std::mt19937* generator)
+CPPProblem::CPPProblem(CPPInstance* nInstance, RandomGenerator* generator)
     : mInstance(nInstance), mRCLSize(2), mGenerator(generator), mMetaHeuristic(FSS), mGreedyHeuristic(MaxIncrease), mRCL(nullptr) {
     mSolution = new CPPSolution(mInstance);
     mSolutionHolder = CPPSolutionHolder();
@@ -442,9 +442,15 @@ void CPPProblem::Calibrate(double iTimeLimit) {
     printf("Accept probability %.3f, Calibrate temp %.2f\n\n", Accept, mSAParams.mInitTemperature);
 }
 
-void CPPProblem::SASearch() {
+void CPPProblem::SALOSearch() {
     double Accept;
     mSolution->LocalSearch();
+    mSolution->SimulatedAnnealing(mSAParams, Accept);
+    mSolution->CalculateObjective();
+}
+
+void CPPProblem::SASearch() {
+    double Accept;
     mSolution->SimulatedAnnealing(mSAParams, Accept);
     mSolution->CalculateObjective();
 }

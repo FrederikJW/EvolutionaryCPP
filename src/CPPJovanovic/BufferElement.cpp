@@ -52,7 +52,7 @@ bool BufferElement::HasRelocation(int* r) {
 
 // Takes a random relocation
 /*
-int* BufferElement::TakeRandomRelocation(std::mt19937& generator) {
+int* BufferElement::TakeRandomRelocation(RandomGenerator& generator) {
     std::uniform_int_distribution<> dist(0, mRelocations.size() - 1);
     int select = dist(generator);
     int* result = mRelocations[select];

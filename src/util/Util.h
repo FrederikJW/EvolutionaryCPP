@@ -2,6 +2,8 @@
 #define UTIL_H
 
 #include <string>
+#include "../partition/Partition.h"
+#include "../graph/Graph.h"
 
 struct Parameters {
     std::string filename;
@@ -15,5 +17,7 @@ struct Parameters {
     double shrink;
     int poolSize;
 };
+
+void verifySolution(Partition* partition, Graph* graph);
 
 #endif // UTIL_H
