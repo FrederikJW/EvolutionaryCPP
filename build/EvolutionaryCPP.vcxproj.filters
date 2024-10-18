@@ -76,7 +76,13 @@
     <ClCompile Include="D:\projects\EvolutionaryCPP\src\strategies\SolutionEvolution.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="D:\projects\EvolutionaryCPP\src\util\Util.cpp">
+    <ClCompile Include="..\src\strategies\SaloImprovement.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\util\Util.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\strategies\SaloOverEdgesImprovement.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -1124,6 +1130,18 @@
     </ClInclude>
     <ClInclude Include="D:\projects\EvolutionaryCPP\libs\Eigen\src\UmfPackSupport\UmfPackSupport.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\RandomGenerator.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\strategies\SaloImprovement.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\util\Util.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\strategies\SaloOverEdgesImprovement.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

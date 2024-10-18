@@ -22,12 +22,28 @@ int CPPInstance::getNumberOfNodes() const {
     return mNumberOfNodes;
 }
 
+int CPPInstance::getNumberOfEdges() const {
+    return numberOfEdges;
+}
+
 const std::vector<std::vector<int>>& CPPInstance::getWeights() const {
     return mWeights;
 }
 
 const std::vector<std::vector<int>>& CPPInstance::getNegativeWeights() const {
     return mNegativeWeights;
+}
+
+const std::vector<int>& CPPInstance::getNeighborSize() const {
+    return neighborSize;
+}
+
+const std::vector<std::vector<int>>& CPPInstance::getNeighbors() const {
+    return neighbors;
+}
+
+const std::vector<std::array<int, 3>>& CPPInstance::getEdges() const {
+    return edges;
 }
 
 int CPPInstance::getWeight(int n1, int n2) const {
@@ -43,12 +59,40 @@ void CPPInstance::InitNegativeWeights() {
     }
 }
 
+void CPPInstance::InitNeighbors() {
+    neighborSize.resize(mNumberOfNodes, 0);
+    neighbors.resize(mNumberOfNodes, std::vector<int>(mNumberOfNodes));
+
+    for (int i = 0; i < mNumberOfNodes; ++i) {
+        for (int j = i + 1; j < mNumberOfNodes; ++j) {
+            if (mWeights[i][j] != 0) {
+                neighbors[i][neighborSize[i]++] = j;
+                neighbors[j][neighborSize[j]++] = i;
+            }
+        }
+    }
+}
+
+void CPPInstance::InitEdges() {
+    numberOfEdges = 0;
+    for (int i = 0; i < mNumberOfNodes; ++i) {
+        for (int j = i + 1; j < mNumberOfNodes; ++j) {
+            int weight = mWeights[i][j];
+            if (weight != 0) {
+                edges.emplace_back(std::array<int, 3>{i, j, weight});
+                numberOfEdges++;
+            }
+        }
+    }
+}
+
 void CPPInstance::Allocate() {
     mWeights.resize(mNumberOfNodes, std::vector<int>(mNumberOfNodes));
 }
 
 void CPPInstance::LoadFromMatrix(int nnode, int** matrix) {
     mNumberOfNodes = nnode;
+    
     Allocate();
     for (int i = 0; i < mNumberOfNodes; ++i) {
         for (int j = i; j < mNumberOfNodes; ++j) {
@@ -58,6 +102,8 @@ void CPPInstance::LoadFromMatrix(int nnode, int** matrix) {
     }
 
     InitNegativeWeights();
+    InitNeighbors();
+    InitEdges();
 }
 
 void CPPInstance::Load(const std::string& FileName) {
@@ -96,6 +142,8 @@ void CPPInstance::Load(const std::string& FileName) {
         }
     }
     InitNegativeWeights();
+    InitNeighbors();
+    InitEdges();
 }
 
 void CPPInstance::LoadMIP1(const std::string& FileName) {
@@ -125,6 +173,8 @@ void CPPInstance::LoadMIP1(const std::string& FileName) {
         file.close();
     }
     InitNegativeWeights();
+    InitNeighbors();
+    InitEdges();
 }
 
 void CPPInstance::LoadMIP_GT(const std::string& FileName) {
@@ -178,6 +228,8 @@ void CPPInstance::LoadMIP_GT(const std::string& FileName) {
         file.close();
     }
     InitNegativeWeights();
+    InitNeighbors();
+    InitEdges();
 }
 
 double CPPInstance::GetCForModularityMaximization(const std::string& FileName) {
@@ -262,6 +314,8 @@ double CPPInstance::LoadMIP_MM(const std::string& FileName) {
         file.close();
     }
     InitNegativeWeights();
+    InitNeighbors();
+    InitEdges();
     return C;
 }
 
@@ -308,4 +362,6 @@ void CPPInstance::LoadMIP_Convert(const std::string& FileName) {
         }
     }
     InitNegativeWeights();
+    InitNeighbors();
+    InitEdges();
 }

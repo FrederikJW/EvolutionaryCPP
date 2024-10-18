@@ -1,7 +1,7 @@
 #ifndef SARELOCATION_H
 #define SARELOCATION_H
 
-enum SAMoveType { N0, N1, Both, Swap, Slide };
+enum SAMoveType { N0, N1, Both, Swap, Slide, None };
 
 class SARelocation {
 public:

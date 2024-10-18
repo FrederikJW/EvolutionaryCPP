@@ -12,7 +12,7 @@
 #include <vector>
 #include <random>
 
-enum SASelectType { Single, Dual, Triple };
+enum SASelectType { Single, Dual, Triple, DualNeighbor1, SingleEdge };
 
 class CPPSolutionBase {
 protected:
@@ -90,8 +90,11 @@ public:
     void SASelectDual(SARelocation& Relocation);
     void SASelectDualPrev(SARelocation& Relocation);
     void SASelectDualExt(SARelocation& Relocation);
+    void SASelectDualFull(SARelocation& Relocation, int weight = 0);
     void SASelectSingle(SARelocation& Relocation);
+    void SASelectSingleEdge(SARelocation& Relocation);
     void SASelectDualR(SARelocation& Relocation);
+    // void SASelectDualNeighborOne(SARelocation& Relocation);
     void SASelectSingleR(SARelocation& Relocation);
     void SASelectR(SARelocation& Relocations);
     void ApplyRelocation(SARelocation Relocation);

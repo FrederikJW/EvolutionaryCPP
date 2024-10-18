@@ -323,6 +323,9 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\strategies\SaloImprovement.cpp" />
+    <ClCompile Include="..\src\strategies\SaloOverEdgesImprovement.cpp" />
+    <ClCompile Include="..\src\util\Util.cpp" />
     <ClCompile Include="D:\projects\EvolutionaryCPP\src\CPPJovanovic\BufferElement.cpp" />
     <ClCompile Include="D:\projects\EvolutionaryCPP\src\CPPJovanovic\CPPCandidate.cpp" />
     <ClCompile Include="D:\projects\EvolutionaryCPP\src\CPPJovanovic\CPPGreedy.cpp" />
@@ -348,7 +351,10 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="D:\projects\EvolutionaryCPP\src\strategies\SaloExtendedImprovement.cpp" />
     <ClCompile Include="D:\projects\EvolutionaryCPP\src\strategies\SimulatedAnnealingImprovement.cpp" />
     <ClCompile Include="D:\projects\EvolutionaryCPP\src\strategies\SolutionEvolution.cpp" />
-    <ClCompile Include="D:\projects\EvolutionaryCPP\src\util\Util.cpp" />
+    <ClInclude Include="..\src\RandomGenerator.h" />
+    <ClInclude Include="..\src\strategies\SaloImprovement.h" />
+    <ClInclude Include="..\src\strategies\SaloOverEdgesImprovement.h" />
+    <ClInclude Include="..\src\util\Util.h" />
     <ClInclude Include="D:\projects\EvolutionaryCPP\libs\Eigen\src\AccelerateSupport\AccelerateSupport.h" />
     <ClInclude Include="D:\projects\EvolutionaryCPP\libs\Eigen\src\AccelerateSupport\InternalHeaderCheck.h" />
     <ClInclude Include="D:\projects\EvolutionaryCPP\libs\Eigen\src\Cholesky\InternalHeaderCheck.h" />

@@ -46,6 +46,7 @@ public:
 
         int iObjective = iSolution.getObjective();
         for (CPPSolutionBase& l : mSolutions) {
+            // TODO: consider distance metric here?
             if (l.IsSame(iObjective, iSolution.getCliques())) {
                 return false;
             }

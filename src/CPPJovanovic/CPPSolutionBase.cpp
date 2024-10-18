@@ -577,7 +577,8 @@ void CPPSolutionBase::SASelectDual(SARelocation& Relocation)
     bool sameCliques = (n1Clique == n0Clique);
 
     if (mCliqueSizes[n0Clique] > Relocation.mChange)
-    {
+    {   
+        // move n0 to new cluster
         Relocation.mChange = n0RemoveChange;
         Relocation.mC0 = Size;
         Relocation.mMoveType = SAMoveType::N0;
@@ -590,7 +591,8 @@ void CPPSolutionBase::SASelectDual(SARelocation& Relocation)
         int cChange0 = n0RemoveChange + CliqueConnections[Relocation.mN0];
 
         if (n0Clique != c && cChange0 > Relocation.mChange)
-        {
+        {   
+            // move n0 to cluster c
             Relocation.mChange = cChange0;
             Relocation.mC0 = c;
             Relocation.mMoveType = SAMoveType::N0;
@@ -603,7 +605,8 @@ void CPPSolutionBase::SASelectDual(SARelocation& Relocation)
             int cChange = cChange1 + cChange0 + (sameCliques ? 2 * bWeight : bWeight);
 
             if (cChange > Relocation.mChange)
-            {
+            {   
+                // move n0 and n1 to cluster c
                 Relocation.mChange = cChange;
                 Relocation.mC0 = c;
                 Relocation.mC1 = c;
@@ -625,7 +628,8 @@ void CPPSolutionBase::SASelectDual(SARelocation& Relocation)
             }
 
             if (cChange > Relocation.mChange)
-            {
+            {   
+                // move n0 to cluster c and n1 to cluster of n0
                 Relocation.mChange = cChange;
                 Relocation.mC0 = c;
                 Relocation.mC1 = n0Clique;
@@ -634,7 +638,6 @@ void CPPSolutionBase::SASelectDual(SARelocation& Relocation)
         }
     }
 }
-
 
 void CPPSolutionBase::SASelectDualPrev(SARelocation& Relocation)
 {
@@ -660,7 +663,7 @@ void CPPSolutionBase::SASelectDualPrev(SARelocation& Relocation)
     if (n0RemoveChange < n1RemoveChange)
     {
         if (mCliqueSizes[n1Clique] > 1)
-        {
+        {   
             Relocation.mChange = n1RemoveChange;
             Relocation.mC1 = Size;
             Relocation.mMoveType = SAMoveType::N1;
@@ -716,24 +719,443 @@ void CPPSolutionBase::SASelectDualPrev(SARelocation& Relocation)
 
 void CPPSolutionBase::SASelectDualExt(SARelocation& Relocation)
 {
-    std::vector<int> CliqueConnections;
-
     int n0Clique = mNodeClique[Relocation.mN0];
     int n1Clique = mNodeClique[Relocation.mN1];
+
+    const int Size = static_cast<int>(mCliqueSizes.size());
+    int mAllConn_n0Clique_n1 = mAllConnections[n0Clique][Relocation.mN1];
+    bool sameCliques = (n1Clique == n0Clique);
+
+    int n0RemoveChange = -mAllConnections[n0Clique][Relocation.mN0];
+    int n1RemoveChange = -mAllConnections[n1Clique][Relocation.mN1];
+
+    int bWeight = mInstance->getWeights()[Relocation.mN0][Relocation.mN1];
+
+    if (n0RemoveChange < n1RemoveChange)
+    {
+        if (mCliqueSizes[n1Clique] > 1)
+        {   
+            // create new clique for n1
+            Relocation.mChange = n1RemoveChange;
+            Relocation.mC1 = Size;
+            Relocation.mMoveType = SAMoveType::N1;
+        }
+    }
+    else
+    {
+        if (mCliqueSizes[n0Clique] > 1)
+        {   
+            // create to clique for n0
+            Relocation.mChange = n0RemoveChange;
+            Relocation.mC0 = Size;
+            Relocation.mMoveType = SAMoveType::N0;
+        }
+    }
+
+    for (int c = 0; c < Size; c++)
+    {
+        const std::vector<int>& CliqueConnections = mAllConnections[c];
+
+        int cChange0 = n0RemoveChange + CliqueConnections[Relocation.mN0];
+        if (n0Clique != c && cChange0 > Relocation.mChange)
+        {
+            // move n0 to clique c
+            Relocation.mChange = cChange0;
+            Relocation.mC0 = c;
+            Relocation.mMoveType = SAMoveType::N0;
+        }
+        int cChange1 = n1RemoveChange + CliqueConnections[Relocation.mN1];
+
+        if (n1Clique != c && cChange1 > Relocation.mChange)
+        {
+            // move n1 to clique c
+            Relocation.mChange = cChange1;
+            Relocation.mC1 = c;
+            Relocation.mMoveType = SAMoveType::N1;
+        }
+
+        if (n1Clique != c && n0Clique != c)
+        {
+            int cChange = cChange1 + cChange0 + (sameCliques ? 2 * bWeight : bWeight);
+
+            if (cChange > Relocation.mChange)
+            {
+                // move n0 and n1 to clique c
+                Relocation.mChange = cChange;
+                Relocation.mC0 = c;
+                Relocation.mC1 = c;
+                Relocation.mMoveType = SAMoveType::Both;
+            }
+        }
+
+        if (n0Clique != n1Clique)
+        {
+            int cChange;
+
+            if (c != n0Clique)
+            {
+                if (c != n1Clique)
+                {
+                    cChange = cChange0 + n1RemoveChange + mAllConnections[n0Clique][Relocation.mN1] - bWeight;
+                }
+                else
+                {
+                    cChange = cChange0 + n1RemoveChange + mAllConnections[n0Clique][Relocation.mN1] - 2 * bWeight;
+                }
+
+                if (cChange > Relocation.mChange)
+                {   
+                    // slide n1 to c0 and n0 to c
+                    Relocation.mChange = cChange;
+                    Relocation.mC0 = c;
+                    Relocation.mC1 = n0Clique;
+                    Relocation.mMoveType = SAMoveType::Slide;
+                }
+            }
+
+            if (c != n1Clique)
+            {
+                if (c != n0Clique)
+                {
+                    cChange = cChange1 + n0RemoveChange + mAllConnections[n1Clique][Relocation.mN0] - bWeight;
+                }
+                else
+                {
+                    cChange = cChange1 + n0RemoveChange + mAllConnections[n1Clique][Relocation.mN0] - 2 * bWeight;
+                }
+
+                if (cChange > Relocation.mChange)
+                {   
+                    // slide n0 to c1 and n1 to c
+                    Relocation.mChange = cChange;
+                    Relocation.mC0 = n1Clique;
+                    Relocation.mC1 = c;
+                    Relocation.mMoveType = SAMoveType::Slide;
+                }
+            }
+        }
+    }
+}
+
+void CPPSolutionBase::SASelectDualFull(SARelocation& Relocation, int weight)
+{   
+    int n0Clique = mNodeClique[Relocation.mN0];
+    int n1Clique = mNodeClique[Relocation.mN1];
+
+    const int Size = static_cast<int>(mCliqueSizes.size());
+
+    int n0RemoveChange = -mAllConnections[n0Clique][Relocation.mN0];
+    int n1RemoveChange = -mAllConnections[n1Clique][Relocation.mN1];
+
+    int bestN0Clique = n0Clique;
+    int secondBestN0Clique = n0Clique;
+    int bestN0Change = INT_MIN;
+    int secondBestN0Change = INT_MIN;
+    int bestN1Clique = n1Clique;
+    int secondBestN1Clique = n1Clique;
+    int bestN1Change = INT_MIN;
+    int secondBestN1Change = INT_MIN;
+
+    Relocation.mC0 = n0Clique;
+    Relocation.mC1 = n1Clique;
+    Relocation.mChange = INT_MIN;
+
+    if (weight == 0) {
+        weight = mInstance->getWeights()[Relocation.mN0][Relocation.mN1];
+    }
+    int mergeWeight = weight;
+    int splitWeight = -weight;
+
+    bool sameClique = n0Clique == n1Clique;
+    if (sameClique) {
+        mergeWeight = 0;
+    } else {
+        splitWeight = 0;
+    }
+
+    long cChange;
+    const std::vector<int>& n0CliqueConnections = mAllConnections[n0Clique];
+    const std::vector<int>& n1CliqueConnections = mAllConnections[n1Clique];
+
+    for (int c = 0; c < Size; c++) {
+        const std::vector<int>& cCliqueConnections = mAllConnections[c];
+        int cChange0 = n0RemoveChange + cCliqueConnections[Relocation.mN0];
+        int cChange1 = n1RemoveChange + cCliqueConnections[Relocation.mN1];
+
+        if (n0Clique != c && n1Clique != c) {
+            // move individually n0 to c
+            if (cChange0 > bestN0Change) {
+                secondBestN0Clique = bestN0Clique;
+                bestN0Clique = c;
+                secondBestN0Change = bestN0Change;
+                bestN0Change = cChange0;
+            }
+            else if (cChange0 > secondBestN0Change) {
+                secondBestN0Clique = c;
+                secondBestN0Change = cChange0;
+            }
+
+            // move individually n1 to c
+            if (cChange1 > bestN1Change) {
+                secondBestN1Clique = bestN1Clique;
+                bestN1Clique = c;
+                secondBestN1Change = bestN1Change;
+                bestN1Change = cChange1;
+            }
+            else if (cChange1 > secondBestN1Change) {
+                secondBestN1Clique = c;
+                secondBestN1Change = cChange1;
+            }
+
+            // move both to c
+            cChange = cChange1 + cChange0 + mergeWeight - 2 * splitWeight;
+            if (cChange > Relocation.mChange) {
+                Relocation.mC0 = c;
+                Relocation.mC1 = c;
+                Relocation.mChange = cChange;
+                Relocation.mMoveType = SAMoveType::Both;
+            }
+        }
+
+        if (!sameClique) {
+            if (n0Clique != c) {
+                // slide n1 to n0Clique and n0 to c
+                if (c != n1Clique) {
+                    cChange = cChange0 + n1RemoveChange + n0CliqueConnections[Relocation.mN1] - mergeWeight;
+                } else {
+                    cChange = cChange0 + n1RemoveChange + n0CliqueConnections[Relocation.mN1] - 2 * mergeWeight;
+                }
+
+                if (cChange > Relocation.mChange) {
+                    Relocation.mC0 = c;
+                    Relocation.mC1 = n0Clique;
+                    Relocation.mChange = cChange;
+                    Relocation.mMoveType = SAMoveType::Slide;
+                }
+            } else {
+                // move n1 to n0Clique
+                if (cChange1 > Relocation.mChange) {
+                    Relocation.mC0 = n0Clique;
+                    Relocation.mC1 = n0Clique;
+                    Relocation.mChange = cChange1;
+                    Relocation.mMoveType = SAMoveType::N1;
+                }
+            }
+
+            if (n1Clique != c) {
+                // slide n0 to n1Clique and n1 to c
+                if (c != n0Clique) {
+                    cChange = cChange1 + n0RemoveChange + n1CliqueConnections[Relocation.mN0] - mergeWeight;
+                }
+                else {
+                    cChange = cChange1 + n0RemoveChange + n1CliqueConnections[Relocation.mN0] - 2 * mergeWeight;
+                }
+
+                if (cChange > Relocation.mChange) {
+                    Relocation.mC0 = n1Clique;
+                    Relocation.mC1 = c;
+                    Relocation.mChange = cChange;
+                    Relocation.mMoveType = SAMoveType::Slide;
+                }
+            } else {
+                // move n0 to n1Clique
+                if (cChange0 > Relocation.mChange) {
+                    Relocation.mC0 = n1Clique;
+                    Relocation.mC1 = n1Clique;
+                    Relocation.mChange = cChange0;
+                    Relocation.mMoveType = SAMoveType::N0;
+                }
+            }
+        }
+    }
+
+    // remove individually
+    if (n0RemoveChange > bestN0Change) {
+        secondBestN0Clique = bestN0Clique;
+        bestN0Clique = Size;
+        secondBestN0Change = bestN0Change;
+        bestN0Change = n0RemoveChange;
+    }
+    if (n1RemoveChange > bestN1Change) {
+        secondBestN1Clique = bestN1Clique;
+        bestN1Clique = Size;
+        secondBestN1Change = bestN1Change;
+        bestN1Change = n1RemoveChange;
+    }
+
+    // combine individual moves to together moves
+    if (bestN0Clique != bestN1Clique) {
+        // individual movement of nodes
+        cChange = bestN0Change + bestN1Change - splitWeight;
+        if (cChange > Relocation.mChange) {
+            Relocation.mC0 = bestN0Clique;
+            Relocation.mC1 = bestN1Clique;
+            Relocation.mChange = cChange;
+            Relocation.mMoveType = SAMoveType::Both;
+        }
+    } else {
+        // conflict in movement of nodes
+        if (bestN0Clique == Size) {
+            // move to newly created cluster
+            cChange = bestN0Change + bestN1Change - splitWeight;
+            if (cChange > Relocation.mChange) {
+                Relocation.mC0 = Size;
+                Relocation.mC1 = Size + 1;
+                Relocation.mChange = cChange;
+                Relocation.mMoveType = SAMoveType::Both;
+            }
+        }
+        else {
+            cChange = bestN0Change + secondBestN1Change - splitWeight;
+            if (secondBestN1Change != INT_MIN && cChange > Relocation.mChange) {
+                Relocation.mC0 = bestN0Clique;
+                Relocation.mC1 = secondBestN1Clique;
+                Relocation.mChange = cChange;
+                Relocation.mMoveType = SAMoveType::Both;
+            }
+            cChange = secondBestN0Change + bestN1Change - splitWeight;
+            if (secondBestN0Change != INT_MIN && cChange > Relocation.mChange) {
+                Relocation.mC0 = secondBestN0Clique;
+                Relocation.mC1 = bestN1Clique;
+                Relocation.mChange = cChange;
+                Relocation.mMoveType = SAMoveType::Both;
+            }
+        }
+    }
+
+    // remove together
+    int removeTogether = n0RemoveChange + n1RemoveChange + mergeWeight - 2 * splitWeight;
+    if (removeTogether > Relocation.mChange) {
+        Relocation.mC0 = Size;
+        Relocation.mC1 = Size;
+        Relocation.mChange = removeTogether;
+        Relocation.mMoveType = SAMoveType::Both;
+    }
+
+    // check if better if one node does not move
+    if (bestN0Change > Relocation.mChange) {
+        // split up and return two Relocations instead
+        // four attributes: nextAcceptRelocation, nextDenyRelocation, nextRelocationCalculated, prevAccepted
+        Relocation.mC0 = bestN0Clique;
+        Relocation.mC1 = n1Clique;
+        Relocation.mChange = bestN0Change;
+        Relocation.mMoveType = SAMoveType::N0;
+    }
+    if (bestN1Change > Relocation.mChange) {
+        // split up and return two Relocations instead
+        Relocation.mC0 = n0Clique;
+        Relocation.mC1 = bestN1Clique;
+        Relocation.mChange = bestN1Change;
+        Relocation.mMoveType = SAMoveType::N1;
+    }
+
+    // check if better if no node moves
+    // commented because backward moves should be allowed
+    /*
+    if (Relocation.mChange < 0) {
+        Relocation.mC0 = n0Clique;
+        Relocation.mC1 = n1Clique;
+        Relocation.mChange = 0;
+        Relocation.mMoveType = SAMoveType::None;
+    }*/
+
+    // assert(Relocation.mChange >= 0);
+}
+
+void CPPSolutionBase::SASelectSingle(SARelocation& Relocation)
+{
+
+    int n0Clique = mNodeClique[Relocation.mN0];
     int n0RemoveChange;
-    int n1RemoveChange;
-    int RemoveChange;
-    int bWeight;
     int cChange0;
-    int cChange1;
-    int cChange;
-    int swapChange;
     int Size = mCliqueSizes.size();
 
     n0RemoveChange = -mAllConnections[n0Clique][Relocation.mN0];
-    n1RemoveChange = -mAllConnections[n1Clique][Relocation.mN1];
 
-    bWeight = mInstance->getWeights()[Relocation.mN0][Relocation.mN1];
+    if (mCliqueSizes[n0Clique] > 1)
+    {
+        Relocation.mChange = n0RemoveChange;
+        Relocation.mC0 = Size;
+        Relocation.mMoveType = SAMoveType::N0;
+    }
+
+    for (int c = 0; c < Size; c++)
+    {
+        const std::vector<int>& CliqueConnections = mAllConnections[c];
+
+        cChange0 = n0RemoveChange + CliqueConnections[Relocation.mN0];
+        if (n0Clique != c)
+        {
+            if (cChange0 > Relocation.mChange)
+            {
+                Relocation.mChange = cChange0;
+                Relocation.mC0 = c;
+                Relocation.mMoveType = SAMoveType::N0;
+            }
+        }
+    }
+}
+
+void CPPSolutionBase::SASelectSingleEdge(SARelocation& Relocation) {
+    // move the distribution to the instance
+    std::uniform_int_distribution<int> distribution(0, mInstance->getNumberOfEdges() - 1);
+
+    const auto& edge = mInstance->getEdges()[distribution(*mGenerator)];
+    int n0 = edge[0];
+    int n1 = edge[1];
+    int weight = edge[2];
+
+    Relocation.mN0 = n0;
+    Relocation.mN1 = n1;
+
+    SASelectDualFull(Relocation, weight);
+}
+
+void CPPSolutionBase::SASelectDualR(SARelocation& Relocation)
+{
+    int n0, n1;
+
+    std::uniform_int_distribution<int> distribution(0, mInstance->getNumberOfNodes() - 1);
+    n0 = distribution(*mGenerator);
+
+    Relocation.mN1 = Relocation.mN0;
+    Relocation.mN0 = n0;
+
+    if (Relocation.mN0 != Relocation.mN1)
+        SASelectDual(Relocation);
+    else
+        SASelectSingle(Relocation);
+}
+
+/*
+void CPPSolutionBase::SASelectDualNeighborOne(SARelocation& Relocation)
+{
+    int n0, n1;
+
+    int neighborSize = 0;
+    while (neighborSize == 0) {
+        std::uniform_int_distribution<int> distribution(0, mInstance->getNumberOfNodes() - 1);
+        n1 = distribution(*mGenerator);
+        neighborSize = mInstance->getNeighborSize()[n1];
+    }
+
+    int i = (*mGenerator)() % neighborSize;
+    n0 = mInstance->getNeighbors()[n1][i];
+
+    Relocation.mN1 = n1;
+    Relocation.mN0 = n0;
+
+    int n0Clique = mNodeClique[Relocation.mN0];
+    int n1Clique = mNodeClique[Relocation.mN1];
+
+    const int Size = static_cast<int>(mCliqueSizes.size());
+    int mAllConn_n0Clique_n1 = mAllConnections[n0Clique][Relocation.mN1];
+    bool sameCliques = (n1Clique == n0Clique);
+
+    int n0RemoveChange = -mAllConnections[n0Clique][Relocation.mN0];
+    int n1RemoveChange = -mAllConnections[n1Clique][Relocation.mN1];
+
+    int bWeight = mInstance->getWeights()[Relocation.mN0][Relocation.mN1];
 
     if (n0RemoveChange < n1RemoveChange)
     {
@@ -756,43 +1178,33 @@ void CPPSolutionBase::SASelectDualExt(SARelocation& Relocation)
 
     for (int c = 0; c < Size; c++)
     {
-        CliqueConnections = mAllConnections[c];
+        const std::vector<int>& CliqueConnections = mAllConnections[c];
 
-        cChange0 = n0RemoveChange + CliqueConnections[Relocation.mN0];
-        if (n0Clique != c)
-        {
-            if (cChange0 > Relocation.mChange)
-            {
-                Relocation.mChange = cChange0;
-                Relocation.mC0 = c;
-                Relocation.mMoveType = SAMoveType::N0;
-            }
+        int cChange0 = n0RemoveChange + CliqueConnections[Relocation.mN0];
+        if (n0Clique != c && cChange0 > Relocation.mChange)
+        {   
+            // move n0 to cluster c
+            Relocation.mChange = cChange0;
+            Relocation.mC0 = c;
+            Relocation.mMoveType = SAMoveType::N0;
         }
-        cChange1 = n1RemoveChange + CliqueConnections[Relocation.mN1];
+        int cChange1 = n1RemoveChange + CliqueConnections[Relocation.mN1];
 
-        if (n1Clique != c)
-        {
-            if (cChange1 > Relocation.mChange)
-            {
-                Relocation.mChange = cChange1;
-                Relocation.mC1 = c;
-                Relocation.mMoveType = SAMoveType::N1;
-            }
+        if (n1Clique != c && cChange1 > Relocation.mChange)
+        {   
+            // move n1 to cluster c
+            Relocation.mChange = cChange1;
+            Relocation.mC1 = c;
+            Relocation.mMoveType = SAMoveType::N1;
         }
 
-        if ((n1Clique != c) && (n0Clique != c))
+        if (n1Clique != c && n0Clique != c)
         {
-            if (n1Clique == n0Clique)
-            {
-                cChange = cChange1 + cChange0 + 2 * bWeight;
-            }
-            else
-            {
-                cChange = cChange1 + cChange0 + bWeight;
-            }
+            int cChange = cChange1 + cChange0 + (sameCliques ? 2 * bWeight : bWeight);
 
             if (cChange > Relocation.mChange)
             {
+                // move n0 and n1 to cluster c
                 Relocation.mChange = cChange;
                 Relocation.mC0 = c;
                 Relocation.mC1 = c;
@@ -800,8 +1212,10 @@ void CPPSolutionBase::SASelectDualExt(SARelocation& Relocation)
             }
         }
 
-        if (n0Clique != n1Clique)
+        if (n0Clique != n1Clique && c != n0Clique)
         {
+            int cChange;
+
             if (c != n0Clique)
             {
                 if (c != n1Clique)
@@ -843,90 +1257,7 @@ void CPPSolutionBase::SASelectDualExt(SARelocation& Relocation)
             }
         }
     }
-
-    if (n1Clique != n0Clique)
-    {
-        swapChange = n0RemoveChange + n1RemoveChange + mAllConnections[n0Clique][Relocation.mN1] + mAllConnections[n1Clique][Relocation.mN0] - 2 * bWeight;
-        if (swapChange > Relocation.mChange)
-        {
-            Relocation.mChange = swapChange;
-            Relocation.mMoveType = SAMoveType::Swap;
-        }
-    }
-
-    n0RemoveChange += n1RemoveChange;
-
-    if (n1Clique == n0Clique)
-    {
-        if (Relocation.mChange < n0RemoveChange + 2 * bWeight)
-        {
-            Relocation.mChange = n0RemoveChange + 2 * bWeight;
-            Relocation.mC0 = Size;
-            Relocation.mC1 = Size;
-            Relocation.mMoveType = SAMoveType::Both;
-        }
-    }
-    else
-    {
-        if (Relocation.mChange < n0RemoveChange + bWeight)
-        {
-            Relocation.mChange = n0RemoveChange + bWeight;
-            Relocation.mC0 = Size;
-            Relocation.mC1 = Size;
-            Relocation.mMoveType = SAMoveType::Both;
-        }
-    }
-}
-
-void CPPSolutionBase::SASelectSingle(SARelocation& Relocation)
-{
-
-    int n0Clique = mNodeClique[Relocation.mN0];
-    int n0RemoveChange;
-    int cChange0;
-    int Size = mCliqueSizes.size();
-
-    n0RemoveChange = -mAllConnections[n0Clique][Relocation.mN0];
-
-    if (mCliqueSizes[n0Clique] > 1)
-    {
-        Relocation.mChange = n0RemoveChange;
-        Relocation.mC0 = Size;
-        Relocation.mMoveType = SAMoveType::N0;
-    }
-
-    for (int c = 0; c < Size; c++)
-    {
-        const std::vector<int>& CliqueConnections = mAllConnections[c];
-
-        cChange0 = n0RemoveChange + CliqueConnections[Relocation.mN0];
-        if (n0Clique != c)
-        {
-            if (cChange0 > Relocation.mChange)
-            {
-                Relocation.mChange = cChange0;
-                Relocation.mC0 = c;
-                Relocation.mMoveType = SAMoveType::N0;
-            }
-        }
-    }
-}
-
-void CPPSolutionBase::SASelectDualR(SARelocation& Relocation)
-{
-    int n0, n1;
-
-    std::uniform_int_distribution<int> distribution(0, mInstance->getNumberOfNodes() - 1);
-    n0 = distribution(*mGenerator);
-
-    Relocation.mN1 = Relocation.mN0;
-    Relocation.mN0 = n0;
-
-    if (Relocation.mN0 != Relocation.mN1)
-        SASelectDual(Relocation);
-    else
-        SASelectSingle(Relocation);
-}
+}*/
 
 void CPPSolutionBase::SASelectSingleR(SARelocation& Relocation)
 {
@@ -940,18 +1271,26 @@ void CPPSolutionBase::SASelectSingleR(SARelocation& Relocation)
     SASelectSingle(Relocation);
 }
 
-void CPPSolutionBase::SASelectR(SARelocation& Relocations)
+void CPPSolutionBase::SASelectR(SARelocation& Relocation)
 {
     switch (mSASelectType)
     {
     case SASelectType::Single:
-        SASelectSingleR(Relocations);
+        SASelectSingleR(Relocation);
         break;
     case SASelectType::Dual:
-        SASelectDualR(Relocations);
+        SASelectDualR(Relocation);
+        break;
+    /*
+    case SASelectType::DualNeighbor1:
+        SASelectDualNeighborOne(Relocation);
+        break;
+    */
+    case SASelectType::SingleEdge:
+        SASelectSingleEdge(Relocation);
         break;
     default:
-        SASelectDualR(Relocations);
+        SASelectDualR(Relocation);
         break;
     }
 }
@@ -988,6 +1327,8 @@ void CPPSolutionBase::ApplyRelocation(SARelocation Relocation)
         UpdateAllConnections(Relocation.mN1, Relocation.mC1);
         MoveNodeSA(Relocation.mN1, Relocation.mC1);
         break;
+    case SAMoveType::None:
+        break;
     }
 
     while (RemoveEmptyCliqueSA(true, true));
@@ -1017,6 +1358,7 @@ bool CPPSolutionBase::SimulatedAnnealing(SAParameters& iSAParameters, double& Ac
     std::copy(mNodeClique.begin(), mNodeClique.end(), tNodeClique.begin());
 
     T = iSAParameters.mInitTemperature;
+    int L = NeiborhoodSize * iSAParameters.mSizeRepeat;
 
     int counterCool = 0;
     cSolObjective = StartObjective;
@@ -1031,7 +1373,7 @@ bool CPPSolutionBase::SimulatedAnnealing(SAParameters& iSAParameters, double& Ac
         Accept = 0;
         waste = 0;
 
-        for (int i = 0; i < NeiborhoodSize * iSAParameters.mSizeRepeat; i++)
+        for (int i = 0; i < L; i++)
         {   
             // clock_t start = clock();
             cRelocation.mChange = INT_MIN;
@@ -1068,7 +1410,7 @@ bool CPPSolutionBase::SimulatedAnnealing(SAParameters& iSAParameters, double& Ac
             T = iSAParameters.mInitTemperature * 1 / (1 + iSAParameters.mCoolingParam * counterCool);
         }
 
-        if (static_cast<double>(Accept) / (NeiborhoodSize * iSAParameters.mSizeRepeat) < iSAParameters.mMinAccept)
+        if (static_cast<double>(Accept) / L < iSAParameters.mMinAccept)
         {
             Stag++;
         }
