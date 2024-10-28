@@ -1,4 +1,4 @@
-#include "SaloExtendedImprovement.h"
+#include "SaloOverEdgesForcedDualImprovement.h"
 #include "../Defines.h"
 #include <cassert>
 #include <cstdio>
@@ -11,20 +11,20 @@
 // TODO: move these parameter to somewhere else
 #define EMPTY_IDX 0
 
-SaloExtendedImprovement::~SaloExtendedImprovement() {
+SaloOverEdgesForcedDualImprovement::~SaloOverEdgesForcedDualImprovement() {
     disposeEnvironment();
 }
 
-void SaloExtendedImprovement::improveSolution(Partition& solution, clock_t startTime, int maxSeconds, BestSolutionInfo* frt, int generation_cnt) {
+void SaloOverEdgesForcedDualImprovement::improveSolution(Partition& solution, clock_t startTime, int maxSeconds, BestSolutionInfo* frt, int generation_cnt) {
     recorder->enter("improve_solution");
     setStart(solution);
     search(startTime, maxSeconds, generation_cnt);
     selectBetter(frt, startTime, generation_cnt);
     recorder->exit("improve_solution");
-    printf("Child has been raised to by SA %d\n", getBestObjective());
+    printf("Child has been raised to by SA %d\n", frt->best_val);
 }
 
-void SaloExtendedImprovement::setEnvironment(Graph& graph) {
+void SaloOverEdgesForcedDualImprovement::setEnvironment(Graph& graph) {
     delete instance;
     instance = new CPPInstance(graph.getNodeCount(), graph.getMatrix());
     delete problem;
@@ -32,24 +32,27 @@ void SaloExtendedImprovement::setEnvironment(Graph& graph) {
     problem->SetSASelect(selectType);
 }
 
-void SaloExtendedImprovement::setStart(Partition& startSol) {
+void SaloOverEdgesForcedDualImprovement::setStart(Partition& startSol) {
     problem->AllocateSolution(startSol.getPvertex(), startSol.getNnode(), startSol.getValue());
 }
 
-void SaloExtendedImprovement::disposeEnvironment() {
+void SaloOverEdgesForcedDualImprovement::disposeEnvironment() {
     delete instance;
     delete problem;
 }
 
-void SaloExtendedImprovement::calibrateTemp() {
+void SaloOverEdgesForcedDualImprovement::calibrateTemp() {
     problem->Calibrate(10000);
 }
 
-void SaloExtendedImprovement::search(clock_t startTime, int maxSeconds, int generation_cnt) {
+void SaloOverEdgesForcedDualImprovement::search(clock_t startTime, int maxSeconds, int generation_cnt = 0) {
+    // testing dynamic neighborhood factor
+    // long neighboorFactor = (200 + (generation_cnt / 4)) / 100;
+    problem->setNeighborhoodFactor(2.5);
     problem->SALOSearch();
 }
 
-void SaloExtendedImprovement::selectBetter(BestSolutionInfo* frt, clock_t start_time, int generation_cnt) {
+void SaloOverEdgesForcedDualImprovement::selectBetter(BestSolutionInfo* frt, clock_t start_time, int generation_cnt) {
     if (getBestObjective() > frt->best_val) {
         frt->best_partition->copyPartition(getBestPartition());
         frt->best_val = getBestObjective();
@@ -61,11 +64,11 @@ void SaloExtendedImprovement::selectBetter(BestSolutionInfo* frt, clock_t start_
     }
 }
 
-int SaloExtendedImprovement::getBestObjective() {
+int SaloOverEdgesForcedDualImprovement::getBestObjective() {
     return problem->GetSolution().getObjective();
 }
 
-Partition SaloExtendedImprovement::getBestPartition() {
+Partition SaloOverEdgesForcedDualImprovement::getBestPartition() {
     int nnode = problem->GetInstance()->getNumberOfNodes();
     Partition partition(nnode);
 

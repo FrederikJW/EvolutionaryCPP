@@ -72,6 +72,8 @@ public:
     void InitTracking();
     void InitFSS();
 
+    void setNeighborhoodFactor(long factor) { mSAParams.neighborhoodFactor = factor; }
+
     void AllocateSolution();
     void AllocateSolution(CPPSolutionBase* solution);
     void AllocateSolution(int* pvertex, int numVertices, int objective);

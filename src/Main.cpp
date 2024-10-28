@@ -10,6 +10,8 @@
 #include "strategies/SaloImprovement.h"
 #include "strategies/SaloExtendedImprovement.h"
 #include "strategies/SaloOverEdgesImprovement.h"
+#include "strategies/SaloOverEdgesForcedDualImprovement.h"
+#include "strategies/SaloDualNeighborImprovement.h"
 #include "strategies/EvolutionStrategy.h"
 #include "strategies/FixedSetEvolution.h"
 #include "strategies/SolutionEvolution.h"
@@ -59,6 +61,8 @@ enum class ImprovementStrategyCode {
     SALO,  // SAe
     SALOe,
     SALOoE,
+    SOEFD,
+    SALODN,
 };
 
 // Enum for Initial Pool Strategy
@@ -87,6 +91,9 @@ std::string getAlgorithmConfigCode(EvolutionStrategyCode evol, ImprovementStrate
         break;
     case ImprovementStrategyCode::SALOoE:
         configCode += "SALOoE-";
+        break;
+    case ImprovementStrategyCode::SOEFD:
+        configCode += "SOEFD-";
         break;
     }
 
@@ -312,10 +319,9 @@ int bulk_run(int argc, char** argv) {
 
     // std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/rand400-5.txt", 12133, ImprovementStrategyCode::SALO, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 10),
     // std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/rand400-5.txt", 12133, ImprovementStrategyCode::SALOe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 10),
-
-    // file name, known best, improvement strategy, initial pool strategy, evolution strategy, number of runs
-    std::vector<std::tuple<std::string, int, ImprovementStrategyCode, InitialPoolStrategyCode, EvolutionStrategyCode, int>> list_of_run_settings = {
-        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-5-1.txt", 17691, ImprovementStrategyCode::SALO, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 10),
+    
+    /*
+            std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-5-1.txt", 17691, ImprovementStrategyCode::SALO, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 10),
         std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-5-1.txt", 17691, ImprovementStrategyCode::SALOe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 10),
         std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-5-1.txt", 17691, ImprovementStrategyCode::SALOoE, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 10),
         std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-5-2.txt", 17169, ImprovementStrategyCode::SALO, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 10),
@@ -375,13 +381,21 @@ int bulk_run(int argc, char** argv) {
         std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-100-10.txt", 314864, ImprovementStrategyCode::SALO, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 10),
         std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-100-10.txt", 314864, ImprovementStrategyCode::SALOe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 10),
         std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-100-10.txt", 314864, ImprovementStrategyCode::SALOoE, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 10),
+     */
+
+    // file name, known best, improvement strategy, initial pool strategy, evolution strategy, number of runs
+    std::vector<std::tuple<std::string, int, ImprovementStrategyCode, InitialPoolStrategyCode, EvolutionStrategyCode, int>> list_of_run_settings = {
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/MCF/Wang250.txt", 419, ImprovementStrategyCode::SOEFD, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 3),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/MCF/Wang250.txt", 419, ImprovementStrategyCode::SALOe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 3),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/MCF/Wang800.txt", 1788, ImprovementStrategyCode::SOEFD, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 3),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/MCF/Wang800.txt", 1788, ImprovementStrategyCode::SALOe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 3),
     };
     /*
     std::vector<std::tuple<std::string, int, ImprovementStrategyCode, InitialPoolStrategyCode, EvolutionStrategyCode, int>> list_of_run_settings = {
         std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/p500-5-3.txt", 16816, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 20),
     };*/
 
-    Recorder* bulkRecorder = new Recorder("randFull.txt", "SALOComparisonBulk10_2", true);
+    Recorder* bulkRecorder = new Recorder("Wang.txt", "Comparison", true);
 
     for (const auto& run_settings : list_of_run_settings) {
         bulkRecorder->clearTimeResults();
@@ -442,6 +456,11 @@ int bulk_run(int argc, char** argv) {
             case ImprovementStrategyCode::SALOoE:
                 improvementStrategy = new SaloOverEdgesImprovement(knownbest, param_minpercent, param_tempfactor, param_sizefactor, bulkRecorder, randomGenerator);
                 break;
+            case ImprovementStrategyCode::SOEFD:
+                improvementStrategy = new SaloOverEdgesForcedDualImprovement(knownbest, param_minpercent, param_tempfactor, param_sizefactor, bulkRecorder, randomGenerator);
+                break;
+            case ImprovementStrategyCode::SALODN:
+                improvementStrategy = new SaloDualNeighborImprovement(knownbest, param_minpercent, param_tempfactor, param_sizefactor, bulkRecorder, randomGenerator);
             }
 
             CrossoverStrategy* mergeDevideCrossover = new MergeDivideCrossover(param_shrink);
@@ -496,6 +515,7 @@ int bulk_run(int argc, char** argv) {
             sumiter += finalBest.best_generation;
 
             reportResult();
+            verifySolution(finalBest.best_partition, &graph);
 
             run_cnt++;
 

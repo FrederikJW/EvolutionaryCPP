@@ -12,6 +12,8 @@ public:
     double mMinAccept;
     int mMaxStagnation;
 
+    double neighborhoodFactor;
+
     void InitGeometric();
     void InitLinearMultiplicative();
 };

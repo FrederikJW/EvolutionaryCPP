@@ -306,7 +306,7 @@ CPPSolutionBase::CPPSolutionBase(int* pvertex, int numVertices, int objective, C
     mObjective = objective;
 }
 
-bool CPPSolutionBase::CheckSolutionValid(CPPInstance tInstance)
+bool CPPSolutionBase::CheckSolutionValid(CPPInstance& tInstance)
 {
     int TotalNodes = 0;
     std::vector<int> AllNodes;
@@ -837,7 +837,7 @@ void CPPSolutionBase::SASelectDualExt(SARelocation& Relocation)
     }
 }
 
-void CPPSolutionBase::SASelectDualFull(SARelocation& Relocation, int weight)
+void CPPSolutionBase::SASelectDualFull(SARelocation& Relocation, int weight, bool forceDualMove)
 {   
     int n0Clique = mNodeClique[Relocation.mN0];
     int n1Clique = mNodeClique[Relocation.mN1];
@@ -1049,6 +1049,132 @@ void CPPSolutionBase::SASelectDualFull(SARelocation& Relocation, int weight)
         Relocation.mMoveType = SAMoveType::N1;
     }
 
+    
+    if (forceDualMove) {
+        if (Relocation.mMoveType == SAMoveType::N0) {
+            nextAcceptRelocation.mN0 = Relocation.mN0;
+            nextAcceptRelocation.mN1 = Relocation.mN1;
+            nextAcceptRelocation.mC0 = Relocation.mC0;
+            nextAcceptRelocation.mMoveType = SAMoveType::N1;
+            nextDenyRelocation.mN0 = Relocation.mN0;
+            nextDenyRelocation.mN1 = Relocation.mN1;
+            nextDenyRelocation.mC0 = n0Clique;
+            nextDenyRelocation.mMoveType = SAMoveType::N1;
+            nextRelocationCalculated = true;
+            int acceptCChange;
+            int denyCChange;
+            if (Relocation.mC0 == n1Clique) {
+                // n0 is moved to c1
+                nextAcceptRelocation.mC1 = bestN1Clique;
+                nextAcceptRelocation.mChange = bestN1Change - mergeWeight;
+                nextDenyRelocation.mC1 = bestN1Clique;
+                nextDenyRelocation.mChange = bestN1Change;
+            }
+            else {
+                // n0 is moved somewhere else than c1
+                int acceptBest, denyBest, acceptSecondBest, denySecondBest;
+                if (bestN1Clique == Relocation.mC0) {
+                    // best clique for n1 is the one n0 is moved to
+                    acceptBest = bestN1Change - splitWeight + weight;
+                    denyBest = bestN1Change;
+                }
+                else {
+                    // best clique for n1 is NOT the one n0 is moved to
+                    acceptBest = bestN1Change - splitWeight;
+                    denyBest = bestN1Change;
+                }
+                if (secondBestN1Clique == Relocation.mC0) {
+                    // second best clique for n1 is the one n0 is moved to
+                    acceptSecondBest = secondBestN1Change - 2 * splitWeight + mergeWeight;
+                    denySecondBest = secondBestN1Change;
+                }
+                else {
+                    // second best clique for n1 is NOT the one n0 is moved to
+                    acceptSecondBest = secondBestN1Change - splitWeight;
+                    denySecondBest = secondBestN1Change;
+                }
+
+                if (acceptBest >= acceptSecondBest) {
+                    nextAcceptRelocation.mC1 = bestN1Clique;
+                    nextAcceptRelocation.mChange = acceptBest;
+                }
+                else {
+                    nextAcceptRelocation.mC1 = secondBestN1Clique;
+                    nextAcceptRelocation.mChange = acceptSecondBest;
+                }
+                if (denyBest >= denySecondBest) {
+                    nextDenyRelocation.mC1 = bestN1Clique;
+                    nextDenyRelocation.mChange = denyBest;
+                }
+                else {
+                    nextDenyRelocation.mC1 = secondBestN1Clique;
+                    nextDenyRelocation.mChange = denySecondBest;
+                }
+            }
+        } else if (Relocation.mMoveType == SAMoveType::N1) {
+            nextAcceptRelocation.mN0 = Relocation.mN0;
+            nextAcceptRelocation.mN1 = Relocation.mN1;
+            nextAcceptRelocation.mC1 = Relocation.mC1;
+            nextAcceptRelocation.mMoveType = SAMoveType::N0;
+            nextDenyRelocation.mN0 = Relocation.mN0;
+            nextDenyRelocation.mN1 = Relocation.mN1;
+            nextDenyRelocation.mC1 = n1Clique;
+            nextDenyRelocation.mMoveType = SAMoveType::N0;
+            nextRelocationCalculated = true;
+            int acceptCChange;
+            int denyCChange;
+            if (Relocation.mC1 == n0Clique) {
+                // n1 is moved to c0
+                nextAcceptRelocation.mC0 = bestN0Clique;
+                nextAcceptRelocation.mChange = bestN0Change - mergeWeight;
+                nextDenyRelocation.mC0 = bestN0Clique;
+                nextDenyRelocation.mChange = bestN0Change;
+            }
+            else {
+                // n1 is moved somewhere else than c0
+                int acceptBest, denyBest, acceptSecondBest, denySecondBest;
+                if (bestN0Clique == Relocation.mC1) {
+                    // best clique for n0 is the one n1 is moved to
+                    acceptBest = bestN0Change - splitWeight + weight;
+                    denyBest = bestN0Change;
+                }
+                else {
+                    // best clique for n0 is NOT the one n1 is moved to
+                    acceptBest = bestN0Change - splitWeight;
+                    denyBest = bestN0Change;
+                }
+                if (secondBestN0Clique == Relocation.mC1) {
+                    // second best clique for n0 is the one n1 is moved to
+                    acceptSecondBest = secondBestN0Change - 2 * splitWeight + mergeWeight;
+                    denySecondBest = secondBestN0Change;
+                }
+                else {
+                    // second best clique for n0 is NOT the one n1 is moved to
+                    acceptSecondBest = secondBestN0Change - splitWeight;
+                    denySecondBest = secondBestN0Change;
+                }
+
+                if (acceptBest >= acceptSecondBest) {
+                    nextAcceptRelocation.mC0 = bestN0Clique;
+                    nextAcceptRelocation.mChange = acceptBest;
+                }
+                else {
+                    nextAcceptRelocation.mC0 = secondBestN0Clique;
+                    nextAcceptRelocation.mChange = acceptSecondBest;
+                }
+                if (denyBest >= denySecondBest) {
+                    nextDenyRelocation.mC0 = bestN0Clique;
+                    nextDenyRelocation.mChange = denyBest;
+                }
+                else {
+                    nextDenyRelocation.mC0 = secondBestN0Clique;
+                    nextDenyRelocation.mChange = denySecondBest;
+                }
+            }
+        }
+    }
+
+
     // check if better if no node moves
     // commented because backward moves should be allowed
     /*
@@ -1096,11 +1222,33 @@ void CPPSolutionBase::SASelectSingle(SARelocation& Relocation)
     }
 }
 
-void CPPSolutionBase::SASelectSingleEdge(SARelocation& Relocation) {
+void CPPSolutionBase::SASelectSingleEdge(SARelocation& Relocation, bool forceDualMove) {
+    if (nextRelocationCalculated) {
+        nextRelocationCalculated = false;
+        if (prevAccepted) {
+            Relocation.mC0 = nextAcceptRelocation.mC0;
+            Relocation.mC1 = nextAcceptRelocation.mC1;
+            Relocation.mN0 = nextAcceptRelocation.mN0;
+            Relocation.mN1 = nextAcceptRelocation.mN1;
+            Relocation.mChange = nextAcceptRelocation.mChange;
+            Relocation.mMoveType = nextAcceptRelocation.mMoveType;
+        }
+        else {
+            Relocation.mC0 = nextDenyRelocation.mC0;
+            Relocation.mC1 = nextDenyRelocation.mC1;
+            Relocation.mN0 = nextDenyRelocation.mN0;
+            Relocation.mN1 = nextDenyRelocation.mN1;
+            Relocation.mChange = nextDenyRelocation.mChange;
+            Relocation.mMoveType = nextDenyRelocation.mMoveType;
+        }
+        return;
+    }
+
     // move the distribution to the instance
     std::uniform_int_distribution<int> distribution(0, mInstance->getNumberOfEdges() - 1);
 
     const auto& edge = mInstance->getEdges()[distribution(*mGenerator)];
+    // const auto& edge = mInstance->getSampledRandEdge();
     int n0 = edge[0];
     int n1 = edge[1];
     int weight = edge[2];
@@ -1108,7 +1256,7 @@ void CPPSolutionBase::SASelectSingleEdge(SARelocation& Relocation) {
     Relocation.mN0 = n0;
     Relocation.mN1 = n1;
 
-    SASelectDualFull(Relocation, weight);
+    SASelectDualFull(Relocation, weight, forceDualMove);
 }
 
 void CPPSolutionBase::SASelectDualR(SARelocation& Relocation)
@@ -1127,7 +1275,7 @@ void CPPSolutionBase::SASelectDualR(SARelocation& Relocation)
         SASelectSingle(Relocation);
 }
 
-/*
+
 void CPPSolutionBase::SASelectDualNeighborOne(SARelocation& Relocation)
 {
     int n0, n1;
@@ -1257,7 +1405,7 @@ void CPPSolutionBase::SASelectDualNeighborOne(SARelocation& Relocation)
             }
         }
     }
-}*/
+}
 
 void CPPSolutionBase::SASelectSingleR(SARelocation& Relocation)
 {
@@ -1281,13 +1429,14 @@ void CPPSolutionBase::SASelectR(SARelocation& Relocation)
     case SASelectType::Dual:
         SASelectDualR(Relocation);
         break;
-    /*
-    case SASelectType::DualNeighbor1:
+    case SASelectType::DualNeighbor:
         SASelectDualNeighborOne(Relocation);
         break;
-    */
     case SASelectType::SingleEdge:
-        SASelectSingleEdge(Relocation);
+        SASelectSingleEdge(Relocation, false);
+        break;
+    case SASelectType::SingleEdgeForcedDual:
+        SASelectSingleEdge(Relocation, true);
         break;
     default:
         SASelectDualR(Relocation);
@@ -1337,7 +1486,8 @@ void CPPSolutionBase::ApplyRelocation(SARelocation Relocation)
 bool CPPSolutionBase::SimulatedAnnealing(SAParameters& iSAParameters, double& AcceptRelative)
 {   
     // printf("enter SA");
-    int NeiborhoodSize = mInstance->getNumberOfNodes() * getNumberOfCliques();
+    nextRelocationCalculated = false;
+    int NeiborhoodSize = mInstance->getNumberOfNodes() * getNumberOfCliques() * iSAParameters.neighborhoodFactor;
     int n;
     double Prob;
     double T = 1;
@@ -1378,14 +1528,21 @@ bool CPPSolutionBase::SimulatedAnnealing(SAParameters& iSAParameters, double& Ac
             // clock_t start = clock();
             cRelocation.mChange = INT_MIN;
             SASelectR(cRelocation);
-            Prob = FastExp(cRelocation.mChange / T);
+
+            int numMoves = 1;
+            if (cRelocation.mMoveType != SAMoveType::N0 && cRelocation.mMoveType != SAMoveType::N1) {
+                numMoves = 2;
+            }
+
+            Prob = FastExp(cRelocation.mChange / (T * numMoves));
             // clock_t checkpoint1 = clock();
             // printf("  Prob=%.3f x=%.3f T=%.3f mchange=%d\n", Prob, cRelocation.mChange / T, T, cRelocation.mChange);
             /*if (cRelocation.mChange / T > 900 || cRelocation.mChange / T < -900)
                 printf("  Prob=%.3f x=%.3f T=%.3f mchange=%d\n", Prob, cRelocation.mChange / T, T, cRelocation.mChange);*/
             if (Prob * 1000 > 1 + (*mGenerator)() % 1000)
-            {
-                Accept++;
+            {   
+                prevAccepted = true;
+                Accept += numMoves;
                 ApplyRelocation(cRelocation);
                 cSolObjective += cRelocation.mChange;
                 if (cSol != cSolObjective)
@@ -1396,7 +1553,27 @@ bool CPPSolutionBase::SimulatedAnnealing(SAParameters& iSAParameters, double& Ac
                     BestSol = cSolObjective;
                     std::copy(mNodeClique.begin(), mNodeClique.end(), tNodeClique.begin());
                 }
+            } else {
+                prevAccepted = false;
             }
+            /*
+            if (nextRelocationCalculated) {
+                SASelectR(cRelocation);
+                Prob = FastExp(cRelocation.mChange / T);
+                if (Prob * 1000 > (*mGenerator)() % 1000)
+                {
+                    ApplyRelocation(cRelocation);
+                    cSolObjective += cRelocation.mChange;
+                    if (cSol != cSolObjective)
+                        cSol = cSolObjective;
+
+                    if (BestSol < cSolObjective)
+                    {
+                        BestSol = cSolObjective;
+                        std::copy(mNodeClique.begin(), mNodeClique.end(), tNodeClique.begin());
+                    }
+                }
+            }*/
             // printf("%d ; %d\n", checkpoint1 - start, clock() - checkpoint1);
         }
         counterCool++;
@@ -1434,8 +1611,9 @@ bool CPPSolutionBase::SimulatedAnnealing(SAParameters& iSAParameters, double& Ac
 }
 
 bool CPPSolutionBase::CalibrateSA(SAParameters& iSAParameters, double& Accept)
-{
-    int MaxStep = mInstance->getNumberOfNodes() * getNumberOfCliques() * iSAParameters.mSizeRepeat;
+{   
+    nextRelocationCalculated = false;
+    int MaxStep = mInstance->getNumberOfNodes() * getNumberOfCliques() * iSAParameters.mSizeRepeat * iSAParameters.neighborhoodFactor;
     int n;
     double Prob;
     double T = 1;
@@ -1458,13 +1636,18 @@ bool CPPSolutionBase::CalibrateSA(SAParameters& iSAParameters, double& Accept)
 
         Relocation.mChange = INT_MIN;
         SASelectR(Relocation);
+        int numMoves = 1;
+        if (Relocation.mMoveType != SAMoveType::N0 && Relocation.mMoveType != SAMoveType::N1) {
+            numMoves = 2;
+        }
         T = iSAParameters.mInitTemperature;
 
-        Prob = std::exp(Relocation.mChange / T);
+        Prob = std::exp(Relocation.mChange / (T * numMoves));
 
         if (Prob * 1000 > (*mGenerator)() % 1000)
-        {
-            Accept++;
+        {   
+            prevAccepted = true;
+            Accept += numMoves;
 
             ApplyRelocation(Relocation);
 
@@ -1478,7 +1661,30 @@ bool CPPSolutionBase::CalibrateSA(SAParameters& iSAParameters, double& Accept)
                 BestSol = cSolObjective;
                 std::copy(mNodeClique.begin(), mNodeClique.end(), tNodeClique.begin());
             }
+        } else {
+            prevAccepted = false;
         }
+        /*
+        if (nextRelocationCalculated) {
+            SASelectR(Relocation);
+            T = iSAParameters.mInitTemperature;
+            Prob = std::exp(Relocation.mChange / T);
+            if (Prob * 1000 > (*mGenerator)() % 1000)
+            {
+                ApplyRelocation(Relocation);
+
+                cSolObjective += Relocation.mChange;
+                if (cSol != cSolObjective)
+                    cSol = cSolObjective;
+
+                if (BestSol < cSolObjective)
+                {
+                    NoImprove = 0;
+                    BestSol = cSolObjective;
+                    std::copy(mNodeClique.begin(), mNodeClique.end(), tNodeClique.begin());
+                }
+            }
+        }*/
     }
 
     CreateFromNodeClique(tNodeClique);
@@ -1716,7 +1922,7 @@ bool CPPSolutionBase::RemoveEmptyCliqueSA(bool bUpdateAllConnections, bool bUseC
     for (size_t i = 0; i < mCliqueSizes.size(); i++)
     {
         if (mCliqueSizes[i] == 0)
-        {
+        {   
             if (bUseCliqueSize)
             {
                 mCliqueSizes.erase(mCliqueSizes.begin() + i);
@@ -1744,6 +1950,24 @@ bool CPPSolutionBase::RemoveEmptyCliqueSA(bool bUpdateAllConnections, bool bUseC
                 }
 
                 mAllConnections = nAllConnections;
+            }
+
+            // adjust next move
+            
+            if (nextAcceptRelocation.mMoveType == SAMoveType::N0) {
+                if (nextAcceptRelocation.mC0 == i) {
+                    nextAcceptRelocation.mC0 = mCliqueSizes.size();
+                }
+                else if (nextAcceptRelocation.mC0 > i) {
+                    nextAcceptRelocation.mC0--;
+                }
+            } else if (nextAcceptRelocation.mMoveType == SAMoveType::N1) {
+                if (nextAcceptRelocation.mC1 == i) {
+                    nextAcceptRelocation.mC1 = mCliqueSizes.size();
+                }
+                else if (nextAcceptRelocation.mC1 > i) {
+                    nextAcceptRelocation.mC1--;
+                }
             }
 
             return true;

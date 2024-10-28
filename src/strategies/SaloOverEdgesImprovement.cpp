@@ -18,7 +18,7 @@ SaloOverEdgesImprovement::~SaloOverEdgesImprovement() {
 void SaloOverEdgesImprovement::improveSolution(Partition& solution, clock_t startTime, int maxSeconds, BestSolutionInfo* frt, int generation_cnt) {
     recorder->enter("improve_solution");
     setStart(solution);
-    search(startTime, maxSeconds);
+    search(startTime, maxSeconds, generation_cnt);
     selectBetter(frt, startTime, generation_cnt);
     recorder->exit("improve_solution");
     printf("Child has been raised to by SA %d\n", frt->best_val);
@@ -45,7 +45,7 @@ void SaloOverEdgesImprovement::calibrateTemp() {
     problem->Calibrate(10000);
 }
 
-void SaloOverEdgesImprovement::search(clock_t startTime, int maxSeconds) {
+void SaloOverEdgesImprovement::search(clock_t startTime, int maxSeconds, int generation_cnt) {
     problem->SALOSearch();
 }
 

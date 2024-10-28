@@ -10,6 +10,7 @@ CPPProblem::CPPProblem(CPPInstance* nInstance, RandomGenerator* generator)
     InitFSS();
     CPPSolution::Init(mInstance->getNumberOfNodes());
     mSAParams.InitGeometric();
+    mSAParams.neighborhoodFactor = 1;
 }
 
 CPPProblem::~CPPProblem() {

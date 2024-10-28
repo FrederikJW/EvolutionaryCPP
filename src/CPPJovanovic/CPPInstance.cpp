@@ -10,12 +10,16 @@
 #include <list>
 
 
-CPPInstance::CPPInstance(const std::string& FileName) {
+CPPInstance::CPPInstance(const std::string& FileName): edgeSampler(nullptr) {
     Load(FileName);
 }
 
-CPPInstance::CPPInstance(int nnode, int** matrix) {
+CPPInstance::CPPInstance(int nnode, int** matrix) : edgeSampler(nullptr) {
     LoadFromMatrix(nnode, matrix);
+}
+
+CPPInstance::~CPPInstance() {
+    delete edgeSampler;
 }
 
 int CPPInstance::getNumberOfNodes() const {
@@ -86,6 +90,22 @@ void CPPInstance::InitEdges() {
     }
 }
 
+void CPPInstance::InitEdgeSampler() {
+    std::vector<int> edgeWeights(numberOfEdges);
+
+    for (int i = 0; i < numberOfEdges; i++) {
+        int weight = edges[i][2];
+        if (weight < 0) weight = -weight;
+        edgeWeights[i] = weight;
+    }
+
+    edgeSampler = new WeightedRandomSampler(edgeWeights);
+}
+
+const std::array<int, 3>& CPPInstance::getSampledRandEdge() {
+    return edges[edgeSampler->sample()];
+}
+
 void CPPInstance::Allocate() {
     mWeights.resize(mNumberOfNodes, std::vector<int>(mNumberOfNodes));
 }
@@ -104,6 +124,7 @@ void CPPInstance::LoadFromMatrix(int nnode, int** matrix) {
     InitNegativeWeights();
     InitNeighbors();
     InitEdges();
+    InitEdgeSampler();
 }
 
 void CPPInstance::Load(const std::string& FileName) {
@@ -144,6 +165,7 @@ void CPPInstance::Load(const std::string& FileName) {
     InitNegativeWeights();
     InitNeighbors();
     InitEdges();
+    InitEdgeSampler();
 }
 
 void CPPInstance::LoadMIP1(const std::string& FileName) {
@@ -175,6 +197,7 @@ void CPPInstance::LoadMIP1(const std::string& FileName) {
     InitNegativeWeights();
     InitNeighbors();
     InitEdges();
+    InitEdgeSampler();
 }
 
 void CPPInstance::LoadMIP_GT(const std::string& FileName) {
@@ -230,6 +253,7 @@ void CPPInstance::LoadMIP_GT(const std::string& FileName) {
     InitNegativeWeights();
     InitNeighbors();
     InitEdges();
+    InitEdgeSampler();
 }
 
 double CPPInstance::GetCForModularityMaximization(const std::string& FileName) {
@@ -316,6 +340,7 @@ double CPPInstance::LoadMIP_MM(const std::string& FileName) {
     InitNegativeWeights();
     InitNeighbors();
     InitEdges();
+    InitEdgeSampler();
     return C;
 }
 
@@ -364,4 +389,5 @@ void CPPInstance::LoadMIP_Convert(const std::string& FileName) {
     InitNegativeWeights();
     InitNeighbors();
     InitEdges();
+    InitEdgeSampler();
 }

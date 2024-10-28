@@ -16,7 +16,7 @@ SimulatedAnnealingImprovement::~SimulatedAnnealingImprovement() {
 void SimulatedAnnealingImprovement::improveSolution(Partition& solution, clock_t startTime, int maxSeconds, BestSolutionInfo *frt, int generation_cnt) {
     recorder->enter("improve_solution");
     setStart(solution);
-    search(startTime, maxSeconds);
+    search(startTime, maxSeconds, generation_cnt);
     selectBetter(frt, startTime, generation_cnt);
     recorder->exit("improve_solution");
     printf("Child has been raised to by SA %d\n", lsdata->fbest);
@@ -216,7 +216,7 @@ double SimulatedAnnealingImprovement::fastExp(double x)
     return tmp.d;
 }
 
-void SimulatedAnnealingImprovement::search(clock_t startTime, int maxSeconds) {
+void SimulatedAnnealingImprovement::search(clock_t startTime, int maxSeconds, int generation_cnt) {
     double T = temp;
     int frozenCounter = 0;
     int accpCnt = 0;

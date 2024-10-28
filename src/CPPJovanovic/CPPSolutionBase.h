@@ -12,7 +12,7 @@
 #include <vector>
 #include <random>
 
-enum SASelectType { Single, Dual, Triple, DualNeighbor1, SingleEdge };
+enum SASelectType { Single, Dual, Triple, DualNeighbor, SingleEdge, SingleEdgeForcedDual };
 
 class CPPSolutionBase {
 protected:
@@ -26,6 +26,13 @@ protected:
     SASelectType mSASelectType;
     std::vector<int> mRestricted;
     RandomGenerator* mGenerator;
+
+    // parameters for SALOoE
+
+    SARelocation nextAcceptRelocation;
+    SARelocation nextDenyRelocation;
+    bool nextRelocationCalculated;
+    bool prevAccepted;
 
 public:
     CPPSolutionBase();
@@ -60,7 +67,7 @@ public:
 
     virtual void AddCandidate(const CPPCandidate& A);
 
-    bool CheckSolutionValid(CPPInstance tInstance);
+    bool CheckSolutionValid(CPPInstance& tInstance);
     std::vector<int> CliqueForNode(int iNode);
 
     bool IsSame(int iObjective, const std::vector<std::vector<int>>& iPartitions);
@@ -90,9 +97,10 @@ public:
     void SASelectDual(SARelocation& Relocation);
     void SASelectDualPrev(SARelocation& Relocation);
     void SASelectDualExt(SARelocation& Relocation);
-    void SASelectDualFull(SARelocation& Relocation, int weight = 0);
+    void SASelectDualFull(SARelocation& Relocation, int weight = 0, bool forceDualMove = false);
+    void SASelectDualNeighborOne(SARelocation& Relocation);
     void SASelectSingle(SARelocation& Relocation);
-    void SASelectSingleEdge(SARelocation& Relocation);
+    void SASelectSingleEdge(SARelocation& Relocation, bool forceDualMove);
     void SASelectDualR(SARelocation& Relocation);
     // void SASelectDualNeighborOne(SARelocation& Relocation);
     void SASelectSingleR(SARelocation& Relocation);

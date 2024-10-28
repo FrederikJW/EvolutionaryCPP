@@ -30,7 +30,7 @@ public:
     ~SimulatedAnnealingImprovement();
 
     void improveSolution(Partition& solution, clock_t startTime, int maxSeconds, BestSolutionInfo* frt, int generation_cnt) override;
-    void search(clock_t startTime, int maxSeconds) override;
+    void search(clock_t startTime, int maxSeconds, int generation_cnt) override;
     void search_original(clock_t startTime, int maxSeconds);
     void setEnvironment(Graph& graph) override;
     void setStart(Partition& startSol) override;
