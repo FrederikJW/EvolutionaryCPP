@@ -40,13 +40,26 @@ public:
             return true;
         }
 
+        // check distance
+        /*
+        int distanceSum = 0;
+        int minDistance = INT_MAX;
+        for (CPPSolutionBase& l : mSolutions) {
+            int distance = iSolution.calculateDistance(l);
+            distanceSum += distance;
+            if (distance < minDistance) {
+                minDistance = distance;
+            }
+        }
+        float distanceAvg = distanceSum / mSolutions.size();
+        printf("Avg distance: %.3f\nMin distance: %d\n", distanceAvg, minDistance);*/
+
         if (!((mSolutions.size() < mMaxSize) || (iSolution.getObjective() > mMinObjective))) {
             return false;
         }
 
         int iObjective = iSolution.getObjective();
         for (CPPSolutionBase& l : mSolutions) {
-            // TODO: consider distance metric here?
             if (l.IsSame(iObjective, iSolution.getCliques())) {
                 return false;
             }

@@ -236,7 +236,7 @@ int CPPSolutionBase::CalculateObjectiveForClique(const std::vector<int>& Clique)
 
 void CPPSolutionBase::FixCliques() {}
 
-bool CPPSolutionBase::InSameClique(int nodeA, int nodeB)
+bool CPPSolutionBase::InSameClique(int nodeA, int nodeB) const
 {
     return mNodeClique[nodeA] == mNodeClique[nodeB];
 }
@@ -252,6 +252,24 @@ int CPPSolutionBase::CalculateObjective()
 
     mObjective = result;
     return result;
+}
+
+int CPPSolutionBase::calculateDistance(const CPPSolutionBase& iSolution) {
+    int sum = 0;
+    int nnode = mInstance->getNumberOfNodes();
+    for (int i = 0; i < nnode; ++i) {
+        for (int j = i + 1; j < nnode; ++j) {
+            if (InSameClique(i, j)) {
+                if (iSolution.InSameClique(i, j))
+                    sum++;
+            }
+            else {
+                if (iSolution.InSameClique(i, j))
+                    sum++;
+            }
+        }
+    }
+    return sum;
 }
 
 void CPPSolutionBase::AddCandidate(const CPPCandidate& A) {};
@@ -931,7 +949,7 @@ void CPPSolutionBase::SASelectDualFull(SARelocation& Relocation, int weight, boo
                     Relocation.mC1 = n0Clique;
                     Relocation.mChange = cChange;
                     Relocation.mMoveType = SAMoveType::Slide;
-                }
+                    }
             } else {
                 // move n1 to n0Clique
                 if (cChange1 > Relocation.mChange) {
@@ -956,7 +974,7 @@ void CPPSolutionBase::SASelectDualFull(SARelocation& Relocation, int weight, boo
                     Relocation.mC1 = c;
                     Relocation.mChange = cChange;
                     Relocation.mMoveType = SAMoveType::Slide;
-                }
+                    }
             } else {
                 // move n0 to n1Clique
                 if (cChange0 > Relocation.mChange) {
@@ -1004,15 +1022,15 @@ void CPPSolutionBase::SASelectDualFull(SARelocation& Relocation, int weight, boo
                 Relocation.mChange = cChange;
                 Relocation.mMoveType = SAMoveType::Both;
             }
-        }
-        else {
+                }
+                else {
             cChange = bestN0Change + secondBestN1Change - splitWeight;
             if (secondBestN1Change != INT_MIN && cChange > Relocation.mChange) {
                 Relocation.mC0 = bestN0Clique;
                 Relocation.mC1 = secondBestN1Clique;
                 Relocation.mChange = cChange;
                 Relocation.mMoveType = SAMoveType::Both;
-            }
+                }
             cChange = secondBestN0Change + bestN1Change - splitWeight;
             if (secondBestN0Change != INT_MIN && cChange > Relocation.mChange) {
                 Relocation.mC0 = secondBestN0Clique;
@@ -1188,6 +1206,318 @@ void CPPSolutionBase::SASelectDualFull(SARelocation& Relocation, int weight, boo
     // assert(Relocation.mChange >= 0);
 }
 
+void CPPSolutionBase::SASelectDualSplit(SARelocation& Relocation, int weight, bool forceDualMove)
+{
+    int n0Clique = mNodeClique[Relocation.mN0];
+    int n1Clique = mNodeClique[Relocation.mN1];
+
+    const int Size = static_cast<int>(mCliqueSizes.size());
+
+    int n0RemoveChange = -mAllConnections[n0Clique][Relocation.mN0];
+    int n1RemoveChange = -mAllConnections[n1Clique][Relocation.mN1];
+
+    SASingleRelocation bestN0Relocation;
+    bestN0Relocation.node = Relocation.mN0;
+    bestN0Relocation.clique = n0Clique;
+    bestN0Relocation.change = INT_MIN;
+    SASingleRelocation secondBestN0Relocation;
+    secondBestN0Relocation.node = Relocation.mN0;
+    secondBestN0Relocation.clique = n0Clique;
+    secondBestN0Relocation.change = INT_MIN;
+    SASingleRelocation bestN1Relocation;
+    bestN1Relocation.node = Relocation.mN1;
+    bestN1Relocation.clique = n1Clique;
+    bestN1Relocation.change = INT_MIN;
+    SASingleRelocation secondBestN1Relocation;
+    secondBestN1Relocation.node = Relocation.mN1;
+    secondBestN1Relocation.clique = n1Clique;
+    secondBestN1Relocation.change = INT_MIN;
+
+    SADualSplitRelocation bestCombinedRelocation;
+    bestCombinedRelocation.mN0 = Relocation.mN0;
+    bestCombinedRelocation.mN1 = Relocation.mN1;
+    bestCombinedRelocation.mC0 = n0Clique;
+    bestCombinedRelocation.mC1 = n1Clique;
+    bestCombinedRelocation.mChange0 = INT_MIN;
+    bestCombinedRelocation.mChange1 = INT_MIN;
+    bestCombinedRelocation.mChange = INT_MIN;
+
+    if (weight == 0) {
+        weight = mInstance->getWeights()[Relocation.mN0][Relocation.mN1];
+    }
+    int mergeWeight = weight;
+    int splitWeight = -weight;
+
+    bool sameClique = n0Clique == n1Clique;
+    if (sameClique) {
+        mergeWeight = 0;
+    }
+    else {
+        splitWeight = 0;
+    }
+
+    long cChange;
+    const std::vector<int>& n0CliqueConnections = mAllConnections[n0Clique];
+    const std::vector<int>& n1CliqueConnections = mAllConnections[n1Clique];
+
+    for (int c = 0; c < Size; c++) {
+        const std::vector<int>& cCliqueConnections = mAllConnections[c];
+        int cChange0 = n0RemoveChange + cCliqueConnections[Relocation.mN0];
+        int cChange1 = n1RemoveChange + cCliqueConnections[Relocation.mN1];
+
+        if (n0Clique != c && n1Clique != c) {
+            // move individually n0 to c
+            if (cChange0 > bestN0Relocation.change) {
+                secondBestN0Relocation.clique = bestN0Relocation.clique;
+                bestN0Relocation.clique = c;
+                secondBestN0Relocation.change = bestN0Relocation.change;
+                bestN0Relocation.change = cChange0;
+            }
+            else if (cChange0 > secondBestN0Relocation.change) {
+                secondBestN0Relocation.clique = c;
+                secondBestN0Relocation.change = cChange0;
+            }
+
+            // move individually n1 to c
+            if (cChange1 > bestN1Relocation.change) {
+                secondBestN1Relocation.clique = bestN1Relocation.clique;
+                bestN1Relocation.clique = c;
+                secondBestN1Relocation.change = bestN1Relocation.change;
+                bestN1Relocation.change = cChange1;
+            }
+            else if (cChange1 > secondBestN1Relocation.change) {
+                secondBestN1Relocation.clique = c;
+                secondBestN1Relocation.change = cChange1;
+            }
+
+            // move both to c
+            cChange = cChange1 + cChange0 + mergeWeight - 2 * splitWeight;
+            if (cChange > Relocation.mChange) {
+                bestCombinedRelocation.mC0 = c;
+                bestCombinedRelocation.mC1 = c;
+                bestCombinedRelocation.mChange = cChange;
+                if (cChange0 > cChange1) {
+                    bestCombinedRelocation.mChange0 = cChange0;
+                    bestCombinedRelocation.mChange1 = cChange1 + mergeWeight - 2 * splitWeight;
+                    bestCombinedRelocation.moveN0First = true;
+                }
+                else {
+                    bestCombinedRelocation.mChange0 = cChange0 + mergeWeight - 2 * splitWeight;
+                    bestCombinedRelocation.mChange1 = cChange1;
+                    bestCombinedRelocation.moveN0First = false;
+                }
+            }
+        }
+
+        if (!sameClique) {
+            if (n0Clique != c) {
+                int tempChange1 = n1RemoveChange + n0CliqueConnections[Relocation.mN1];
+                int mergeAdjustment;
+
+                // slide n1 to n0Clique and n0 to c
+                if (c != n1Clique) {
+                    mergeAdjustment = -mergeWeight;
+                }
+                else {
+                    mergeAdjustment = -2 * mergeWeight;
+                }
+
+                cChange = cChange0 + tempChange1 + mergeAdjustment;
+
+                if (cChange > Relocation.mChange) {
+                    bestCombinedRelocation.mC0 = c;
+                    bestCombinedRelocation.mC1 = n0Clique;
+                    bestCombinedRelocation.mChange = cChange;
+                    if (cChange0 > tempChange1) {
+                        bestCombinedRelocation.mChange0 = cChange0;
+                        bestCombinedRelocation.mChange1 = tempChange1 + mergeAdjustment;
+                        bestCombinedRelocation.moveN0First = true;
+                    }
+                    else {
+                        bestCombinedRelocation.mChange0 = cChange0 + mergeAdjustment;
+                        bestCombinedRelocation.mChange1 = tempChange1;
+                        bestCombinedRelocation.moveN0First = false;
+                    }
+                }
+            }
+
+            if (n1Clique != c) {
+                int tempChange0 = n0RemoveChange + n1CliqueConnections[Relocation.mN0];
+                int mergeAdjustment;
+
+                // slide n0 to n1Clique and n1 to c
+                if (c != n0Clique) {
+                    mergeAdjustment = -mergeWeight;
+                }
+                else {
+                    mergeAdjustment = -2 * mergeWeight;
+                }
+
+                cChange = cChange1 + tempChange0 + mergeAdjustment;
+
+                if (cChange > Relocation.mChange) {
+                    bestCombinedRelocation.mC0 = n1Clique;
+                    bestCombinedRelocation.mC1 = c;
+                    bestCombinedRelocation.mChange = cChange;
+                    if (cChange1 > tempChange0) {
+                        bestCombinedRelocation.mChange0 = tempChange0 + mergeAdjustment;
+                        bestCombinedRelocation.mChange1 = cChange1;
+                        bestCombinedRelocation.moveN0First = false;
+                    }
+                    else {
+                        bestCombinedRelocation.mChange0 = tempChange0;
+                        bestCombinedRelocation.mChange1 = cChange1 + mergeAdjustment;
+                        bestCombinedRelocation.moveN0First = true;
+                    }
+                }
+            }
+        }
+    }
+
+    // remove individually
+    if (n0RemoveChange > bestN0Relocation.change) {
+        secondBestN0Relocation.clique = bestN0Relocation.clique;
+        bestN0Relocation.clique = Size;
+        secondBestN0Relocation.change = bestN0Relocation.change;
+        bestN0Relocation.change = n0RemoveChange;
+    }
+    if (n1RemoveChange > bestN1Relocation.change) {
+        secondBestN1Relocation.clique = bestN1Relocation.clique;
+        bestN1Relocation.clique = Size;
+        secondBestN1Relocation.change = bestN1Relocation.change;
+        bestN1Relocation.change = n1RemoveChange;
+    }
+
+    // combine individual moves to together moves
+    if (bestN0Relocation.clique != bestN1Relocation.clique) {
+        // individual movement of nodes
+        cChange = bestN0Relocation.change + bestN1Relocation.change - splitWeight;
+        if (cChange > bestCombinedRelocation.mChange) {
+            bestCombinedRelocation.mC0 = bestN0Relocation.clique;
+            bestCombinedRelocation.mC1 = bestN1Relocation.clique;
+            bestCombinedRelocation.mChange = cChange;
+            if (bestN0Relocation.change > bestN1Relocation.change) {
+                bestCombinedRelocation.mChange0 = bestN0Relocation.change;
+                bestCombinedRelocation.mChange1 = bestN1Relocation.change - splitWeight;
+                bestCombinedRelocation.moveN0First = true;
+            }
+            else {
+                bestCombinedRelocation.mChange0 = bestN0Relocation.change - splitWeight;
+                bestCombinedRelocation.mChange1 = bestN1Relocation.change;
+                bestCombinedRelocation.moveN0First = false;
+            }
+        }
+    }
+    else {
+        // conflict in movement of nodes
+        if (bestN0Relocation.clique == Size) {
+            // move to newly created cluster
+            cChange = bestN0Relocation.change + bestN1Relocation.change - splitWeight;
+            if (cChange > bestCombinedRelocation.mChange) {
+                bestCombinedRelocation.mChange = cChange;
+                if (bestN0Relocation.change > bestN1Relocation.change) {
+                    bestCombinedRelocation.mC0 = Size;
+                    bestCombinedRelocation.mC1 = Size + 1;
+                    bestCombinedRelocation.mChange0 = bestN0Relocation.change;
+                    bestCombinedRelocation.mChange1 = bestN1Relocation.change - splitWeight;
+                    bestCombinedRelocation.moveN0First = true;
+                }
+                else {
+                    bestCombinedRelocation.mC0 = Size + 1;
+                    bestCombinedRelocation.mC1 = Size;
+                    bestCombinedRelocation.mChange0 = bestN0Relocation.change - splitWeight;
+                    bestCombinedRelocation.mChange1 = bestN1Relocation.change;
+                    bestCombinedRelocation.moveN0First = false;
+                }
+            }
+        }
+        else {
+            cChange = bestN0Relocation.change + secondBestN1Relocation.change - splitWeight;
+            if (secondBestN1Relocation.change != INT_MIN && cChange > bestCombinedRelocation.mChange) {
+                bestCombinedRelocation.mC0 = bestN0Relocation.clique;
+                bestCombinedRelocation.mC1 = secondBestN1Relocation.clique;
+                bestCombinedRelocation.mChange = cChange;
+                if (bestN0Relocation.change > secondBestN1Relocation.change) {
+                    bestCombinedRelocation.mChange0 = bestN0Relocation.change;
+                    bestCombinedRelocation.mChange1 = secondBestN1Relocation.change - splitWeight;
+                    bestCombinedRelocation.moveN0First = true;
+                }
+                else {
+                    bestCombinedRelocation.mChange0 = bestN0Relocation.change - splitWeight;
+                    bestCombinedRelocation.mChange1 = secondBestN1Relocation.change;
+                    bestCombinedRelocation.moveN0First = false;
+                }
+            }
+            cChange = secondBestN0Relocation.change + bestN1Relocation.change - splitWeight;
+            if (secondBestN0Relocation.change != INT_MIN && cChange > bestCombinedRelocation.mChange) {
+                bestCombinedRelocation.mC0 = secondBestN0Relocation.clique;
+                bestCombinedRelocation.mC1 = bestN1Relocation.clique;
+                bestCombinedRelocation.mChange = cChange;
+                if (secondBestN0Relocation.change > bestN1Relocation.change) {
+                    bestCombinedRelocation.mChange0 = secondBestN0Relocation.change;
+                    bestCombinedRelocation.mChange1 = bestN1Relocation.change - splitWeight;
+                    bestCombinedRelocation.moveN0First = true;
+                }
+                else {
+                    bestCombinedRelocation.mChange0 = secondBestN0Relocation.change - splitWeight;
+                    bestCombinedRelocation.mChange1 = bestN1Relocation.change;
+                    bestCombinedRelocation.moveN0First = false;
+                }
+            }
+        }
+    }
+
+    // remove together
+    int removeTogether = n0RemoveChange + n1RemoveChange + mergeWeight - 2 * splitWeight;
+    if (removeTogether > bestCombinedRelocation.mChange) {
+        bestCombinedRelocation.mC0 = Size;
+        bestCombinedRelocation.mC1 = Size;
+        bestCombinedRelocation.mChange = removeTogether;
+        if (n0RemoveChange > n1RemoveChange) {
+            bestCombinedRelocation.mChange0 = n0RemoveChange;
+            bestCombinedRelocation.mChange1 = n1RemoveChange + mergeWeight - 2 * splitWeight;
+            bestCombinedRelocation.moveN0First = true;
+        }
+        else {
+            bestCombinedRelocation.mChange0 = n0RemoveChange + mergeWeight - 2 * splitWeight;
+            bestCombinedRelocation.mChange1 = n1RemoveChange;
+            bestCombinedRelocation.moveN0First = false;
+        }
+    }
+
+    Relocation.mN0 = bestCombinedRelocation.mN0;
+    Relocation.mC0 = bestCombinedRelocation.mC0;
+    Relocation.mN1 = bestCombinedRelocation.mN1;
+    Relocation.mC1 = bestCombinedRelocation.mC1;
+    if (bestCombinedRelocation.moveN0First) {
+        Relocation.mChange = bestCombinedRelocation.mChange0;
+        Relocation.mMoveType = SAMoveType::N0;
+
+        nextAcceptRelocation.copy(Relocation);
+        nextAcceptRelocation.mChange = bestCombinedRelocation.mChange1;
+        nextAcceptRelocation.mMoveType = SAMoveType::N1;
+        nextDenyRelocation.copy(Relocation);
+        nextDenyRelocation.mN0 = bestN1Relocation.node;
+        nextDenyRelocation.mC0 = bestN1Relocation.clique;
+        nextDenyRelocation.mChange = bestN1Relocation.change;
+
+    }
+    else {
+        Relocation.mChange = bestCombinedRelocation.mChange1;
+        Relocation.mMoveType = SAMoveType::N1;
+        nextAcceptRelocation.copy(Relocation);
+        nextAcceptRelocation.mChange = bestCombinedRelocation.mChange0;
+        nextAcceptRelocation.mMoveType = SAMoveType::N0;
+        nextDenyRelocation.copy(Relocation);
+        nextDenyRelocation.mN1 = bestN0Relocation.node;
+        nextDenyRelocation.mC1 = bestN0Relocation.clique;
+        nextDenyRelocation.mChange = bestN0Relocation.change;
+    }
+
+    Relocation.mProbChange = Relocation.mChange + (nextAcceptRelocation.mChange / 3.0) - (nextDenyRelocation.mChange / 3.0);
+    nextRelocationCalculated = true;
+}
+
 void CPPSolutionBase::SASelectSingle(SARelocation& Relocation)
 {
 
@@ -1231,6 +1561,7 @@ void CPPSolutionBase::SASelectSingleEdge(SARelocation& Relocation, bool forceDua
             Relocation.mN0 = nextAcceptRelocation.mN0;
             Relocation.mN1 = nextAcceptRelocation.mN1;
             Relocation.mChange = nextAcceptRelocation.mChange;
+            Relocation.mProbChange = nextAcceptRelocation.mChange;
             Relocation.mMoveType = nextAcceptRelocation.mMoveType;
         }
         else {
@@ -1239,6 +1570,7 @@ void CPPSolutionBase::SASelectSingleEdge(SARelocation& Relocation, bool forceDua
             Relocation.mN0 = nextDenyRelocation.mN0;
             Relocation.mN1 = nextDenyRelocation.mN1;
             Relocation.mChange = nextDenyRelocation.mChange;
+            Relocation.mProbChange = nextDenyRelocation.mChange;
             Relocation.mMoveType = nextDenyRelocation.mMoveType;
         }
         return;
@@ -1256,7 +1588,7 @@ void CPPSolutionBase::SASelectSingleEdge(SARelocation& Relocation, bool forceDua
     Relocation.mN0 = n0;
     Relocation.mN1 = n1;
 
-    SASelectDualFull(Relocation, weight, forceDualMove);
+    SASelectDualSplit(Relocation, weight, forceDualMove);
 }
 
 void CPPSolutionBase::SASelectDualR(SARelocation& Relocation)
@@ -1273,6 +1605,8 @@ void CPPSolutionBase::SASelectDualR(SARelocation& Relocation)
         SASelectDual(Relocation);
     else
         SASelectSingle(Relocation);
+
+    Relocation.mProbChange = Relocation.mChange;
 }
 
 
@@ -1531,10 +1865,10 @@ bool CPPSolutionBase::SimulatedAnnealing(SAParameters& iSAParameters, double& Ac
 
             int numMoves = 1;
             if (cRelocation.mMoveType != SAMoveType::N0 && cRelocation.mMoveType != SAMoveType::N1) {
-                numMoves = 2;
+                numMoves = 1;
             }
 
-            Prob = FastExp(cRelocation.mChange / (T * numMoves));
+            Prob = FastExp(cRelocation.mProbChange / (T * numMoves));
             // clock_t checkpoint1 = clock();
             // printf("  Prob=%.3f x=%.3f T=%.3f mchange=%d\n", Prob, cRelocation.mChange / T, T, cRelocation.mChange);
             /*if (cRelocation.mChange / T > 900 || cRelocation.mChange / T < -900)
@@ -1638,11 +1972,11 @@ bool CPPSolutionBase::CalibrateSA(SAParameters& iSAParameters, double& Accept)
         SASelectR(Relocation);
         int numMoves = 1;
         if (Relocation.mMoveType != SAMoveType::N0 && Relocation.mMoveType != SAMoveType::N1) {
-            numMoves = 2;
+            numMoves = 1;
         }
         T = iSAParameters.mInitTemperature;
 
-        Prob = std::exp(Relocation.mChange / (T * numMoves));
+        Prob = std::exp(Relocation.mProbChange / (T * numMoves));
 
         if (Prob * 1000 > (*mGenerator)() % 1000)
         {   

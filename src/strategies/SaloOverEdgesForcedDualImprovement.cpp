@@ -48,7 +48,7 @@ void SaloOverEdgesForcedDualImprovement::calibrateTemp() {
 void SaloOverEdgesForcedDualImprovement::search(clock_t startTime, int maxSeconds, int generation_cnt = 0) {
     // testing dynamic neighborhood factor
     // long neighboorFactor = (200 + (generation_cnt / 4)) / 100;
-    problem->setNeighborhoodFactor(2.5);
+    problem->setNeighborhoodFactor(1);
     problem->SALOSearch();
 }
 

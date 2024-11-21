@@ -54,10 +54,11 @@ public:
     void Load(const std::string& FileName);
     virtual int CalculateObjectiveForClique(const std::vector<int>& Clique);
     virtual void FixCliques();
-    bool InSameClique(int nodeA, int nodeB);
+    bool InSameClique(int nodeA, int nodeB) const;
     virtual int CalculateObjective();
     virtual int GetChange(int iNode, int iClique) { return -1; }
     virtual int GetChange(const std::vector<int>& nodes, int iClique) { return -1; }
+    int calculateDistance(const CPPSolutionBase& iSolution);
 
     int getObjective() const { return mObjective; }
     void setObjective(int value) { mObjective = value; }
@@ -98,6 +99,7 @@ public:
     void SASelectDualPrev(SARelocation& Relocation);
     void SASelectDualExt(SARelocation& Relocation);
     void SASelectDualFull(SARelocation& Relocation, int weight = 0, bool forceDualMove = false);
+    void SASelectDualSplit(SARelocation& Relocation, int weight = 0, bool forceDualMove = false);
     void SASelectDualNeighborOne(SARelocation& Relocation);
     void SASelectSingle(SARelocation& Relocation);
     void SASelectSingleEdge(SARelocation& Relocation, bool forceDualMove);
