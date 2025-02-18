@@ -399,6 +399,50 @@ void CPPProblem::SolveFixSetSearch(int MaxGenerated, double iTimeLimit) {
     }
 }
 
+void CPPProblem::CalibrateDoubleMoves(double iTimeLimit) {
+    double Accept;
+    double LT = 1;
+    double UT = 2000;
+    double Tolerate = 0.05;
+    double DesiredAcceptance = 0.5;
+    int cSolutionValue;
+
+    // AllocateSolution();
+    mBestSolutionValue = std::numeric_limits<int>::min();
+    mStartTime = std::chrono::steady_clock::now();
+    InitTracking();
+
+    mSAParams.mInitTemperature = 1000;
+    mNumberOfSolutionsGenerated = 0;
+
+    while (true) {
+        // TODO: this erases the solution partially
+        SolveGreedy();
+        mSolution->CalibrateSADoubleMoves(mSAParams, Accept);
+        cSolutionValue = mSolution->CalculateObjective();
+        mSolution->setObjective(cSolutionValue);
+        mSolutionHolder.Add(*mSolution);
+        CheckBest();
+
+        if (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - mStartTime).count() > iTimeLimit) break;
+
+        if (Accept > DesiredAcceptance + Tolerate) {
+            UT = mSAParams.mInitTemperature;
+            mSAParams.mInitTemperature = (LT + UT) / 2;
+            continue;
+        }
+
+        if (Accept < DesiredAcceptance - Tolerate) {
+            LT = mSAParams.mInitTemperature;
+            mSAParams.mInitTemperature = (LT + UT) / 2;
+            continue;
+        }
+        break;
+    }
+
+    printf("Accept probability %.3f, Calibrate temp %.2f\n\n", Accept, mSAParams.mInitTemperature);
+}
+
 void CPPProblem::Calibrate(double iTimeLimit) {
     double Accept;
     double LT = 1;
@@ -448,6 +492,17 @@ void CPPProblem::SALOSearch() {
     mSolution->LocalSearch();
     mSolution->SimulatedAnnealing(mSAParams, Accept);
     mSolution->CalculateObjective();
+}
+
+void CPPProblem::SALODoubleMovesSearch() {
+    double Accept;
+    // mSolution->LocalSearch();
+    mSolution->SimulatedAnnealingWithDoubleMoves(mSAParams, Accept);
+    mSolution->CalculateObjective();
+}
+
+void CPPProblem::LocalSearch() {
+    mSolution->LocalSearch();
 }
 
 void CPPProblem::SASearch() {

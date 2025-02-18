@@ -8,6 +8,10 @@
       <Configuration>Debug</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="Release2|x64">
+      <Configuration>Release2</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Release|x64">
       <Configuration>Release</Configuration>
       <Platform>x64</Platform>
@@ -40,6 +44,11 @@
     <CharacterSet>MultiByte</CharacterSet>
     <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release2|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <CharacterSet>MultiByte</CharacterSet>
@@ -66,11 +75,17 @@
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</LinkIncremental>
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</GenerateManifest>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\projects\EvolutionaryCPP\build\Release\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release2|x64'">D:\projects\EvolutionaryCPP\build\Release\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">EvolutionaryCPP.dir\Release\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release2|x64'">EvolutionaryCPP.dir\Release\</IntDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">EvolutionaryCPP</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release2|x64'">EvolutionaryCPP</TargetName>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.exe</TargetExt>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release2|x64'">.exe</TargetExt>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkIncremental>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release2|x64'">false</LinkIncremental>
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</GenerateManifest>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Release2|x64'">true</GenerateManifest>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\projects\EvolutionaryCPP\build\MinSizeRel\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">EvolutionaryCPP.dir\MinSizeRel\</IntDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">EvolutionaryCPP</TargetName>
@@ -131,6 +146,51 @@
     </ProjectReference>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>D:\projects\EvolutionaryCPP\include;D:\projects\EvolutionaryCPP\libs\Eigen;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /external:I "C:/Users/FreBe/vcpkg/packages/tbb_x64-windows/include"</AdditionalOptions>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
+      <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
+      <Optimization>Disabled</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;PROJECT_ROOT_PATH="D:/projects/EvolutionaryCPP";CMAKE_INTDIR="Release"</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;PROJECT_ROOT_PATH=\"D:/projects/EvolutionaryCPP\";CMAKE_INTDIR=\"Release\"</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>D:\projects\EvolutionaryCPP\include;D:\projects\EvolutionaryCPP\libs\Eigen;C:\Users\FreBe\vcpkg\packages\tbb_x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>D:\projects\EvolutionaryCPP\include;D:\projects\EvolutionaryCPP\libs\Eigen;C:\Users\FreBe\vcpkg\packages\tbb_x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Link>
+      <AdditionalDependencies>C:\Users\FreBe\vcpkg\packages\tbb_x64-windows\lib\tbb12.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ImportLibrary>D:/projects/EvolutionaryCPP/build/Release/EvolutionaryCPP.lib</ImportLibrary>
+      <ProgramDataBaseFile>D:/projects/EvolutionaryCPP/build/Release/EvolutionaryCPP.pdb</ProgramDataBaseFile>
+      <SubSystem>Console</SubSystem>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release2|x64'">
     <ClCompile>
       <AdditionalIncludeDirectories>D:\projects\EvolutionaryCPP\include;D:\projects\EvolutionaryCPP\libs\Eigen;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>%(AdditionalOptions) /external:I "C:/Users/FreBe/vcpkg/packages/tbb_x64-windows/include"</AdditionalOptions>
@@ -282,6 +342,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\projects\EvolutionaryCPP\build\CMakeFiles\generate.stamp</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building Custom Rule D:/projects/EvolutionaryCPP/CMakeLists.txt</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release2|x64'">Building Custom Rule D:/projects/EvolutionaryCPP/CMakeLists.txt</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
 "C:\Program Files\CMake\bin\cmake.exe" -SD:/projects/EvolutionaryCPP -BD:/projects/EvolutionaryCPP/build --check-stamp-file D:/projects/EvolutionaryCPP/build/CMakeFiles/generate.stamp
 if %errorlevel% neq 0 goto :cmEnd
@@ -291,9 +352,21 @@ endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
 exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release2|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SD:/projects/EvolutionaryCPP -BD:/projects/EvolutionaryCPP/build --check-stamp-file D:/projects/EvolutionaryCPP/build/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Program Files\CMake\share\cmake-3.28\Modules\CMakeCInformation.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\CMakeFindDependencyMacro.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\CMakeInitializeConfigs.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\CheckCSourceCompiles.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\CheckIncludeFile.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\CheckLibraryExists.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\Compiler\MSVC-C.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\Compiler\MSVC.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\FindPackageMessage.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\FindThreads.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\Internal\CheckSourceCompiles.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\Platform\Windows-Initialize.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\Platform\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\Platform\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\Platform\WindowsPaths.cmake;C:\Users\FreBe\vcpkg\packages\tbb_x64-windows\share\tbb\TBBConfig.cmake;C:\Users\FreBe\vcpkg\packages\tbb_x64-windows\share\tbb\TBBConfigVersion.cmake;C:\Users\FreBe\vcpkg\packages\tbb_x64-windows\share\tbb\TBBTargets-debug.cmake;C:\Users\FreBe\vcpkg\packages\tbb_x64-windows\share\tbb\TBBTargets-release.cmake;C:\Users\FreBe\vcpkg\packages\tbb_x64-windows\share\tbb\TBBTargets.cmake;D:\projects\EvolutionaryCPP\build\CMakeFiles\3.28.0-rc5\CMakeCCompiler.cmake;D:\projects\EvolutionaryCPP\build\CMakeFiles\3.28.0-rc5\CMakeCXXCompiler.cmake;D:\projects\EvolutionaryCPP\build\CMakeFiles\3.28.0-rc5\CMakeRCCompiler.cmake;D:\projects\EvolutionaryCPP\build\CMakeFiles\3.28.0-rc5\CMakeSystem.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release2|x64'">C:\Program Files\CMake\share\cmake-3.28\Modules\CMakeCInformation.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\CMakeFindDependencyMacro.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\CMakeInitializeConfigs.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\CheckCSourceCompiles.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\CheckIncludeFile.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\CheckLibraryExists.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\Compiler\MSVC-C.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\Compiler\MSVC.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\FindPackageMessage.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\FindThreads.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\Internal\CheckSourceCompiles.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\Platform\Windows-Initialize.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\Platform\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\Platform\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\Platform\WindowsPaths.cmake;C:\Users\FreBe\vcpkg\packages\tbb_x64-windows\share\tbb\TBBConfig.cmake;C:\Users\FreBe\vcpkg\packages\tbb_x64-windows\share\tbb\TBBConfigVersion.cmake;C:\Users\FreBe\vcpkg\packages\tbb_x64-windows\share\tbb\TBBTargets-debug.cmake;C:\Users\FreBe\vcpkg\packages\tbb_x64-windows\share\tbb\TBBTargets-release.cmake;C:\Users\FreBe\vcpkg\packages\tbb_x64-windows\share\tbb\TBBTargets.cmake;D:\projects\EvolutionaryCPP\build\CMakeFiles\3.28.0-rc5\CMakeCCompiler.cmake;D:\projects\EvolutionaryCPP\build\CMakeFiles\3.28.0-rc5\CMakeCXXCompiler.cmake;D:\projects\EvolutionaryCPP\build\CMakeFiles\3.28.0-rc5\CMakeRCCompiler.cmake;D:\projects\EvolutionaryCPP\build\CMakeFiles\3.28.0-rc5\CMakeSystem.cmake;%(AdditionalInputs)</AdditionalInputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\projects\EvolutionaryCPP\build\CMakeFiles\generate.stamp</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release2|x64'">D:\projects\EvolutionaryCPP\build\CMakeFiles\generate.stamp</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release2|x64'">false</LinkObjects>
       <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Building Custom Rule D:/projects/EvolutionaryCPP/CMakeLists.txt</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
 "C:\Program Files\CMake\bin\cmake.exe" -SD:/projects/EvolutionaryCPP -BD:/projects/EvolutionaryCPP/build --check-stamp-file D:/projects/EvolutionaryCPP/build/CMakeFiles/generate.stamp
@@ -323,9 +396,14 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\strategies\SaloDoubleMoves.cpp" />
+    <ClCompile Include="..\src\strategies\SaloDualNeighborImprovement.cpp" />
     <ClCompile Include="..\src\strategies\SaloImprovement.cpp" />
+    <ClCompile Include="..\src\strategies\SaloJovaImprovement.cpp" />
+    <ClCompile Include="..\src\strategies\SaloOverEdgesForcedDualImprovement.cpp" />
     <ClCompile Include="..\src\strategies\SaloOverEdgesImprovement.cpp" />
     <ClCompile Include="..\src\util\Util.cpp" />
+    <ClCompile Include="..\src\util\WeightedRandomSampler.cpp" />
     <ClCompile Include="D:\projects\EvolutionaryCPP\src\CPPJovanovic\BufferElement.cpp" />
     <ClCompile Include="D:\projects\EvolutionaryCPP\src\CPPJovanovic\CPPCandidate.cpp" />
     <ClCompile Include="D:\projects\EvolutionaryCPP\src\CPPJovanovic\CPPGreedy.cpp" />
@@ -352,9 +430,14 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="D:\projects\EvolutionaryCPP\src\strategies\SimulatedAnnealingImprovement.cpp" />
     <ClCompile Include="D:\projects\EvolutionaryCPP\src\strategies\SolutionEvolution.cpp" />
     <ClInclude Include="..\src\RandomGenerator.h" />
+    <ClInclude Include="..\src\strategies\SaloDoubleMoves.h" />
+    <ClInclude Include="..\src\strategies\SaloDualNeighborImprovement.h" />
     <ClInclude Include="..\src\strategies\SaloImprovement.h" />
+    <ClInclude Include="..\src\strategies\SaloJovaImprovement.h" />
+    <ClInclude Include="..\src\strategies\SaloOverEdgesForcedDualImprovement.h" />
     <ClInclude Include="..\src\strategies\SaloOverEdgesImprovement.h" />
     <ClInclude Include="..\src\util\Util.h" />
+    <ClInclude Include="..\src\util\WeightedRandomSampler.h" />
     <ClInclude Include="D:\projects\EvolutionaryCPP\libs\Eigen\src\AccelerateSupport\AccelerateSupport.h" />
     <ClInclude Include="D:\projects\EvolutionaryCPP\libs\Eigen\src\AccelerateSupport\InternalHeaderCheck.h" />
     <ClInclude Include="D:\projects\EvolutionaryCPP\libs\Eigen\src\Cholesky\InternalHeaderCheck.h" />

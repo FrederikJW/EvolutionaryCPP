@@ -1,4 +1,4 @@
-#include "SaloExtendedImprovement.h"
+#include "SaloJovaImprovement.h"
 #include "../Defines.h"
 #include <cassert>
 #include <cstdio>
@@ -11,11 +11,11 @@
 // TODO: move these parameter to somewhere else
 #define EMPTY_IDX 0
 
-SaloExtendedImprovement::~SaloExtendedImprovement() {
+SaloJovaImprovement::~SaloJovaImprovement() {
     disposeEnvironment();
 }
 
-void SaloExtendedImprovement::improveSolution(Partition& solution, clock_t startTime, int maxSeconds, BestSolutionInfo* frt, int generation_cnt) {
+void SaloJovaImprovement::improveSolution(Partition& solution, clock_t startTime, int maxSeconds, BestSolutionInfo* frt, int generation_cnt) {
     recorder->enter("improve_solution");
     setStart(solution);
     search(startTime, maxSeconds, generation_cnt);
@@ -24,7 +24,7 @@ void SaloExtendedImprovement::improveSolution(Partition& solution, clock_t start
     printf("Child has been raised to by SA %d\n", getBestObjective());
 }
 
-void SaloExtendedImprovement::setEnvironment(Graph& graph) {
+void SaloJovaImprovement::setEnvironment(Graph& graph) {
     delete instance;
     instance = new CPPInstance(graph.getNodeCount(), graph.getMatrix());
     delete problem;
@@ -32,26 +32,24 @@ void SaloExtendedImprovement::setEnvironment(Graph& graph) {
     problem->SetSASelect(selectType);
 }
 
-void SaloExtendedImprovement::setStart(Partition& startSol) {
+void SaloJovaImprovement::setStart(Partition& startSol) {
     problem->AllocateSolution(startSol.getPvertex(), startSol.getNnode(), startSol.getValue());
 }
 
-void SaloExtendedImprovement::disposeEnvironment() {
+void SaloJovaImprovement::disposeEnvironment() {
     delete instance;
     delete problem;
 }
 
-void SaloExtendedImprovement::calibrateTemp() {
+void SaloJovaImprovement::calibrateTemp() {
     problem->Calibrate(10000);
 }
 
-void SaloExtendedImprovement::search(clock_t startTime, int maxSeconds, int generation_cnt) {
-    double Accept;
-    problem->LocalSearch();
-    problem->SASearch();
+void SaloJovaImprovement::search(clock_t startTime, int maxSeconds, int generation_cnt) {
+    problem->SALOSearch();
 }
 
-void SaloExtendedImprovement::selectBetter(BestSolutionInfo* frt, clock_t start_time, int generation_cnt) {
+void SaloJovaImprovement::selectBetter(BestSolutionInfo* frt, clock_t start_time, int generation_cnt) {
     if (getBestObjective() > frt->best_val) {
         frt->best_partition->copyPartition(getBestPartition());
         frt->best_val = getBestObjective();
@@ -63,11 +61,11 @@ void SaloExtendedImprovement::selectBetter(BestSolutionInfo* frt, clock_t start_
     }
 }
 
-int SaloExtendedImprovement::getBestObjective() {
+int SaloJovaImprovement::getBestObjective() {
     return problem->GetSolution().getObjective();
 }
 
-Partition SaloExtendedImprovement::getBestPartition() {
+Partition SaloJovaImprovement::getBestPartition() {
     int nnode = problem->GetInstance()->getNumberOfNodes();
     Partition partition(nnode);
 

@@ -20,4 +20,6 @@ struct Parameters {
 
 void verifySolution(Partition* partition, Graph* graph);
 
+double FastExp(double x);
+
 #endif // UTIL_H

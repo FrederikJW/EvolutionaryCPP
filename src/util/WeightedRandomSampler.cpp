@@ -1,19 +1,25 @@
+#include <numeric>
 #include "WeightedRandomSampler.h"
 
 WeightedRandomSampler::WeightedRandomSampler(const std::vector<int>& weights)
     : generator(std::random_device{}()), N(weights.size()), total_weight(0.0) {
 
-    // Calculate the total weight
-    for (int w : weights) {
-        total_weight += w;
+    double T = 20;
+
+    std::vector<double> exp_weights;
+    for (double w : weights) {
+        exp_weights.push_back(FastExp(w / T));
     }
 
-    // Normalize the weights to create probabilities
-    std::vector<double> probabilities(N);
-    for (int i = 0; i < N; ++i) {
-        probabilities[i] = static_cast<double>(weights[i]) / total_weight;
-    }
+    // Compute the sum of exponentials
+    double sum_exp_weights = std::accumulate(exp_weights.begin(), exp_weights.end(), 0.0);
 
+    // Compute probabilities
+    std::vector<double> probabilities;
+    for (double exp_weight : exp_weights) {
+        probabilities.push_back(exp_weight / sum_exp_weights);
+    }
+    
     // Build the alias table
     buildAliasTable(probabilities);
 }
@@ -69,11 +75,18 @@ void WeightedRandomSampler::buildAliasTable(const std::vector<double>& probabili
 }
 
 int WeightedRandomSampler::sample() {
+    uint64_t r = generator();
+    uint32_t column = (uint32_t)(r & 0xffffffff) % N;
+    uint32_t pint = (uint32_t)(r >> 32);
+    double p = (double)pint * (1.0 / 4294967296.0);
+
+    /*
     std::uniform_int_distribution<int> dist_int(0, N - 1);
     int column = dist_int(generator);
 
     std::uniform_real_distribution<double> dist_double(0.0, 1.0);
     double p = dist_double(generator);
+    */
 
     if (p < prob[column]) {
         return column;

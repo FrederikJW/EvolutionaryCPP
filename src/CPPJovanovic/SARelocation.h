@@ -3,6 +3,15 @@
 
 enum SAMoveType { N0, N1, Both, Swap, Slide, None };
 
+struct SARelocationStruct {
+    int mN0 = -1, mC0 = -1;
+    int mN1 = -1, mC1 = -1;
+    int mChange = 0;
+    float mProbChange = 0;
+    SAMoveType mMoveType;
+};
+
+
 class SARelocation {
 public:
     int mN0;
@@ -11,12 +20,13 @@ public:
     int mC1;
     int mChange;
     float mProbChange;
+    bool forceAccept;
 
     SAMoveType mMoveType;
 
     // Constructor to initialize all values to 0
     SARelocation()
-        : mN0(0), mN1(0), mC0(0), mC1(0), mChange(0), mProbChange(0), mMoveType(SAMoveType::N0) {}
+        : mN0(0), mN1(0), mC0(0), mC1(0), mChange(0), mProbChange(0), mMoveType(SAMoveType::N0), forceAccept(false) {}
 
     void copy(SARelocation& relocation) {
         mN0 = relocation.mN0;
@@ -26,8 +36,16 @@ public:
         mChange = relocation.mChange;
         mProbChange = relocation.mChange;
         mMoveType = relocation.mMoveType;
+        forceAccept = relocation.forceAccept;
     }
 };
+
+struct SADualSplitRelocationStruct {
+    int mN0 = -1, mN1 = -1;
+    int mC0 = -1, mC1 = -1;
+    int mChange = INT_MIN;
+};
+
 
 class SADualSplitRelocation {
 public:
@@ -41,6 +59,13 @@ public:
     bool moveN0First;
     SADualSplitRelocation() : mN0(0), mN1(0), mC0(0), mC1(0), mChange0(0), mChange1(0), mChange(0), moveN0First(true) {}
 };
+
+struct SASingleRelocationStruct {
+    int  node = -1;
+    int  clique = -1;
+    int change = INT_MIN;
+};
+
 
 class SASingleRelocation {
 public:

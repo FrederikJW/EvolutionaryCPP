@@ -82,6 +82,10 @@ void CPPInstance::InitEdges() {
     for (int i = 0; i < mNumberOfNodes; ++i) {
         for (int j = i + 1; j < mNumberOfNodes; ++j) {
             int weight = mWeights[i][j];
+            /*
+            edges.emplace_back(std::array<int, 3>{i, j, weight});
+            numberOfEdges++;
+            */
             if (weight != 0) {
                 edges.emplace_back(std::array<int, 3>{i, j, weight});
                 numberOfEdges++;

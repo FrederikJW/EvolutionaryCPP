@@ -18,6 +18,7 @@ CPPSolution::CPPSolution(int* pvertex, int numVertices, int objective, CPPInstan
 }
 
 void CPPSolution::Init(int size) {
+    EmptyChange.clear();
     EmptyChange.resize(size, std::vector<int>(size, 0));
 }
 

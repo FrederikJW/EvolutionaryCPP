@@ -10,6 +10,8 @@
 #include <Dense>
 #include "CPPSolutionBase.h"
 #include "../RandomGenerator.h"
+#include "../util/Util.h"
+#include <algorithm>
 
 // does not work correctly
 void parallelAddSse(std::vector<int>& a, const std::vector<int>& b) {
@@ -397,17 +399,19 @@ int CPPSolutionBase::CalculateAllConnections(int node, int clique)
 
 void CPPSolutionBase::UpdateAllConnections(int nNode, int nClique)
 {
-    if (nClique >= static_cast<int>(mAllConnections.size()))
+    if (nClique >= mAllConnections.size())
     {
-        std::vector<std::vector<int>> nAllConnections(mAllConnections.size() + 1);
-        nAllConnections[nClique].resize(mNodeClique.size(), 0);
-
-        for (size_t i = 0; i < mAllConnections.size(); i++)
-        {
-            nAllConnections[i] = mAllConnections[i];
+        // Reserve extra capacity to reduce the frequency of reallocations.
+        if (nClique >= mAllConnections.capacity()) {
+            // For example, double the capacity.
+            size_t newCapacity = std::max(nClique + 1, static_cast<int>(mAllConnections.capacity() * 2));
+            mAllConnections.reserve(newCapacity);
         }
+        // Now resize without triggering a reallocation most of the time.
+        mAllConnections.resize(nClique + 1);
 
-        mAllConnections = nAllConnections;
+        // For new clique, allocate the inner vector once.
+        mAllConnections[nClique].resize(mNodeClique.size(), 0);
     }
 
     std::vector<int>& newAllConnectedNode = mAllConnections[nClique];
@@ -1489,33 +1493,124 @@ void CPPSolutionBase::SASelectDualSplit(SARelocation& Relocation, int weight, bo
     Relocation.mC0 = bestCombinedRelocation.mC0;
     Relocation.mN1 = bestCombinedRelocation.mN1;
     Relocation.mC1 = bestCombinedRelocation.mC1;
+    nextAcceptRelocation.copy(Relocation);
+    nextDenyRelocation.mN0 = bestN0Relocation.node;
+    nextDenyRelocation.mC0 = bestN0Relocation.clique;
+    nextDenyRelocation.mN1 = bestN1Relocation.node;
+    nextDenyRelocation.mC1 = bestN1Relocation.clique;
+
     if (bestCombinedRelocation.moveN0First) {
         Relocation.mChange = bestCombinedRelocation.mChange0;
+        Relocation.mProbChange = bestCombinedRelocation.mChange0;
         Relocation.mMoveType = SAMoveType::N0;
 
-        nextAcceptRelocation.copy(Relocation);
         nextAcceptRelocation.mChange = bestCombinedRelocation.mChange1;
+        nextAcceptRelocation.mProbChange = bestCombinedRelocation.mChange1;
         nextAcceptRelocation.mMoveType = SAMoveType::N1;
+        /*
         nextDenyRelocation.copy(Relocation);
         nextDenyRelocation.mN0 = bestN1Relocation.node;
         nextDenyRelocation.mC0 = bestN1Relocation.clique;
-        nextDenyRelocation.mChange = bestN1Relocation.change;
+        nextDenyRelocation.mChange = bestN1Relocation.change;*/
 
+        // choose best alternative relocation
+        /*
+        if (bestN0Relocation.change > bestN1Relocation.change && bestN0Relocation.change > Relocation.mChange) {
+            nextDenyRelocation.mMoveType = SAMoveType::N0;
+            nextDenyRelocation.mChange = bestN0Relocation.change;
+            nextDenyRelocation.mProbChange = bestN0Relocation.change;
+        }
+        else if (secondBestN0Relocation.change > bestN1Relocation.change && secondBestN0Relocation.change > Relocation.mChange) {
+            nextDenyRelocation.mMoveType = SAMoveType::N0;
+            nextDenyRelocation.mChange = secondBestN0Relocation.change;
+            nextDenyRelocation.mProbChange = secondBestN0Relocation.change;
+        }
+        else {
+            nextDenyRelocation.mMoveType = SAMoveType::N1;
+            nextDenyRelocation.mChange = bestN1Relocation.change;
+            nextDenyRelocation.mProbChange = bestN1Relocation.change;
+        }*/
+        
+        nextDenyRelocation.mMoveType = SAMoveType::N1;
+        nextDenyRelocation.mChange = bestN1Relocation.change;
+        nextDenyRelocation.mProbChange = bestN1Relocation.change;
     }
     else {
         Relocation.mChange = bestCombinedRelocation.mChange1;
+        Relocation.mProbChange = bestCombinedRelocation.mChange1;
         Relocation.mMoveType = SAMoveType::N1;
-        nextAcceptRelocation.copy(Relocation);
+
         nextAcceptRelocation.mChange = bestCombinedRelocation.mChange0;
+        nextAcceptRelocation.mProbChange = bestCombinedRelocation.mChange0;
         nextAcceptRelocation.mMoveType = SAMoveType::N0;
+        /*
         nextDenyRelocation.copy(Relocation);
         nextDenyRelocation.mN1 = bestN0Relocation.node;
         nextDenyRelocation.mC1 = bestN0Relocation.clique;
+        nextDenyRelocation.mChange = bestN0Relocation.change;*/
+
+        // choose best alternative relocation
+        /*
+        if (bestN1Relocation.change > bestN0Relocation.change && bestN1Relocation.change > Relocation.mChange) {
+            nextDenyRelocation.mMoveType = SAMoveType::N1;
+            nextDenyRelocation.mChange = bestN1Relocation.change;
+            nextDenyRelocation.mProbChange = bestN1Relocation.change;
+        }
+        else if (secondBestN1Relocation.change > bestN0Relocation.change && secondBestN1Relocation.change > Relocation.mChange) {
+            nextDenyRelocation.mMoveType = SAMoveType::N1;
+            nextDenyRelocation.mChange = secondBestN1Relocation.change;
+            nextDenyRelocation.mProbChange = secondBestN1Relocation.change;
+        }
+        else {
+            nextDenyRelocation.mMoveType = SAMoveType::N0;
+            nextDenyRelocation.mChange = bestN0Relocation.change;
+            nextDenyRelocation.mProbChange = bestN0Relocation.change;
+        }*/
+
+        
+        nextDenyRelocation.mMoveType = SAMoveType::N0;
         nextDenyRelocation.mChange = bestN0Relocation.change;
+        nextDenyRelocation.mProbChange = bestN0Relocation.change;
     }
 
-    Relocation.mProbChange = Relocation.mChange + (nextAcceptRelocation.mChange / 3.0) - (nextDenyRelocation.mChange / 3.0);
+    // what if nextDenyRelocation.mChange > Relocation.mChange + nextAcceptRelocation.mChange && nextDenyRelocation.mChange > Relocation.mChange -> yes possible
+    //      then: return nextDenyRelocation as current relocation, (but only if change is positive?)
+    //      also consider best relocation of first node?
+    //      is it possible the best relocation of first node is better than next deny relocation? -> catch this case
+    
+    // decide to split or bind the double move depending on score
+
     nextRelocationCalculated = true;
+    // nextAcceptRelocation.forceAccept = false;
+    /*
+    Relocation.forceAccept = false;
+    if (Relocation.mChange < Relocation.mChange + nextAcceptRelocation.mChange) {
+        Relocation.mChange = Relocation.mChange + nextAcceptRelocation.mChange;
+        Relocation.mProbChange = Relocation.mChange;
+        if (Relocation.mC1 == Size && Relocation.mC0 == Size + 1) {
+            Relocation.mC0 = Size;
+            Relocation.mC1 == Size + 1;
+        }
+        Relocation.mMoveType = SAMoveType::Both;
+        // nextAcceptRelocation.forceAccept = true;
+        nextRelocationCalculated = false;
+    }*/
+
+    
+
+    // decide if alternative relocation is better than double relocation
+    /*
+    if (nextDenyRelocation.mChange > Relocation.mChange && nextDenyRelocation.mChange > Relocation.mChange + nextAcceptRelocation.mChange) {
+        Relocation.copy(nextDenyRelocation);
+        nextRelocationCalculated = false;
+    }*/
+    
+    if (nextAcceptRelocation.mChange > 0) {
+        Relocation.mProbChange = Relocation.mChange + nextAcceptRelocation.mChange;
+    }
+    else {
+        Relocation.mProbChange = Relocation.mChange;
+    }
 }
 
 void CPPSolutionBase::SASelectSingle(SARelocation& Relocation)
@@ -1556,22 +1651,10 @@ void CPPSolutionBase::SASelectSingleEdge(SARelocation& Relocation, bool forceDua
     if (nextRelocationCalculated) {
         nextRelocationCalculated = false;
         if (prevAccepted) {
-            Relocation.mC0 = nextAcceptRelocation.mC0;
-            Relocation.mC1 = nextAcceptRelocation.mC1;
-            Relocation.mN0 = nextAcceptRelocation.mN0;
-            Relocation.mN1 = nextAcceptRelocation.mN1;
-            Relocation.mChange = nextAcceptRelocation.mChange;
-            Relocation.mProbChange = nextAcceptRelocation.mChange;
-            Relocation.mMoveType = nextAcceptRelocation.mMoveType;
+            Relocation.copy(nextAcceptRelocation);
         }
         else {
-            Relocation.mC0 = nextDenyRelocation.mC0;
-            Relocation.mC1 = nextDenyRelocation.mC1;
-            Relocation.mN0 = nextDenyRelocation.mN0;
-            Relocation.mN1 = nextDenyRelocation.mN1;
-            Relocation.mChange = nextDenyRelocation.mChange;
-            Relocation.mProbChange = nextDenyRelocation.mChange;
-            Relocation.mMoveType = nextDenyRelocation.mMoveType;
+            Relocation.copy(nextDenyRelocation);
         }
         return;
     }
@@ -1592,9 +1675,10 @@ void CPPSolutionBase::SASelectSingleEdge(SARelocation& Relocation, bool forceDua
 }
 
 void CPPSolutionBase::SASelectDualR(SARelocation& Relocation)
-{
+{   
+    
     int n0, n1;
-
+    
     std::uniform_int_distribution<int> distribution(0, mInstance->getNumberOfNodes() - 1);
     n0 = distribution(*mGenerator);
 
@@ -1751,6 +1835,547 @@ void CPPSolutionBase::SASelectSingleR(SARelocation& Relocation)
     Relocation.mN0 = n0;
 
     SASelectSingle(Relocation);
+
+    Relocation.mProbChange = Relocation.mChange;
+}
+
+// Helper to update the best (and second best) single relocations.
+inline void updateBestAndSecondBest(SASingleRelocationStruct& best,
+    SASingleRelocationStruct& secondBest,
+    int node, int newClique, int newChange)
+{
+    if (newChange > best.change) {
+        // Promote old best to second best
+        secondBest = best;
+        // New best
+        best.node = node;
+        best.clique = newClique;
+        best.change = newChange;
+    }
+    else if (newChange > secondBest.change) {
+        secondBest.node = node;
+        secondBest.clique = newClique;
+        secondBest.change = newChange;
+    }
+}
+
+// Helper to update bestCombined if we find a better sum change.
+inline void updateBestCombined(SADualSplitRelocationStruct& bestCombined,
+    int newC0, int newC1,
+    int newChange
+)
+{
+    if (newChange > bestCombined.mChange) {
+        bestCombined.mC0 = newC0;
+        bestCombined.mC1 = newC1;
+        bestCombined.mChange = newChange;
+    }
+}
+
+void CPPSolutionBase::SASelectDoubleR(SARelocationStruct& RelocationBoth,
+    SARelocationStruct& RelocationN0,
+    SARelocationStruct& RelocationN1)
+{
+    // 1. Pick a random edge
+    std::uniform_int_distribution<int> distribution(0, mInstance->getNumberOfEdges() - 1);
+    const auto& edge = mInstance->getEdges()[distribution(*mGenerator)];
+    // const auto& edge = mInstance->getSampledRandEdge();
+    int n0 = edge[0];
+    int n1 = edge[1];
+    int weight = edge[2];
+
+    if (weight == 0) {
+        weight = mInstance->getWeights()[n0][n1];
+    }
+
+    // 2. Prepare relocation data
+    RelocationBoth.mN0 = n0;
+    RelocationBoth.mN1 = n1;
+
+    int n0Clique = mNodeClique[n0];
+    int n1Clique = mNodeClique[n1];
+
+    const int size = static_cast<int>(mCliqueSizes.size());
+
+    // Precompute remove changes
+    int n0RemoveChange = -mAllConnections[n0Clique][n0];
+    int n1RemoveChange = -mAllConnections[n1Clique][n1];
+
+    // Initialize best & second-best single relocations
+    SASingleRelocationStruct bestN0{ n0, n0Clique, INT_MIN };
+    SASingleRelocationStruct secondN0{ n0, n0Clique, INT_MIN };
+    SASingleRelocationStruct bestN1{ n1, n1Clique, INT_MIN };
+    SASingleRelocationStruct secondN1{ n1, n1Clique, INT_MIN };
+
+    // Combined relocation
+    SADualSplitRelocationStruct bestCombined;
+    bestCombined.mN0 = n0;
+    bestCombined.mN1 = n1;
+    bestCombined.mC0 = n0Clique;
+    bestCombined.mC1 = n1Clique;
+    bestCombined.mChange = INT_MIN;
+
+    // If they are in the same clique, merging them is effectively 0 cost;
+    // if in different cliques, splitting them is 0 cost.
+    bool sameClique = (n0Clique == n1Clique);
+    int mergeWeight = sameClique ? 0 : weight;
+    int splitWeight = sameClique ? -weight : 0;
+
+    // 3. Main loop over possible cliques
+    for (int c = 0; c < size; ++c) {
+        // Single-move changes to clique c
+        const std::vector<int>& connC = mAllConnections[c];
+        int cChange0 = n0RemoveChange + connC[n0];
+        int cChange1 = n1RemoveChange + connC[n1];
+
+        // 3a. Update best single relocations if c differs from the current clique
+        if (c != n0Clique) {
+            updateBestAndSecondBest(bestN0, secondN0, n0, c, cChange0);
+        }
+        if (c != n1Clique) {
+            updateBestAndSecondBest(bestN1, secondN1, n1, c, cChange1);
+        }
+
+        // 3b. Move both to the same new clique c
+        if (c != n0Clique && c != n1Clique) {
+            int cBoth = cChange0 + cChange1 + mergeWeight - 2 * splitWeight;
+            // We only care about the sum
+            updateBestCombined(bestCombined, c, c, cBoth);
+        }
+
+        // 3c. If they are in different cliques, consider "sliding" one into the other's clique
+        if (!sameClique) {
+            // n1 -> n0Clique, n0 -> c
+            if (n0Clique != c) {
+                int tempChange1 = n1RemoveChange + mAllConnections[n0Clique][n1];
+                // If c != n1Clique, reduce once by mergeWeight; else reduce twice
+                int mergeAdjustment = (c != n1Clique) ? -mergeWeight : -2 * mergeWeight;
+                int cChangeSlide = (cChange0 + tempChange1 + mergeAdjustment);
+
+                updateBestCombined(bestCombined,
+                    c,          // new clique for n0
+                    n0Clique,   // new clique for n1
+                    cChangeSlide);
+            }
+
+            // n0 -> n1Clique, n1 -> c
+            if (n1Clique != c) {
+                int tempChange0 = n0RemoveChange + mAllConnections[n1Clique][n0];
+                int mergeAdjustment = (c != n0Clique) ? -mergeWeight : -2 * mergeWeight;
+                int cChangeSlide = (tempChange0 + cChange1 + mergeAdjustment);
+
+                updateBestCombined(bestCombined,
+                    n1Clique,   // new clique for n0
+                    c,          // new clique for n1
+                    cChangeSlide);
+            }
+        }
+    } // end for (c)
+
+    // 4. Consider removing n0 and n1 individually (assign them to a “new” cluster = size)
+    if (n0RemoveChange > bestN0.change) {
+        secondN0 = bestN0;
+        bestN0.clique = size;
+        bestN0.change = n0RemoveChange;
+    }
+    if (n1RemoveChange > bestN1.change) {
+        secondN1 = bestN1;
+        bestN1.clique = size;
+        bestN1.change = n1RemoveChange;
+    }
+
+    // 5. Combine best single moves for n0 and n1
+    {
+        // 5a. If best relocations go to different cliques
+        if (bestN0.clique != bestN1.clique) {
+            int combinedChange = bestN0.change + bestN1.change - splitWeight;
+            updateBestCombined(bestCombined,
+                bestN0.clique,
+                bestN1.clique,
+                combinedChange);
+        }
+        // 5b. Both want to move to the same clique
+        else {
+            // If both want to remove => possibly new clusters (size, size+1)
+            if (bestN0.clique == size) {
+                int combinedChange = bestN0.change + bestN1.change - splitWeight;
+                updateBestCombined(bestCombined,
+                    size, size + 1,
+                    combinedChange);
+            }
+            else {
+                // There's a conflict -> try bestN0 with secondBestN1
+                if (secondN1.change != INT_MIN) {
+                    int cChange = bestN0.change + secondN1.change - splitWeight;
+                    updateBestCombined(bestCombined,
+                        bestN0.clique,
+                        secondN1.clique,
+                        cChange);
+                }
+                // And secondBestN0 with bestN1
+                if (secondN0.change != INT_MIN) {
+                    int cChange = secondN0.change + bestN1.change - splitWeight;
+                    updateBestCombined(bestCombined,
+                        secondN0.clique,
+                        bestN1.clique,
+                        cChange);
+                }
+            }
+        }
+    }
+
+    // 6. Removing both together
+    int removeBoth = n0RemoveChange + n1RemoveChange + mergeWeight - 2 * splitWeight;
+    updateBestCombined(bestCombined,
+        size, size,
+        removeBoth);
+
+    // 7. Final assignments
+    // (a) Both
+    RelocationBoth.mN0 = bestCombined.mN0;
+    RelocationBoth.mC0 = bestCombined.mC0;
+    RelocationBoth.mN1 = bestCombined.mN1;
+    RelocationBoth.mC1 = bestCombined.mC1;
+    RelocationBoth.mChange = bestCombined.mChange;
+    RelocationBoth.mProbChange = bestCombined.mChange;
+    RelocationBoth.mMoveType = SAMoveType::Both;
+
+    // (b) N0
+    RelocationN0.mN0 = bestN0.node;
+    RelocationN0.mC0 = bestN0.clique;
+    RelocationN0.mChange = bestN0.change;
+    RelocationN0.mProbChange = bestN0.change;
+    RelocationN0.mMoveType = SAMoveType::N0;
+
+    // (c) N1
+    RelocationN1.mN1 = bestN1.node;
+    RelocationN1.mC1 = bestN1.clique;
+    RelocationN1.mChange = bestN1.change;
+    RelocationN1.mProbChange = bestN1.change;
+    RelocationN1.mMoveType = SAMoveType::N1;
+}
+
+
+void CPPSolutionBase::SASelectDoubleR2(SARelocation& RelocationBoth, SARelocation& RelocationN0, SARelocation& RelocationN1)
+{   
+    // move the distribution to the instance
+    std::uniform_int_distribution<int> distribution(0, mInstance->getNumberOfEdges() - 1);
+
+    const auto& edge = mInstance->getEdges()[distribution(*mGenerator)];
+    // const auto& edge = mInstance->getSampledRandEdge();
+    int n0 = edge[0];
+    int n1 = edge[1];
+    int weight = edge[2];
+
+    RelocationBoth.mN0 = n0;
+    RelocationBoth.mN1 = n1;
+
+    int n0Clique = mNodeClique[RelocationBoth.mN0];
+    int n1Clique = mNodeClique[RelocationBoth.mN1];
+
+    const int Size = static_cast<int>(mCliqueSizes.size());
+
+    int n0RemoveChange = -mAllConnections[n0Clique][RelocationBoth.mN0];
+    int n1RemoveChange = -mAllConnections[n1Clique][RelocationBoth.mN1];
+
+    SASingleRelocation bestN0Relocation;
+    bestN0Relocation.node = RelocationBoth.mN0;
+    bestN0Relocation.clique = n0Clique;
+    bestN0Relocation.change = INT_MIN;
+    SASingleRelocation secondBestN0Relocation;
+    secondBestN0Relocation.node = RelocationBoth.mN0;
+    secondBestN0Relocation.clique = n0Clique;
+    secondBestN0Relocation.change = INT_MIN;
+    SASingleRelocation bestN1Relocation;
+    bestN1Relocation.node = RelocationBoth.mN1;
+    bestN1Relocation.clique = n1Clique;
+    bestN1Relocation.change = INT_MIN;
+    SASingleRelocation secondBestN1Relocation;
+    secondBestN1Relocation.node = RelocationBoth.mN1;
+    secondBestN1Relocation.clique = n1Clique;
+    secondBestN1Relocation.change = INT_MIN;
+
+    SADualSplitRelocation bestCombinedRelocation;
+    bestCombinedRelocation.mN0 = RelocationBoth.mN0;
+    bestCombinedRelocation.mN1 = RelocationBoth.mN1;
+    bestCombinedRelocation.mC0 = n0Clique;
+    bestCombinedRelocation.mC1 = n1Clique;
+    bestCombinedRelocation.mChange0 = INT_MIN;
+    bestCombinedRelocation.mChange1 = INT_MIN;
+    bestCombinedRelocation.mChange = INT_MIN;
+
+    if (weight == 0) {
+        weight = mInstance->getWeights()[RelocationBoth.mN0][RelocationBoth.mN1];
+    }
+    int mergeWeight = weight;
+    int splitWeight = -weight;
+
+    bool sameClique = n0Clique == n1Clique;
+    if (sameClique) {
+        mergeWeight = 0;
+    }
+    else {
+        splitWeight = 0;
+    }
+
+    long cChange;
+    const std::vector<int>& n0CliqueConnections = mAllConnections[n0Clique];
+    const std::vector<int>& n1CliqueConnections = mAllConnections[n1Clique];
+
+    for (int c = 0; c < Size; c++) {
+        const std::vector<int>& cCliqueConnections = mAllConnections[c];
+        int cChange0 = n0RemoveChange + cCliqueConnections[RelocationBoth.mN0];
+        int cChange1 = n1RemoveChange + cCliqueConnections[RelocationBoth.mN1];
+
+        if (n0Clique != c && n1Clique != c) {
+            // move individually n0 to c
+            if (cChange0 > bestN0Relocation.change) {
+                secondBestN0Relocation.clique = bestN0Relocation.clique;
+                bestN0Relocation.clique = c;
+                secondBestN0Relocation.change = bestN0Relocation.change;
+                bestN0Relocation.change = cChange0;
+            }
+            else if (cChange0 > secondBestN0Relocation.change) {
+                secondBestN0Relocation.clique = c;
+                secondBestN0Relocation.change = cChange0;
+            }
+
+            // move individually n1 to c
+            if (cChange1 > bestN1Relocation.change) {
+                secondBestN1Relocation.clique = bestN1Relocation.clique;
+                bestN1Relocation.clique = c;
+                secondBestN1Relocation.change = bestN1Relocation.change;
+                bestN1Relocation.change = cChange1;
+            }
+            else if (cChange1 > secondBestN1Relocation.change) {
+                secondBestN1Relocation.clique = c;
+                secondBestN1Relocation.change = cChange1;
+            }
+
+            // move both to c
+            cChange = cChange1 + cChange0 + mergeWeight - 2 * splitWeight;
+            if (cChange > RelocationBoth.mChange) {
+                bestCombinedRelocation.mC0 = c;
+                bestCombinedRelocation.mC1 = c;
+                bestCombinedRelocation.mChange = cChange;
+                if (cChange0 > cChange1) {
+                    bestCombinedRelocation.mChange0 = cChange0;
+                    bestCombinedRelocation.mChange1 = cChange1 + mergeWeight - 2 * splitWeight;
+                    bestCombinedRelocation.moveN0First = true;
+                }
+                else {
+                    bestCombinedRelocation.mChange0 = cChange0 + mergeWeight - 2 * splitWeight;
+                    bestCombinedRelocation.mChange1 = cChange1;
+                    bestCombinedRelocation.moveN0First = false;
+                }
+            }
+        }
+
+        if (!sameClique) {
+            if (n0Clique != c) {
+                int tempChange1 = n1RemoveChange + n0CliqueConnections[RelocationBoth.mN1];
+                int mergeAdjustment;
+
+                // slide n1 to n0Clique and n0 to c
+                if (c != n1Clique) {
+                    mergeAdjustment = -mergeWeight;
+                }
+                else {
+                    mergeAdjustment = -2 * mergeWeight;
+                }
+
+                cChange = cChange0 + tempChange1 + mergeAdjustment;
+
+                if (cChange > RelocationBoth.mChange) {
+                    bestCombinedRelocation.mC0 = c;
+                    bestCombinedRelocation.mC1 = n0Clique;
+                    bestCombinedRelocation.mChange = cChange;
+                    if (cChange0 > tempChange1) {
+                        bestCombinedRelocation.mChange0 = cChange0;
+                        bestCombinedRelocation.mChange1 = tempChange1 + mergeAdjustment;
+                        bestCombinedRelocation.moveN0First = true;
+                    }
+                    else {
+                        bestCombinedRelocation.mChange0 = cChange0 + mergeAdjustment;
+                        bestCombinedRelocation.mChange1 = tempChange1;
+                        bestCombinedRelocation.moveN0First = false;
+                    }
+                }
+            }
+
+            if (n1Clique != c) {
+                int tempChange0 = n0RemoveChange + n1CliqueConnections[RelocationBoth.mN0];
+                int mergeAdjustment;
+
+                // slide n0 to n1Clique and n1 to c
+                if (c != n0Clique) {
+                    mergeAdjustment = -mergeWeight;
+                }
+                else {
+                    mergeAdjustment = -2 * mergeWeight;
+                }
+
+                cChange = cChange1 + tempChange0 + mergeAdjustment;
+
+                if (cChange > RelocationBoth.mChange) {
+                    bestCombinedRelocation.mC0 = n1Clique;
+                    bestCombinedRelocation.mC1 = c;
+                    bestCombinedRelocation.mChange = cChange;
+                    if (cChange1 > tempChange0) {
+                        bestCombinedRelocation.mChange0 = tempChange0 + mergeAdjustment;
+                        bestCombinedRelocation.mChange1 = cChange1;
+                        bestCombinedRelocation.moveN0First = false;
+                    }
+                    else {
+                        bestCombinedRelocation.mChange0 = tempChange0;
+                        bestCombinedRelocation.mChange1 = cChange1 + mergeAdjustment;
+                        bestCombinedRelocation.moveN0First = true;
+                    }
+                }
+            }
+        }
+    }
+
+    // remove individually
+    if (n0RemoveChange > bestN0Relocation.change) {
+        secondBestN0Relocation.clique = bestN0Relocation.clique;
+        bestN0Relocation.clique = Size;
+        secondBestN0Relocation.change = bestN0Relocation.change;
+        bestN0Relocation.change = n0RemoveChange;
+    }
+    if (n1RemoveChange > bestN1Relocation.change) {
+        secondBestN1Relocation.clique = bestN1Relocation.clique;
+        bestN1Relocation.clique = Size;
+        secondBestN1Relocation.change = bestN1Relocation.change;
+        bestN1Relocation.change = n1RemoveChange;
+    }
+
+    // combine individual moves to together moves
+    if (bestN0Relocation.clique != bestN1Relocation.clique) {
+        // individual movement of nodes
+        cChange = bestN0Relocation.change + bestN1Relocation.change - splitWeight;
+        if (cChange > bestCombinedRelocation.mChange) {
+            bestCombinedRelocation.mC0 = bestN0Relocation.clique;
+            bestCombinedRelocation.mC1 = bestN1Relocation.clique;
+            bestCombinedRelocation.mChange = cChange;
+            if (bestN0Relocation.change > bestN1Relocation.change) {
+                bestCombinedRelocation.mChange0 = bestN0Relocation.change;
+                bestCombinedRelocation.mChange1 = bestN1Relocation.change - splitWeight;
+                bestCombinedRelocation.moveN0First = true;
+            }
+            else {
+                bestCombinedRelocation.mChange0 = bestN0Relocation.change - splitWeight;
+                bestCombinedRelocation.mChange1 = bestN1Relocation.change;
+                bestCombinedRelocation.moveN0First = false;
+            }
+        }
+    }
+    else {
+        // conflict in movement of nodes
+        if (bestN0Relocation.clique == Size) {
+            // move to newly created cluster
+            cChange = bestN0Relocation.change + bestN1Relocation.change - splitWeight;
+            if (cChange > bestCombinedRelocation.mChange) {
+                bestCombinedRelocation.mChange = cChange;
+                if (bestN0Relocation.change > bestN1Relocation.change) {
+                    bestCombinedRelocation.mC0 = Size;
+                    bestCombinedRelocation.mC1 = Size + 1;
+                    bestCombinedRelocation.mChange0 = bestN0Relocation.change;
+                    bestCombinedRelocation.mChange1 = bestN1Relocation.change - splitWeight;
+                    bestCombinedRelocation.moveN0First = true;
+                }
+                else {
+                    // in this function N0 will always be moved first
+                    bestCombinedRelocation.mC0 = Size;
+                    bestCombinedRelocation.mC1 = Size + 1;
+                    bestCombinedRelocation.mChange0 = bestN0Relocation.change - splitWeight;
+                    bestCombinedRelocation.mChange1 = bestN1Relocation.change;
+                    bestCombinedRelocation.moveN0First = false;
+                }
+            }
+        }
+        else {
+            cChange = bestN0Relocation.change + secondBestN1Relocation.change - splitWeight;
+            if (secondBestN1Relocation.change != INT_MIN && cChange > bestCombinedRelocation.mChange) {
+                bestCombinedRelocation.mC0 = bestN0Relocation.clique;
+                bestCombinedRelocation.mC1 = secondBestN1Relocation.clique;
+                bestCombinedRelocation.mChange = cChange;
+                if (bestN0Relocation.change > secondBestN1Relocation.change) {
+                    bestCombinedRelocation.mChange0 = bestN0Relocation.change;
+                    bestCombinedRelocation.mChange1 = secondBestN1Relocation.change - splitWeight;
+                    bestCombinedRelocation.moveN0First = true;
+                }
+                else {
+                    bestCombinedRelocation.mChange0 = bestN0Relocation.change - splitWeight;
+                    bestCombinedRelocation.mChange1 = secondBestN1Relocation.change;
+                    bestCombinedRelocation.moveN0First = false;
+                }
+            }
+            cChange = secondBestN0Relocation.change + bestN1Relocation.change - splitWeight;
+            if (secondBestN0Relocation.change != INT_MIN && cChange > bestCombinedRelocation.mChange) {
+                bestCombinedRelocation.mC0 = secondBestN0Relocation.clique;
+                bestCombinedRelocation.mC1 = bestN1Relocation.clique;
+                bestCombinedRelocation.mChange = cChange;
+                if (secondBestN0Relocation.change > bestN1Relocation.change) {
+                    bestCombinedRelocation.mChange0 = secondBestN0Relocation.change;
+                    bestCombinedRelocation.mChange1 = bestN1Relocation.change - splitWeight;
+                    bestCombinedRelocation.moveN0First = true;
+                }
+                else {
+                    bestCombinedRelocation.mChange0 = secondBestN0Relocation.change - splitWeight;
+                    bestCombinedRelocation.mChange1 = bestN1Relocation.change;
+                    bestCombinedRelocation.moveN0First = false;
+                }
+            }
+        }
+    }
+
+    // remove together
+    int removeTogether = n0RemoveChange + n1RemoveChange + mergeWeight - 2 * splitWeight;
+    if (removeTogether > bestCombinedRelocation.mChange) {
+        bestCombinedRelocation.mC0 = Size;
+        bestCombinedRelocation.mC1 = Size;
+        bestCombinedRelocation.mChange = removeTogether;
+        if (n0RemoveChange > n1RemoveChange) {
+            bestCombinedRelocation.mChange0 = n0RemoveChange;
+            bestCombinedRelocation.mChange1 = n1RemoveChange + mergeWeight - 2 * splitWeight;
+            bestCombinedRelocation.moveN0First = true;
+        }
+        else {
+            bestCombinedRelocation.mChange0 = n0RemoveChange + mergeWeight - 2 * splitWeight;
+            bestCombinedRelocation.mChange1 = n1RemoveChange;
+            bestCombinedRelocation.moveN0First = false;
+        }
+    }
+
+    RelocationBoth.mN0 = bestCombinedRelocation.mN0;
+    RelocationBoth.mC0 = bestCombinedRelocation.mC0;
+    RelocationBoth.mN1 = bestCombinedRelocation.mN1;
+    RelocationBoth.mC1 = bestCombinedRelocation.mC1;
+    RelocationBoth.mChange = bestCombinedRelocation.mChange0 + bestCombinedRelocation.mChange1;
+    RelocationBoth.mMoveType = SAMoveType::Both;
+    RelocationBoth.mProbChange = RelocationBoth.mChange;
+
+    RelocationN0.mN0 = bestN0Relocation.node;
+    RelocationN0.mC0 = bestN0Relocation.clique;
+    RelocationN0.mChange = bestN0Relocation.change;
+    RelocationN0.mMoveType = SAMoveType::N0;
+    RelocationN0.mProbChange = RelocationN0.mChange;
+
+    RelocationN1.mN1 = bestN1Relocation.node;
+    RelocationN1.mC1 = bestN1Relocation.clique;
+    RelocationN1.mChange = bestN1Relocation.change;
+    RelocationN1.mMoveType = SAMoveType::N1;
+    RelocationN1.mProbChange = RelocationN1.mChange;
+
+    // test to benefit double moves
+    /*
+    if (RelocationBoth.mProbChange > 0) {
+        RelocationBoth.mProbChange *= 1.1;
+    }
+    else {
+        RelocationBoth.mProbChange *= 0.9;
+    }*/
 }
 
 void CPPSolutionBase::SASelectR(SARelocation& Relocation)
@@ -1817,6 +2442,403 @@ void CPPSolutionBase::ApplyRelocation(SARelocation Relocation)
     while (RemoveEmptyCliqueSA(true, true));
 }
 
+bool CPPSolutionBase::SimulatedAnnealingWithDoubleMoves(SAParameters& iSAParameters, double& AcceptRelative)
+{
+    // printf("enter SA");
+    nextRelocationCalculated = false;
+    int NeiborhoodSize = mInstance->getNumberOfNodes() * getNumberOfCliques() * iSAParameters.neighborhoodFactor;
+    int n;
+    double Prob;
+    double scoreN0;
+    double expScoreNone, expScoreBoth, expScoreN0, expScoreN1, expScoreAA;
+    double probabilityAA, probabilityAR, probabilityRA;
+    double bestSingleAccept, bestAccept;
+    int randomValue;
+    double sumExpScores;
+    double T = 1;
+    int BestSol = INT_MIN;
+    int cSol = INT_MIN;
+    std::vector<int> tNodeClique(mInstance->getNumberOfNodes());
+    std::vector<int> tempNodeClique(mInstance->getNumberOfNodes());
+    int StartObjective = CalculateObjective();
+    int cSolObjective;
+    int Accept;
+    int AcceptTotal;
+    int Stag = 0;
+    int counter = 0;
+    std::vector<int> NodesChange(mInstance->getNumberOfNodes());
+    SARelocation cRelocation, bestRelocation;
+    SARelocationStruct cRelocationBoth, cRelocationN0, cRelocationN1;
+    int waste = 0;
+    removedClique = -1;
+
+    InitAllConnections();
+    std::copy(mNodeClique.begin(), mNodeClique.end(), tNodeClique.begin());
+
+    T = iSAParameters.mInitTemperature;
+    int L = NeiborhoodSize * iSAParameters.mSizeRepeat;
+
+    int counterCool = 0;
+    cSolObjective = StartObjective;
+    BestSol = StartObjective - 1;
+    AcceptTotal = 0;
+    int sumNodeChange;
+
+    while (true)
+    {
+
+        // gets caught in an endless loop here?
+        counter++;
+        Accept = 0;
+        waste = 0;
+
+        int iterations = L / 2;
+        for (int i = 0; i < iterations; i++)
+        {
+            // clock_t start = clock();
+            cRelocationBoth.mChange = INT_MIN;
+            cRelocationN0.mChange = INT_MIN;
+            cRelocationN1.mChange = INT_MIN;
+
+            SASelectDoubleR(cRelocationBoth, cRelocationN0, cRelocationN1);
+
+            /*
+            // adjusted standard
+            expScoreNone = 1;
+            expScoreBoth = FastExp(cRelocationBoth.mProbChange / T);
+            expScoreBoth = expScoreBoth < 1 ? expScoreBoth : 1;
+            scoreN0 = cRelocationBoth.mProbChange / 2 > cRelocationN0.mProbChange ? cRelocationBoth.mProbChange / 2 : cRelocationN0.mProbChange;
+            expScoreN0 = FastExp(scoreN0 / T);
+            expScoreN0 = expScoreN0 < 1 ? expScoreN0 : 1;
+            expScoreAA = FastExp((cRelocationBoth.mProbChange - cRelocationN0.mProbChange) / T);
+            expScoreAA = expScoreAA < 1 ? expScoreAA : 1;
+            expScoreN1 = FastExp(cRelocationN1.mProbChange / T);
+            expScoreN1 = expScoreN1 < 1 ? expScoreN1 : 1;
+            // sumExpScores = expScoreNone + expScoreBoth + expScoreN0 + expScoreN1;
+            //probability0 = expScore0 / sumExpScores;
+            probabilityAA = expScoreN0 * expScoreAA;
+            probabilityAR = expScoreN0 * (1 - expScoreAA);
+            probabilityRA = (1 - expScoreN0) * expScoreN1;
+            randomValue = 1 + (*mGenerator)() % 1000;*/
+
+            /*
+            grouping double move
+            expScoreBoth = FastExp((cRelocationBoth.mProbChange) / T);
+            expScoreBoth = expScoreBoth < 1 ? expScoreBoth : 1;
+            expScoreN0 = FastExp((cRelocationN0.mProbChange) / T);
+            expScoreN0 = expScoreN0 < 1 ? expScoreN0 : 1;
+            expScoreN1 = FastExp((cRelocationN1.mProbChange) / T);
+            expScoreN1 = expScoreN1 < 1 ? expScoreN1 : 1;
+            expScoreNone = ((1 - expScoreN0) + (1 - expScoreN1)) / 2;
+            sumExpScores = expScoreN0 + expScoreN1 + expScoreNone;
+            probabilityAA = expScoreBoth;
+            probabilityAR = (1 - expScoreBoth) * (expScoreN0 / sumExpScores);
+            probabilityRA = (1 - expScoreBoth) * (expScoreN1 / sumExpScores);
+            randomValue = 1 + (*mGenerator)() % 1000;*/
+
+            /*
+            // grouping double move version2
+            bestSingleAccept = cRelocationN0.mProbChange > cRelocationN1.mProbChange ? cRelocationN0.mProbChange : cRelocationN1.mProbChange;
+            bestAccept = bestSingleAccept > cRelocationBoth.mProbChange ? bestSingleAccept : cRelocationBoth.mProbChange;
+            expScoreAA = FastExp(bestAccept / T);
+            expScoreAA = expScoreAA < 1 ? expScoreAA : 1;
+            expScoreBoth = FastExp((cRelocationBoth.mProbChange - bestSingleAccept) / T);
+            expScoreBoth = expScoreBoth < 1 ? expScoreBoth : 1;
+
+            expScoreN0 = FastExp((cRelocationN0.mProbChange) / T);
+            expScoreN0 = expScoreN0 < 1 ? expScoreN0 : 1;
+            expScoreN1 = FastExp((cRelocationN1.mProbChange) / T);
+            expScoreN1 = expScoreN1 < 1 ? expScoreN1 : 1;
+            // expScoreNone = ((1 - expScoreN0) + (1 - expScoreN1)) / 2;
+            sumExpScores = expScoreN0 + expScoreN1;
+            probabilityAA = expScoreAA * expScoreBoth;
+            probabilityAR = expScoreAA * (1 - expScoreBoth) * (expScoreN0 / sumExpScores);
+            probabilityRA = expScoreAA * (1 - expScoreBoth) * (expScoreN1 / sumExpScores);
+            randomValue = 1 + (*mGenerator)() % 1000;*/
+
+            /*
+            // grouping double move version3
+            bestSingleAccept = cRelocationN0.mProbChange > cRelocationN1.mProbChange ? cRelocationN0.mProbChange : cRelocationN1.mProbChange;
+            bestAccept = bestSingleAccept > cRelocationBoth.mProbChange ? bestSingleAccept : cRelocationBoth.mProbChange;
+            expScoreAA = FastExp(bestAccept / T);
+            expScoreAA = expScoreAA < 1 ? expScoreAA : 1;
+            expScoreBoth = FastExp((cRelocationBoth.mProbChange - bestSingleAccept) / T);
+            expScoreBoth = expScoreBoth < 1 ? expScoreBoth : 1;
+
+            expScoreN0 = FastExp((cRelocationN0.mProbChange) / T);
+            expScoreN1 = FastExp((cRelocationN1.mProbChange) / T);
+            expScoreN0 = expScoreN1 >= 1 && expScoreN1 > expScoreN0 ? 0 : expScoreN0;
+            expScoreN1 = expScoreN0 >= 1 && expScoreN0 > expScoreN1 ? 0 : expScoreN1;
+
+            sumExpScores = expScoreN0 + expScoreN1;
+            probabilityAA = expScoreAA * expScoreBoth;
+            probabilityAR = expScoreAA * (1 - expScoreBoth) * (expScoreN0 / sumExpScores);
+            probabilityRA = expScoreAA * (1 - expScoreBoth) * (expScoreN1 / sumExpScores);
+            randomValue = 1 + (*mGenerator)() % 1000;
+
+            // grouping double move version4 (extension to version 3)
+            if (cRelocationBoth.mProbChange > 0 || cRelocationN0.mProbChange > 0 || cRelocationN1.mProbChange > 0) {
+                if (cRelocationBoth.mProbChange >= cRelocationN0.mProbChange && cRelocationBoth.mProbChange >= cRelocationN1.mProbChange) {
+                    probabilityAA = 1;
+                    probabilityAR = 0;
+                    probabilityRA = 0;
+                }
+                else if (cRelocationN0.mProbChange >= cRelocationN1.mProbChange) {
+                    probabilityAA = 0;
+                    probabilityAR = 1;
+                    probabilityRA = 0;
+                }
+                else {
+                    probabilityAA = 0;
+                    probabilityAR = 0;
+                    probabilityRA = 1;
+                }
+            }*/
+
+            // grouping double move version5
+
+            bestSingleAccept = cRelocationN0.mProbChange > cRelocationN1.mProbChange ? cRelocationN0.mProbChange : cRelocationN1.mProbChange;
+            bestAccept = bestSingleAccept > cRelocationBoth.mProbChange ? bestSingleAccept : cRelocationBoth.mProbChange;
+            expScoreAA = std::exp(bestAccept / T);
+            expScoreAA = expScoreAA < 1 ? expScoreAA : 1;
+            expScoreBoth = std::exp((cRelocationBoth.mProbChange - bestSingleAccept) / T);
+            expScoreBoth = expScoreBoth < 1 ? expScoreBoth : 1;
+
+            expScoreN0 = std::exp((cRelocationN0.mProbChange) / T);
+            expScoreN1 = std::exp((cRelocationN1.mProbChange) / T);
+            expScoreN0 = expScoreN1 >= 1 && expScoreN1 > expScoreN0 ? 0 : expScoreN0;
+            expScoreN1 = expScoreN0 >= 1 && expScoreN0 > expScoreN1 ? 0 : expScoreN1;
+
+            sumExpScores = expScoreN0 + expScoreN1;
+            probabilityAA = expScoreAA * expScoreBoth;
+            probabilityAR = expScoreAA * (1 - expScoreBoth) * (expScoreN0 / sumExpScores);
+            probabilityRA = expScoreAA * (1 - expScoreBoth) * (expScoreN1 / sumExpScores);
+            randomValue = 1 + (*mGenerator)() % 1000;
+
+            /*
+            if (cRelocationBoth.mProbChange > 0 && cRelocationBoth.mProbChange >= cRelocationN0.mProbChange && cRelocationBoth.mProbChange >= cRelocationN1.mProbChange) {
+                probabilityAA = 1;
+                probabilityAR = 0;
+                probabilityRA = 0;
+            }*/
+
+            bestRelocation.mChange = INT_MIN;
+            if (cRelocationBoth.mProbChange > 0 || cRelocationN0.mProbChange > 0 || cRelocationN1.mProbChange > 0) {
+                if (cRelocationBoth.mProbChange >= cRelocationN0.mProbChange && cRelocationBoth.mProbChange >= cRelocationN1.mProbChange) {
+                    bestRelocation.mN0 = cRelocationBoth.mN0;
+                    bestRelocation.mN1 = cRelocationBoth.mN1;
+                    bestRelocation.mC0 = cRelocationBoth.mC0;
+                    bestRelocation.mC1 = cRelocationBoth.mC1;
+                    bestRelocation.mChange = cRelocationBoth.mChange;
+                    bestRelocation.mProbChange = cRelocationBoth.mProbChange;
+                    bestRelocation.mMoveType = cRelocationBoth.mMoveType;
+                }
+                else if (cRelocationN0.mProbChange >= cRelocationN1.mProbChange) {
+                    bestRelocation.mN0 = cRelocationN0.mN0;
+                    bestRelocation.mN1 = cRelocationN0.mN1;
+                    bestRelocation.mC0 = cRelocationN0.mC0;
+                    bestRelocation.mC1 = cRelocationN0.mC1;
+                    bestRelocation.mChange = cRelocationN0.mChange;
+                    bestRelocation.mProbChange = cRelocationN0.mProbChange;
+                    bestRelocation.mMoveType = cRelocationN0.mMoveType;
+                }
+                else {
+                    bestRelocation.mN0 = cRelocationN1.mN0;
+                    bestRelocation.mN1 = cRelocationN1.mN1;
+                    bestRelocation.mC0 = cRelocationN1.mC0;
+                    bestRelocation.mC1 = cRelocationN1.mC1;
+                    bestRelocation.mChange = cRelocationN1.mChange;
+                    bestRelocation.mProbChange = cRelocationN1.mProbChange;
+                    bestRelocation.mMoveType = cRelocationN1.mMoveType;
+                }
+            }
+
+            /*
+            * standard double move simulation
+            expScoreNone = 1;
+            expScoreBoth = FastExp((cRelocationBoth.mProbChange) / T);
+            expScoreBoth = expScoreBoth < 1 ? expScoreBoth : 1;
+            expScoreN0 = FastExp((cRelocationN0.mProbChange) / T);
+            expScoreN0 = expScoreN0 < 1 ? expScoreN0 : 1;
+            expScoreN1 = FastExp((cRelocationN1.mProbChange) / T);
+            expScoreN1 = expScoreN1 < 1 ? expScoreN1 : 1;
+            // sumExpScores = expScoreNone + expScoreBoth + expScoreN0 + expScoreN1;
+            //probability0 = expScore0 / sumExpScores;
+            probabilityAA = expScoreN0 * expScoreBoth;
+            probabilityAR = expScoreN0 * (1 - expScoreBoth);
+            probabilityRA = (1 - expScoreN0) * expScoreN1;
+            randomValue = 1 + (*mGenerator)() % 1000;
+            */
+
+            /*
+            * initial test
+            SASelectDoubleR(cRelocation1, cRelocation2, cRelocation3);
+            expScore0 = FastExp(0);
+            expScore1 = FastExp((cRelocation1.mProbChange) / T);
+            expScore2 = FastExp((cRelocation2.mProbChange) / T);
+            expScore3 = FastExp((cRelocation3.mProbChange) / T);
+            sumExpScores = expScore0 + expScore1 + expScore2 + expScore3;
+            //probability0 = expScore0 / sumExpScores;
+            probability1 = expScore1 / sumExpScores;
+            probability2 = expScore2 / sumExpScores;
+            probability3 = expScore3 / sumExpScores;
+            randomValue = 1 + (*mGenerator)() % 1000;
+            */
+            // clock_t checkpoint1 = clock();
+            // printf("  Prob=%.3f x=%.3f T=%.3f mchange=%d\n", Prob, cRelocation.mChange / T, T, cRelocation.mChange);
+            /*if (cRelocation.mChange / T > 900 || cRelocation.mChange / T < -900)
+                printf("  Prob=%.3f x=%.3f T=%.3f mchange=%d\n", Prob, cRelocation.mChange / T, T, cRelocation.mChange);*/
+
+            bool skip = true;
+            if (probabilityAA * 1000 > randomValue) {
+                cRelocation.mN0 = cRelocationBoth.mN0;
+                cRelocation.mN1 = cRelocationBoth.mN1;
+                cRelocation.mC0 = cRelocationBoth.mC0;
+                cRelocation.mC1 = cRelocationBoth.mC1;
+                cRelocation.mChange = cRelocationBoth.mChange;
+                cRelocation.mProbChange = cRelocationBoth.mProbChange;
+                cRelocation.mMoveType = cRelocationBoth.mMoveType;
+                skip = false;
+            }
+            else if ((probabilityAA + probabilityAR) * 1000 > randomValue) {
+                cRelocation.mN0 = cRelocationN0.mN0;
+                cRelocation.mN1 = cRelocationN0.mN1;
+                cRelocation.mC0 = cRelocationN0.mC0;
+                cRelocation.mC1 = cRelocationN0.mC1;
+                cRelocation.mChange = cRelocationN0.mChange;
+                cRelocation.mProbChange = cRelocationN0.mProbChange;
+                cRelocation.mMoveType = cRelocationN0.mMoveType;
+                skip = false;
+            }
+            else if ((probabilityAA + probabilityAR + probabilityRA) * 1000 > randomValue) {
+                cRelocation.mN0 = cRelocationN1.mN0;
+                cRelocation.mN1 = cRelocationN1.mN1;
+                cRelocation.mC0 = cRelocationN1.mC0;
+                cRelocation.mC1 = cRelocationN1.mC1;
+                cRelocation.mChange = cRelocationN1.mChange;
+                cRelocation.mProbChange = cRelocationN1.mProbChange;
+                cRelocation.mMoveType = cRelocationN1.mMoveType;
+                skip = false;
+            }
+
+            if (!skip) {
+                
+                if (cRelocation.mMoveType == SAMoveType::Both) {
+                    Accept += 2;
+                }
+                else {
+                    Accept += 1;
+                }
+                
+                // Accept += 1;
+
+                // save missed but better solution; this assumes that it will only be entered if bestRelocation relocates one node and cRelocation relocates two nodes
+                if (bestRelocation.mChange > cRelocation.mChange && bestRelocation.mChange + cSolObjective > BestSol) {
+                    // std::copy(mNodeClique.begin(), mNodeClique.end(), tempNodeClique.begin());
+
+                    // debug check
+                    if (cRelocation.mMoveType != SAMoveType::Both || bestRelocation.mMoveType == SAMoveType::Both)
+                        printf("error");
+
+                    /*
+                    int prevClique;
+                    if (bestRelocation.mMoveType == SAMoveType::N0) {
+                        prevClique = mNodeClique[bestRelocation.mN0];
+                    }
+                    else if (bestRelocation.mMoveType == SAMoveType::N1) {
+                        prevClique = mNodeClique[bestRelocation.mN1];
+                    }*/
+                    
+                    ApplyRelocation(bestRelocation);
+                    cSolObjective += bestRelocation.mChange;
+                    if (removedClique > -1) {
+                        if (cRelocation.mC0 > removedClique) cRelocation.mC0 -= 1;
+                        if (cRelocation.mC1 > removedClique) cRelocation.mC1 -= 1;
+                        
+                        int newClique = mAllConnections.size();
+                        if (cRelocation.mC0 == removedClique) cRelocation.mC0 = newClique;
+                        if (cRelocation.mC1 == removedClique) cRelocation.mC1 = newClique;
+                    }
+
+                    if (BestSol < cSolObjective)
+                    {
+                        BestSol = cSolObjective;
+                        std::copy(mNodeClique.begin(), mNodeClique.end(), tNodeClique.begin());
+                    }
+
+                    cSolObjective -= bestRelocation.mChange;
+                    // CreateFromNodeClique(tempNodeClique);
+                    // InitAllConnections();
+                    removedClique = -1;
+                }
+
+                ApplyRelocation(cRelocation);
+                cSolObjective += cRelocation.mChange;
+                /*
+                if (cSol != cSolObjective)
+                    cSol = cSolObjective;*/
+
+                if (BestSol < cSolObjective)
+                {
+                    BestSol = cSolObjective;
+                    std::copy(mNodeClique.begin(), mNodeClique.end(), tNodeClique.begin());
+                }
+            }
+
+            /*
+            if (nextRelocationCalculated) {
+                SASelectR(cRelocation);
+                Prob = FastExp(cRelocation.mChange / T);
+                if (Prob * 1000 > (*mGenerator)() % 1000)
+                {
+                    ApplyRelocation(cRelocation);
+                    cSolObjective += cRelocation.mChange;
+                    if (cSol != cSolObjective)
+                        cSol = cSolObjective;
+
+                    if (BestSol < cSolObjective)
+                    {
+                        BestSol = cSolObjective;
+                        std::copy(mNodeClique.begin(), mNodeClique.end(), tNodeClique.begin());
+                    }
+                }
+            }*/
+            // printf("%d ; %d\n", checkpoint1 - start, clock() - checkpoint1);
+        }
+        counterCool++;
+
+        if (iSAParameters.mCooling == CPPCooling::Geometric)
+        {
+            T *= iSAParameters.mCoolingParam;
+        }
+        if (iSAParameters.mCooling == CPPCooling::LinearMultiplicative)
+        {
+            T = iSAParameters.mInitTemperature * 1 / (1 + iSAParameters.mCoolingParam * counterCool);
+        }
+
+        if (static_cast<double>(Accept) / L < iSAParameters.mMinAccept)
+        {
+            Stag++;
+        }
+        else
+        {
+            Stag = 0;
+        }
+
+        if (Stag >= 5)
+            break;
+
+        if (T < 0.0005)
+            break;
+        // printf("Stag=%d T=%.3f\n", Stag, T);
+    }
+
+    CreateFromNodeClique(tNodeClique);
+
+    AcceptRelative = static_cast<double>(AcceptTotal) / (NeiborhoodSize * iSAParameters.mSizeRepeat * counter);
+    return true;
+}
+
 bool CPPSolutionBase::SimulatedAnnealing(SAParameters& iSAParameters, double& AcceptRelative)
 {   
     // printf("enter SA");
@@ -1868,12 +2890,12 @@ bool CPPSolutionBase::SimulatedAnnealing(SAParameters& iSAParameters, double& Ac
                 numMoves = 1;
             }
 
-            Prob = FastExp(cRelocation.mProbChange / (T * numMoves));
+            // Prob = FastExp(cRelocation.mProbChange / (T * numMoves));
             // clock_t checkpoint1 = clock();
             // printf("  Prob=%.3f x=%.3f T=%.3f mchange=%d\n", Prob, cRelocation.mChange / T, T, cRelocation.mChange);
             /*if (cRelocation.mChange / T > 900 || cRelocation.mChange / T < -900)
                 printf("  Prob=%.3f x=%.3f T=%.3f mchange=%d\n", Prob, cRelocation.mChange / T, T, cRelocation.mChange);*/
-            if (Prob * 1000 > 1 + (*mGenerator)() % 1000)
+            if (cRelocation.forceAccept || FastExp(cRelocation.mProbChange / (T * numMoves)) * 1000 > 1 + (*mGenerator)() % 1000)
             {   
                 prevAccepted = true;
                 Accept += numMoves;
@@ -1944,6 +2966,205 @@ bool CPPSolutionBase::SimulatedAnnealing(SAParameters& iSAParameters, double& Ac
     return true;
 }
 
+bool CPPSolutionBase::CalibrateSADoubleMoves(SAParameters& iSAParameters, double& Accept)
+{
+    nextRelocationCalculated = false;
+    int MaxStep = (mInstance->getNumberOfNodes() * getNumberOfCliques() * iSAParameters.mSizeRepeat * iSAParameters.neighborhoodFactor) / 2;
+    int n;
+    double Prob;
+    double scoreN0;
+    double bestSingleAccept, bestAccept;
+    double expScoreNone, expScoreBoth, expScoreN0, expScoreN1, expScoreAA;
+    double probabilityAA, probabilityAR, probabilityRA;
+    int randomValue;
+    double sumExpScores;
+    double T = 1;
+    int BestSol = INT_MIN;
+    int cSol = INT_MIN;
+    std::vector<int> tNodeClique(mInstance->getNumberOfNodes());
+    std::vector<int> tempNodeClique(mInstance->getNumberOfNodes());
+    int StartObjective = CalculateObjective();
+    
+    int cSolObjective;
+    int NoImprove = 0;
+    Accept = 0;
+    SARelocation cRelocation, bestRelocation;
+    SARelocationStruct cRelocationBoth, cRelocationN0, cRelocationN1;
+
+    InitAllConnections();
+    std::copy(mNodeClique.begin(), mNodeClique.end(), tNodeClique.begin());
+
+    BestSol = StartObjective - 1;
+    cSolObjective = StartObjective;
+    for (int i = 0; i < MaxStep; i++)
+    {
+        NoImprove++;
+
+        cRelocationBoth.mChange = INT_MIN;
+        cRelocationN0.mChange = INT_MIN;
+        cRelocationN1.mChange = INT_MIN;
+        T = iSAParameters.mInitTemperature;
+
+        SASelectDoubleR(cRelocationBoth, cRelocationN0, cRelocationN1);
+        
+        // grouping double move version5
+        bestSingleAccept = cRelocationN0.mProbChange > cRelocationN1.mProbChange ? cRelocationN0.mProbChange : cRelocationN1.mProbChange;
+        bestAccept = bestSingleAccept > cRelocationBoth.mProbChange ? bestSingleAccept : cRelocationBoth.mProbChange;
+        expScoreAA = std::exp(bestAccept / T); // why the fuck is this not returning what it should?
+        expScoreAA = expScoreAA < 1 ? expScoreAA : 1;
+        expScoreBoth = std::exp((cRelocationBoth.mProbChange - bestSingleAccept) / T);
+        expScoreBoth = expScoreBoth < 1 ? expScoreBoth : 1;
+
+        expScoreN0 = std::exp((cRelocationN0.mProbChange) / T);
+        expScoreN1 = std::exp((cRelocationN1.mProbChange) / T);
+        expScoreN0 = expScoreN1 >= 1 && expScoreN1 > expScoreN0 ? 0 : expScoreN0;
+        expScoreN1 = expScoreN0 >= 1 && expScoreN0 > expScoreN1 ? 0 : expScoreN1;
+
+        sumExpScores = expScoreN0 + expScoreN1;
+        probabilityAA = expScoreAA * expScoreBoth;
+        probabilityAR = expScoreAA * (1 - expScoreBoth) * (expScoreN0 / sumExpScores);
+        probabilityRA = expScoreAA * (1 - expScoreBoth) * (expScoreN1 / sumExpScores);
+        randomValue = 1 + (*mGenerator)() % 1000;
+
+        /*
+        if (cRelocationBoth.mProbChange > 0 && cRelocationBoth.mProbChange >= cRelocationN0.mProbChange && cRelocationBoth.mProbChange >= cRelocationN1.mProbChange) {
+            probabilityAA = 1;
+            probabilityAR = 0;
+            probabilityRA = 0;
+        }*/
+
+        bestRelocation.mChange = INT_MIN;
+        if (cRelocationBoth.mProbChange > 0 || cRelocationN0.mProbChange > 0 || cRelocationN1.mProbChange > 0) {
+            if (cRelocationBoth.mProbChange >= cRelocationN0.mProbChange && cRelocationBoth.mProbChange >= cRelocationN1.mProbChange) {
+                bestRelocation.mN0 = cRelocationBoth.mN0;
+                bestRelocation.mN1 = cRelocationBoth.mN1;
+                bestRelocation.mC0 = cRelocationBoth.mC0;
+                bestRelocation.mC1 = cRelocationBoth.mC1;
+                bestRelocation.mChange = cRelocationBoth.mChange;
+                bestRelocation.mProbChange = cRelocationBoth.mProbChange;
+                bestRelocation.mMoveType = cRelocationBoth.mMoveType;
+            }
+            else if (cRelocationN0.mProbChange >= cRelocationN1.mProbChange) {
+                bestRelocation.mN0 = cRelocationN0.mN0;
+                bestRelocation.mN1 = cRelocationN0.mN1;
+                bestRelocation.mC0 = cRelocationN0.mC0;
+                bestRelocation.mC1 = cRelocationN0.mC1;
+                bestRelocation.mChange = cRelocationN0.mChange;
+                bestRelocation.mProbChange = cRelocationN0.mProbChange;
+                bestRelocation.mMoveType = cRelocationN0.mMoveType;
+            }
+            else {
+                bestRelocation.mN0 = cRelocationN1.mN0;
+                bestRelocation.mN1 = cRelocationN1.mN1;
+                bestRelocation.mC0 = cRelocationN1.mC0;
+                bestRelocation.mC1 = cRelocationN1.mC1;
+                bestRelocation.mChange = cRelocationN1.mChange;
+                bestRelocation.mProbChange = cRelocationN1.mProbChange;
+                bestRelocation.mMoveType = cRelocationN1.mMoveType;
+            }
+        }
+
+
+        bool skip = true;
+        if (probabilityAA * 1000 > randomValue) {
+            cRelocation.mN0 = cRelocationBoth.mN0;
+            cRelocation.mN1 = cRelocationBoth.mN1;
+            cRelocation.mC0 = cRelocationBoth.mC0;
+            cRelocation.mC1 = cRelocationBoth.mC1;
+            cRelocation.mChange = cRelocationBoth.mChange;
+            cRelocation.mProbChange = cRelocationBoth.mProbChange;
+            cRelocation.mMoveType = cRelocationBoth.mMoveType;
+            skip = false;
+        }
+        else if ((probabilityAA + probabilityAR) * 1000 > randomValue) {
+            cRelocation.mN0 = cRelocationN0.mN0;
+            cRelocation.mN1 = cRelocationN0.mN1;
+            cRelocation.mC0 = cRelocationN0.mC0;
+            cRelocation.mC1 = cRelocationN0.mC1;
+            cRelocation.mChange = cRelocationN0.mChange;
+            cRelocation.mProbChange = cRelocationN0.mProbChange;
+            cRelocation.mMoveType = cRelocationN0.mMoveType;
+            skip = false;
+        }
+        else if ((probabilityAA + probabilityAR + probabilityRA) * 1000 > randomValue) {
+            cRelocation.mN0 = cRelocationN1.mN0;
+            cRelocation.mN1 = cRelocationN1.mN1;
+            cRelocation.mC0 = cRelocationN1.mC0;
+            cRelocation.mC1 = cRelocationN1.mC1;
+            cRelocation.mChange = cRelocationN1.mChange;
+            cRelocation.mProbChange = cRelocationN1.mProbChange;
+            cRelocation.mMoveType = cRelocationN1.mMoveType;
+            skip = false;
+        }
+
+        if (!skip) {
+            if (cRelocation.mMoveType == SAMoveType::Both) {
+                Accept += 1;
+            }
+            else {
+                Accept += 0.5;
+            }
+
+            //Accept += 1;
+
+            // save missed but better solution; this assumes that it will only be entered if bestRelocation relocates one node and cRelocation relocates two nodes
+            if (bestRelocation.mChange > cRelocation.mChange && bestRelocation.mChange + cSolObjective > BestSol) {
+                std::copy(mNodeClique.begin(), mNodeClique.end(), tempNodeClique.begin());
+
+                // debug check
+                if (cRelocation.mMoveType != SAMoveType::Both || bestRelocation.mMoveType == SAMoveType::Both)
+                    printf("error");
+
+                /*
+                int prevClique;
+                if (bestRelocation.mMoveType == SAMoveType::N0) {
+                    prevClique = mNodeClique[bestRelocation.mN0];
+                }
+                else if (bestRelocation.mMoveType == SAMoveType::N1) {
+                    prevClique = mNodeClique[bestRelocation.mN1];
+                }*/
+
+                ApplyRelocation(bestRelocation);
+                cSolObjective += bestRelocation.mChange;
+                if (removedClique > -1) {
+                    if (cRelocation.mC0 > removedClique) cRelocation.mC0--;
+                    if (cRelocation.mC1 > removedClique) cRelocation.mC1--;
+                }
+
+                if (BestSol < cSolObjective)
+                {
+                    BestSol = cSolObjective;
+                    std::copy(mNodeClique.begin(), mNodeClique.end(), tNodeClique.begin());
+                }
+
+                cSolObjective -= bestRelocation.mChange;
+                // CreateFromNodeClique(tempNodeClique);
+                // InitAllConnections();
+                removedClique = -1;
+            }
+
+            ApplyRelocation(cRelocation);
+
+            cSolObjective += cRelocation.mChange;
+            /*
+            if (cSol != cSolObjective)
+                cSol = cSolObjective;*/
+
+            if (BestSol < cSolObjective)
+            {
+                NoImprove = 0;
+                BestSol = cSolObjective;
+                std::copy(mNodeClique.begin(), mNodeClique.end(), tNodeClique.begin());
+            }
+        }
+    }
+
+    CreateFromNodeClique(tNodeClique);
+
+    Accept = Accept / MaxStep;
+    return true;
+}
+
 bool CPPSolutionBase::CalibrateSA(SAParameters& iSAParameters, double& Accept)
 {   
     nextRelocationCalculated = false;
@@ -1976,9 +3197,9 @@ bool CPPSolutionBase::CalibrateSA(SAParameters& iSAParameters, double& Accept)
         }
         T = iSAParameters.mInitTemperature;
 
-        Prob = std::exp(Relocation.mProbChange / (T * numMoves));
+        //Prob = std::exp(Relocation.mProbChange / (T * numMoves));
 
-        if (Prob * 1000 > (*mGenerator)() % 1000)
+        if (Relocation.forceAccept || std::exp(Relocation.mProbChange / (T * numMoves)) * 1000 > 1 + (*mGenerator)() % 1000)
         {   
             prevAccepted = true;
             Accept += numMoves;
@@ -2026,7 +3247,7 @@ bool CPPSolutionBase::CalibrateSA(SAParameters& iSAParameters, double& Accept)
     Accept = Accept / MaxStep;
     return true;
 }
-
+/*
 double CPPSolutionBase::FastExp(double x)
 {
     union {
@@ -2038,7 +3259,7 @@ double CPPSolutionBase::FastExp(double x)
     tmp.i <<= 32;
     return tmp.d;
 }
-
+*/
 int CPPSolutionBase::CalculateMoveChange(const std::vector<int>& iNodes, int iClique)
 {
     int Remove = 0;
@@ -2256,7 +3477,7 @@ bool CPPSolutionBase::RemoveEmptyCliqueSA(bool bUpdateAllConnections, bool bUseC
     for (size_t i = 0; i < mCliqueSizes.size(); i++)
     {
         if (mCliqueSizes[i] == 0)
-        {   
+        {
             if (bUseCliqueSize)
             {
                 mCliqueSizes.erase(mCliqueSizes.begin() + i);
@@ -2272,34 +3493,23 @@ bool CPPSolutionBase::RemoveEmptyCliqueSA(bool bUpdateAllConnections, bool bUseC
 
             if (bUpdateAllConnections)
             {
-                std::vector<std::vector<int>> nAllConnections(mAllConnections.size() - 1);
-
-                size_t counter = 0;
-                for (size_t ii = 0; ii < mAllConnections.size(); ii++)
-                {
-                    if (ii != i)
-                    {
-                        nAllConnections[counter++] = mAllConnections[ii];
-                    }
-                }
-
-                mAllConnections = nAllConnections;
+                mAllConnections.erase(mAllConnections.begin() + i);
             }
 
-            // adjust next move
-            
+            removedClique = i;
             if (nextAcceptRelocation.mMoveType == SAMoveType::N0) {
-                if (nextAcceptRelocation.mC0 == i) {
-                    nextAcceptRelocation.mC0 = mCliqueSizes.size();
+                if (nextAcceptRelocation.mC0 == static_cast<int>(i)) {
+                    nextAcceptRelocation.mC0 = static_cast<int>(mCliqueSizes.size());
                 }
-                else if (nextAcceptRelocation.mC0 > i) {
+                else if (nextAcceptRelocation.mC0 > static_cast<int>(i)) {
                     nextAcceptRelocation.mC0--;
                 }
-            } else if (nextAcceptRelocation.mMoveType == SAMoveType::N1) {
-                if (nextAcceptRelocation.mC1 == i) {
-                    nextAcceptRelocation.mC1 = mCliqueSizes.size();
+            }
+            else if (nextAcceptRelocation.mMoveType == SAMoveType::N1) {
+                if (nextAcceptRelocation.mC1 == static_cast<int>(i)) {
+                    nextAcceptRelocation.mC1 = static_cast<int>(mCliqueSizes.size());
                 }
-                else if (nextAcceptRelocation.mC1 > i) {
+                else if (nextAcceptRelocation.mC1 > static_cast<int>(i)) {
                     nextAcceptRelocation.mC1--;
                 }
             }
@@ -2310,6 +3520,7 @@ bool CPPSolutionBase::RemoveEmptyCliqueSA(bool bUpdateAllConnections, bool bUseC
 
     return false;
 }
+
 
 bool CPPSolutionBase::LocalSearch(std::vector<std::vector<int>> Nodes)
 {

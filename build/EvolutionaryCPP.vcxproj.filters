@@ -85,6 +85,21 @@
     <ClCompile Include="..\src\strategies\SaloOverEdgesImprovement.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\strategies\SaloOverEdgesForcedDualImprovement.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\strategies\SaloDualNeighborImprovement.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\util\WeightedRandomSampler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\strategies\SaloJovaImprovement.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\strategies\SaloDoubleMoves.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="D:\projects\EvolutionaryCPP\libs\Eigen\src\AccelerateSupport\AccelerateSupport.h">
@@ -1141,6 +1156,21 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="..\src\strategies\SaloOverEdgesImprovement.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\strategies\SaloOverEdgesForcedDualImprovement.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\strategies\SaloDualNeighborImprovement.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\util\WeightedRandomSampler.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\strategies\SaloJovaImprovement.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\strategies\SaloDoubleMoves.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

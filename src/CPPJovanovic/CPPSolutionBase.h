@@ -8,6 +8,7 @@
 #include "BufferElement.h"
 #include "CPPTypes.h"
 #include "../RandomGenerator.h"
+#include "../util/Util.h"
 
 #include <vector>
 #include <random>
@@ -31,6 +32,7 @@ protected:
 
     SARelocation nextAcceptRelocation;
     SARelocation nextDenyRelocation;
+    int removedClique;
     bool nextRelocationCalculated;
     bool prevAccepted;
 
@@ -107,10 +109,14 @@ public:
     // void SASelectDualNeighborOne(SARelocation& Relocation);
     void SASelectSingleR(SARelocation& Relocation);
     void SASelectR(SARelocation& Relocations);
+    void SASelectDoubleR(SARelocationStruct& RelocationBoth, SARelocationStruct& RelocationN0, SARelocationStruct& RelocationN1);
+    void SASelectDoubleR2(SARelocation& RelocationBoth, SARelocation& RelocationN0, SARelocation& RelocationN1);
     void ApplyRelocation(SARelocation Relocation);
     bool SimulatedAnnealing(SAParameters& iSAParameters, double& AcceptRelative);
+    bool SimulatedAnnealingWithDoubleMoves(SAParameters& iSAParameters, double& AcceptRelative);
     bool CalibrateSA(SAParameters& iSAParameters, double& Accept);
-    double FastExp(double x);
+    bool CalibrateSADoubleMoves(SAParameters& iSAParameters, double& Accept);
+    // double FastExp(double x);
 
     int CalculateMoveChange(const std::vector<int>& iNodes, int iClique);
     int CalculateMoveChange(BufferElement Set);

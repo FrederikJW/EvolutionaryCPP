@@ -88,7 +88,10 @@ public:
     bool CheckBest(double Size = -1);
     void SolveFixSetSearch(int MaxGenerated, double iTimeLimit);
     void Calibrate(double iTimeLimit);
+    void CalibrateDoubleMoves(double iTimeLimit);
     void SALOSearch();
+    void SALODoubleMovesSearch();
+    void LocalSearch();
     void SASearch();
     void SolveGRASP(int MaxIterations, double iTimeLimit);
     void SolveGreedy(const std::vector<std::vector<int>>& FixedSet = {});

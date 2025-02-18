@@ -46,7 +46,7 @@ void SaloImprovement::calibrateTemp() {
 }
 
 void SaloImprovement::search(clock_t startTime, int maxSeconds, int generation_cnt) {
-    problem->SALOSearch();
+    problem->SASearch();
 }
 
 void SaloImprovement::selectBetter(BestSolutionInfo* frt, clock_t start_time, int generation_cnt) {
