@@ -1,6 +1,6 @@
-#include "SolutionEvolution.h"
+#include "MdxEvolution.h"
 
-void SolutionEvolution::run(BestSolutionInfo* frt_, int* totalGen, int poolSize) {
+void MdxEvolution::run(BestSolutionInfo* frt_, int* totalGen, int poolSize) {
     frt = frt_;
     bestTime = 0.0;
     startTime = clock();
@@ -35,7 +35,7 @@ void SolutionEvolution::run(BestSolutionInfo* frt_, int* totalGen, int poolSize)
     printf("Best solution found with value %d at generation %d\n", frt->best_val, frt->best_generation);
 }
 
-void SolutionEvolution::runGeneration() {
+void MdxEvolution::runGeneration() {
     printf("\n------------The %dth generation-----------\n", generationCnt);
 
     double param_shrink = 0.6;

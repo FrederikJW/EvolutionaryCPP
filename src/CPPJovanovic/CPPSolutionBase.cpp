@@ -277,7 +277,7 @@ int CPPSolutionBase::calculateDistance(const CPPSolutionBase& iSolution) {
 void CPPSolutionBase::AddCandidate(const CPPCandidate& A) {};
 
 CPPSolutionBase::CPPSolutionBase()
-{
+{   
     mCliques = std::vector<std::vector<int>>();
 }
 
@@ -300,10 +300,22 @@ CPPSolutionBase::CPPSolutionBase(int iObjective, std::vector<std::vector<int>> i
 }
 
 CPPSolutionBase::CPPSolutionBase(int* pvertex, int numVertices, int objective, CPPInstance* nInstance)
-{   
+{
     // do not delete mInstance if solution object is deleted
     mInstance = nInstance;
     std::unordered_map<int, std::vector<int>> groupMap;
+
+    // reserve resource for time critical vectors for optimal performance
+    mAllConnections.clear();
+    mAllConnections.reserve(numVertices);
+
+    for (size_t i = 0; i < numVertices; ++i)
+    {
+        std::vector<int> inner;
+        inner.reserve(numVertices);
+        mAllConnections.push_back(std::move(inner));
+    }
+
     mNodeClique.resize(numVertices);
 
     for (int i = 0; i < numVertices; ++i) {
@@ -401,16 +413,10 @@ void CPPSolutionBase::UpdateAllConnections(int nNode, int nClique)
 {
     if (nClique >= mAllConnections.size())
     {
-        // Reserve extra capacity to reduce the frequency of reallocations.
-        if (nClique >= mAllConnections.capacity()) {
-            // For example, double the capacity.
-            size_t newCapacity = std::max(nClique + 1, static_cast<int>(mAllConnections.capacity() * 2));
-            mAllConnections.reserve(newCapacity);
-        }
-        // Now resize without triggering a reallocation most of the time.
+        // Resize to ensure we have enough slots.
         mAllConnections.resize(nClique + 1);
 
-        // For new clique, allocate the inner vector once.
+        // Initialize the new clique row to the right size filled with zeros.
         mAllConnections[nClique].resize(mNodeClique.size(), 0);
     }
 
@@ -1659,11 +1665,8 @@ void CPPSolutionBase::SASelectSingleEdge(SARelocation& Relocation, bool forceDua
         return;
     }
 
-    // move the distribution to the instance
-    std::uniform_int_distribution<int> distribution(0, mInstance->getNumberOfEdges() - 1);
+    const auto& edge = mInstance->getRandEdge(*mGenerator);
 
-    const auto& edge = mInstance->getEdges()[distribution(*mGenerator)];
-    // const auto& edge = mInstance->getSampledRandEdge();
     int n0 = edge[0];
     int n1 = edge[1];
     int weight = edge[2];
@@ -2839,6 +2842,133 @@ bool CPPSolutionBase::SimulatedAnnealingWithDoubleMoves(SAParameters& iSAParamet
     return true;
 }
 
+bool CPPSolutionBase::SimulatedAnnealingCool(SAParameters& iSAParameters, double& AcceptRelative)
+{
+    nextRelocationCalculated = false;
+    int NeiborhoodSize = mInstance->getNumberOfNodes() * getNumberOfCliques() * iSAParameters.neighborhoodFactor;
+    int n;
+    double Prob;
+    double T = 1;
+    int BestSol = INT_MIN;
+    int cSol = INT_MIN;
+    std::vector<int> tNodeClique(mInstance->getNumberOfNodes());
+    int StartObjective = CalculateObjective();
+    int cSolObjective;
+    int Accept;
+    int AcceptTotal;
+    int Stag = 0;
+    int counter = 0;
+    std::vector<int> NodesChange(mInstance->getNumberOfNodes());
+    SARelocation cRelocation;
+    int waste = 0;
+
+    InitAllConnections();
+    std::copy(mNodeClique.begin(), mNodeClique.end(), tNodeClique.begin());
+
+    T = iSAParameters.mInitTemperature;
+    int L = NeiborhoodSize * iSAParameters.mSizeRepeat;
+
+    int counterCool = 0;
+    cSolObjective = StartObjective;
+    AcceptTotal = 0;
+    int sumNodeChange;
+
+    cooldown_period = 0.3 * mInstance->getNumberOfNodes();
+    eligible_nodes.reserve(mInstance->getNumberOfNodes());
+
+    eligible_nodes.clear();
+    for (int i = 0; i < mInstance->getNumberOfNodes(); ++i) {
+        eligible_nodes.push_back(i);
+    }
+    cooldown_buffer = std::vector<int>(cooldown_period, -1);
+
+    int iteration = 0;
+    while (true)
+    {
+        counter++;
+        Accept = 0;
+        waste = 0;
+
+        for (int i = 0; i < L; i++)
+        {   
+            int buffer_index = iteration % cooldown_period;
+            int cool_node = cooldown_buffer[buffer_index];
+            if (cool_node != -1)
+                eligible_nodes.push_back(cool_node);
+
+            int rand_i = (*mGenerator)() % eligible_nodes.size();
+
+            cRelocation.mN1 = cRelocation.mN0;
+            cRelocation.mN0 = eligible_nodes[rand_i];
+            eligible_nodes[rand_i] = eligible_nodes.back();
+            eligible_nodes.pop_back();
+
+            cooldown_buffer[buffer_index] = cRelocation.mN0;
+
+            cRelocation.mChange = INT_MIN;
+            SASelectDual(cRelocation);
+
+            cRelocation.mProbChange = cRelocation.mChange;
+
+            int numMoves = 1;
+            if (cRelocation.mMoveType != SAMoveType::N0 && cRelocation.mMoveType != SAMoveType::N1) {
+                numMoves = 1;
+            }
+            if (cRelocation.forceAccept || FastExp(cRelocation.mProbChange / (T * numMoves)) * 1000 > 1 + (*mGenerator)() % 1000)
+            {
+                prevAccepted = true;
+                Accept += numMoves;
+                ApplyRelocation(cRelocation);
+                cSolObjective += cRelocation.mChange;
+                if (cSol != cSolObjective)
+                    cSol = cSolObjective;
+
+                if (BestSol < cSolObjective)
+                {
+                    BestSol = cSolObjective;
+                    std::copy(mNodeClique.begin(), mNodeClique.end(), tNodeClique.begin());
+                }
+            }
+            else {
+                prevAccepted = false;
+            }
+
+            iteration++;
+        }
+        counterCool++;
+
+        if (iSAParameters.mCooling == CPPCooling::Geometric)
+        {
+            T *= iSAParameters.mCoolingParam;
+        }
+        if (iSAParameters.mCooling == CPPCooling::LinearMultiplicative)
+        {
+            T = iSAParameters.mInitTemperature * 1 / (1 + iSAParameters.mCoolingParam * counterCool);
+        }
+
+        if (static_cast<double>(Accept) / L < iSAParameters.mMinAccept)
+        {
+            Stag++;
+        }
+        else
+        {
+            Stag = 0;
+        }
+
+        if (Stag >= 5)
+            break;
+
+        if (T < 0.0005)
+            break;
+        // printf("Stag=%d T=%.3f\n", Stag, T);
+    }
+
+    CreateFromNodeClique(tNodeClique);
+
+    AcceptRelative = static_cast<double>(AcceptTotal) / (NeiborhoodSize * iSAParameters.mSizeRepeat * counter);
+    return true;
+}
+
 bool CPPSolutionBase::SimulatedAnnealing(SAParameters& iSAParameters, double& AcceptRelative)
 {   
     // printf("enter SA");
@@ -2880,7 +3010,7 @@ bool CPPSolutionBase::SimulatedAnnealing(SAParameters& iSAParameters, double& Ac
         waste = 0;
 
         for (int i = 0; i < L; i++)
-        {   
+        {
             // clock_t start = clock();
             cRelocation.mChange = INT_MIN;
             SASelectR(cRelocation);
@@ -3157,6 +3287,95 @@ bool CPPSolutionBase::CalibrateSADoubleMoves(SAParameters& iSAParameters, double
                 std::copy(mNodeClique.begin(), mNodeClique.end(), tNodeClique.begin());
             }
         }
+    }
+
+    CreateFromNodeClique(tNodeClique);
+
+    Accept = Accept / MaxStep;
+    return true;
+}
+
+bool CPPSolutionBase::CalibrateSACool(SAParameters& iSAParameters, double& Accept)
+{
+    nextRelocationCalculated = false;
+    int MaxStep = mInstance->getNumberOfNodes() * getNumberOfCliques() * iSAParameters.mSizeRepeat * iSAParameters.neighborhoodFactor;
+    int n;
+    double Prob;
+    double T = 1;
+    int BestSol = INT_MIN;
+    int cSol = INT_MIN;
+    std::vector<int> tNodeClique(mInstance->getNumberOfNodes());
+    int StartObjective = CalculateObjective();
+    int cSolObjective;
+    int NoImprove = 0;
+    Accept = 0;
+    SARelocation Relocation;
+
+    InitAllConnections();
+    std::copy(mNodeClique.begin(), mNodeClique.end(), tNodeClique.begin());
+
+    cooldown_period = 0.3 * mInstance->getNumberOfNodes();
+    eligible_nodes.reserve(mInstance->getNumberOfNodes());
+
+    eligible_nodes.clear();
+    for (int i = 0; i < mInstance->getNumberOfNodes(); ++i) {
+        eligible_nodes.push_back(i);
+    }
+    cooldown_buffer = std::vector<int>(cooldown_period, -1);
+
+    cSolObjective = StartObjective;
+    int iteration = 0;
+    for (int i = 0; i < MaxStep; i++)
+    {
+        NoImprove++;
+
+        int buffer_index = iteration % cooldown_period;
+        int cool_node = cooldown_buffer[buffer_index];
+        if (cool_node != -1)
+            eligible_nodes.push_back(cool_node);
+
+        int rand_i = (*mGenerator)() % eligible_nodes.size();
+
+        Relocation.mN1 = Relocation.mN0;
+        Relocation.mN0 = eligible_nodes[rand_i];
+        eligible_nodes[rand_i] = eligible_nodes.back();
+        eligible_nodes.pop_back();
+
+        cooldown_buffer[buffer_index] = Relocation.mN0;
+
+        Relocation.mChange = INT_MIN;
+        SASelectDual(Relocation);
+
+        Relocation.mProbChange = Relocation.mChange;
+
+        int numMoves = 1;
+        if (Relocation.mMoveType != SAMoveType::N0 && Relocation.mMoveType != SAMoveType::N1) {
+            numMoves = 1;
+        }
+        T = iSAParameters.mInitTemperature;
+
+        if (Relocation.forceAccept || std::exp(Relocation.mProbChange / (T * numMoves)) * 1000 > 1 + (*mGenerator)() % 1000)
+        {
+            prevAccepted = true;
+            Accept += numMoves;
+
+            ApplyRelocation(Relocation);
+
+            cSolObjective += Relocation.mChange;
+            if (cSol != cSolObjective)
+                cSol = cSolObjective;
+
+            if (BestSol < cSolObjective)
+            {
+                NoImprove = 0;
+                BestSol = cSolObjective;
+                std::copy(mNodeClique.begin(), mNodeClique.end(), tNodeClique.begin());
+            }
+        }
+        else {
+            prevAccepted = false;
+        }
+        iteration++;
     }
 
     CreateFromNodeClique(tNodeClique);
@@ -3730,7 +3949,6 @@ void CPPSolutionBase::CreateFromNodeClique(const std::vector<int>& iNodeClique)
         if (iNumCliques < mNodeClique[i] + 1)
             iNumCliques = mNodeClique[i] + 1;
     }
-
     mCliques.resize(iNumCliques);
 
     for (int i = 0; i < static_cast<int>(mNodeClique.size()); i++)

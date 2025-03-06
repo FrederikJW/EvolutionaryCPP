@@ -4,7 +4,7 @@
 #include "population/Population.h"
 #include "partition/Partition.h"
 #include "strategies/CrossoverStrategy.h"
-#include "strategies/InitialPoolBuilder.h"
+#include "strategies/InitialPoolStrategy.h"
 #include "strategies/ImprovementStrategy.h"
 #include "graph/Graph.h"
 #include "Statistic.h"

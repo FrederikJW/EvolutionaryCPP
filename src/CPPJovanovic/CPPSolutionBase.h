@@ -36,11 +36,18 @@ protected:
     bool nextRelocationCalculated;
     bool prevAccepted;
 
+    // parameters for SALOe Cool
+    std::vector<int> cooldown_buffer;
+    std::vector<int> eligible_nodes;
+    int cooldown_period;
+
 public:
     CPPSolutionBase();
     CPPSolutionBase(const CPPSolutionBase& iSolution);
     CPPSolutionBase(int iObjective, std::vector<std::vector<int>> iPartitions);
     CPPSolutionBase(int* pvertex, int numVertices, int objective, CPPInstance* nInstance);
+
+    virtual ~CPPSolutionBase() {}
 
     SASelectType getSASType() const { return mSASelectType; }
     CPPInstance* getInstance() { return mInstance; }
@@ -113,8 +120,10 @@ public:
     void SASelectDoubleR2(SARelocation& RelocationBoth, SARelocation& RelocationN0, SARelocation& RelocationN1);
     void ApplyRelocation(SARelocation Relocation);
     bool SimulatedAnnealing(SAParameters& iSAParameters, double& AcceptRelative);
+    bool SimulatedAnnealingCool(SAParameters& iSAParameters, double& AcceptRelative);
     bool SimulatedAnnealingWithDoubleMoves(SAParameters& iSAParameters, double& AcceptRelative);
     bool CalibrateSA(SAParameters& iSAParameters, double& Accept);
+    bool CalibrateSACool(SAParameters& iSAParameters, double& Accept);
     bool CalibrateSADoubleMoves(SAParameters& iSAParameters, double& Accept);
     // double FastExp(double x);
 

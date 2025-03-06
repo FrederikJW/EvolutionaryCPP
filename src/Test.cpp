@@ -24,7 +24,7 @@ void StrategyTests::testSAImprovement() {
     Recorder* recorder = new Recorder(filename, "SATest", false);
     Partition* childPartition = new Partition(graph.getNodeCount());
 
-    ImprovementStrategy* improvementStrategy = new SimulatedAnnealingImprovement(knownbest, minpercent, tempfactor, sizefactor, recorder, randomGenerator);
+    ImprovementStrategy* improvementStrategy = new SimulatedAnnealingImprovement(knownbest, minpercent, tempfactor, sizefactor, recorder, randomGenerator, true);
     improvementStrategy->setEnvironment(graph);
 
     // build Partition
@@ -73,7 +73,7 @@ void StrategyTests::testSAeImprovement() {
     Recorder* recorder = new Recorder(filename, "SATest", false);
     Partition* childPartition = new Partition(graph.getNodeCount());
 
-    ImprovementStrategy* improvementStrategy = new SaloExtendedImprovement(knownbest, minpercent, tempfactor, sizefactor, recorder, randomGenerator);
+    ImprovementStrategy* improvementStrategy = new SaloExtendedImprovement(knownbest, minpercent, tempfactor, sizefactor, recorder, randomGenerator, true);
     improvementStrategy->setEnvironment(graph);
 
     // build Partition
@@ -126,8 +126,8 @@ void StrategyTests::testStdInitStrategy() {
     Population population(pool_size);
 
     // assuming SimulatedAnnealingImprovement works correctly; needs to be testet previously in a full test execution
-    ImprovementStrategy* improvementStrategy = new SimulatedAnnealingImprovement(knownbest, minpercent, tempfactor, sizefactor, recorder, randomGenerator);
-    InitialPoolStrategy* poolBuilder = new InitialPoolBuilder(recorder, randomGenerator);
+    ImprovementStrategy* improvementStrategy = new SimulatedAnnealingImprovement(knownbest, minpercent, tempfactor, sizefactor, recorder, randomGenerator, true);
+    InitialPoolStrategy* poolBuilder = new SingletonInitStrategy(recorder, randomGenerator);
 
     improvementStrategy->setEnvironment(graph);
     poolBuilder->generateInitialSolution(*childPartition, graph);
@@ -170,7 +170,7 @@ void StrategyTests::testRCLInitStrategy() {
     Population population(pool_size);
 
     // assuming SimulatedAnnealingImprovement works correctly; needs to be testet previously in a full test execution
-    ImprovementStrategy* improvementStrategy = new SimulatedAnnealingImprovement(knownbest, minpercent, tempfactor, sizefactor, recorder, randomGenerator);
+    ImprovementStrategy* improvementStrategy = new SimulatedAnnealingImprovement(knownbest, minpercent, tempfactor, sizefactor, recorder, randomGenerator, true);
     InitialPoolStrategy* RCLStrategy = new RCLInitStrategy(recorder, randomGenerator);
 
     improvementStrategy->setEnvironment(graph);
@@ -220,10 +220,10 @@ void StrategyTests::testSolEvolution() {
         clearResult(&finalBest);
         RandomGenerator* randomGenerator = new RandomGenerator(param_seed + run_cnt);
 
-        ImprovementStrategy* improvementStrategy = new SimulatedAnnealingImprovement(param_knownbest, param_minpercent, param_tempfactor, param_sizefactor, recorder, randomGenerator);
+        ImprovementStrategy* improvementStrategy = new SimulatedAnnealingImprovement(param_knownbest, param_minpercent, param_tempfactor, param_sizefactor, recorder, randomGenerator, true);
         CrossoverStrategy* mergeDevideCrossover = new MergeDivideCrossover(param_shrink);
-        InitialPoolStrategy* initialPoolstrategy = new InitialPoolBuilder(recorder, randomGenerator);
-        EvolutionStrategy* evolutionStrategy = new SolutionEvolution(mergeDevideCrossover, initialPoolstrategy, improvementStrategy, &graph, recorder, param_max_generations, param_time, randomGenerator);
+        InitialPoolStrategy* initialPoolstrategy = new SingletonInitStrategy(recorder, randomGenerator);
+        EvolutionStrategy* evolutionStrategy = new MdxEvolution(mergeDevideCrossover, initialPoolstrategy, improvementStrategy, &graph, recorder, param_max_generations, param_time, randomGenerator);
 
         evolutionStrategy->run(&finalBest, &totalgen, param_pool_size);
 
@@ -283,9 +283,9 @@ void StrategyTests::testFSSEvolution() {
         clearResult(&finalBest);
         RandomGenerator* randomGenerator = new RandomGenerator(param_seed + run_cnt);
 
-        ImprovementStrategy* improvementStrategy = new SimulatedAnnealingImprovement(param_knownbest, param_minpercent, param_tempfactor, param_sizefactor, recorder, randomGenerator);
+        ImprovementStrategy* improvementStrategy = new SimulatedAnnealingImprovement(param_knownbest, param_minpercent, param_tempfactor, param_sizefactor, recorder, randomGenerator, true);
         CrossoverStrategy* mergeDevideCrossover = new MergeDivideCrossover(param_shrink);
-        InitialPoolStrategy* initialPoolstrategy = new InitialPoolBuilder(recorder, randomGenerator);
+        InitialPoolStrategy* initialPoolstrategy = new SingletonInitStrategy(recorder, randomGenerator);
         EvolutionStrategy* evolutionStrategy = new FixedSetEvolution(mergeDevideCrossover, initialPoolstrategy, improvementStrategy, &graph, recorder, param_max_generations, param_time, randomGenerator);
 
         evolutionStrategy->run(&finalBest, &totalgen, param_pool_size);

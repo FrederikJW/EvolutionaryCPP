@@ -10,11 +10,15 @@
 #include <list>
 
 
-CPPInstance::CPPInstance(const std::string& FileName): edgeSampler(nullptr) {
+CPPInstance::CPPInstance(const std::string& FileName): edgeSampler(nullptr), edgeFilter(false), edgeSampling(false) {
     Load(FileName);
 }
 
-CPPInstance::CPPInstance(int nnode, int** matrix) : edgeSampler(nullptr) {
+CPPInstance::CPPInstance(int nnode, int** matrix) : edgeSampler(nullptr), edgeFilter(false), edgeSampling(false) {
+    LoadFromMatrix(nnode, matrix);
+}
+
+CPPInstance::CPPInstance(int nnode, int** matrix, bool edgeFilter, bool edgeSampling) : edgeSampler(nullptr), edgeFilter(edgeFilter), edgeSampling(edgeSampling){
     LoadFromMatrix(nnode, matrix);
 }
 
@@ -82,11 +86,13 @@ void CPPInstance::InitEdges() {
     for (int i = 0; i < mNumberOfNodes; ++i) {
         for (int j = i + 1; j < mNumberOfNodes; ++j) {
             int weight = mWeights[i][j];
-            /*
-            edges.emplace_back(std::array<int, 3>{i, j, weight});
-            numberOfEdges++;
-            */
-            if (weight != 0) {
+            if (edgeFilter) {
+                if (weight != 0) {
+                    edges.emplace_back(std::array<int, 3>{i, j, weight});
+                    numberOfEdges++;
+                }
+            }
+            else {
                 edges.emplace_back(std::array<int, 3>{i, j, weight});
                 numberOfEdges++;
             }
@@ -95,6 +101,7 @@ void CPPInstance::InitEdges() {
 }
 
 void CPPInstance::InitEdgeSampler() {
+    edgeDistribution = std::uniform_int_distribution<int>(0, numberOfEdges - 1);
     std::vector<int> edgeWeights(numberOfEdges);
 
     for (int i = 0; i < numberOfEdges; i++) {
@@ -108,6 +115,17 @@ void CPPInstance::InitEdgeSampler() {
 
 const std::array<int, 3>& CPPInstance::getSampledRandEdge() {
     return edges[edgeSampler->sample()];
+}
+
+const std::array<int, 3>& CPPInstance::getRandEdge(RandomGenerator& generator) {
+    int r;
+    if (edgeSampling) {
+        r = edgeSampler->sample();
+    }
+    else {
+        r = edgeDistribution(generator);
+    }
+    return edges[r];
 }
 
 void CPPInstance::Allocate() {

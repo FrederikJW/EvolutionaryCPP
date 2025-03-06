@@ -1,10 +1,10 @@
-#include "InitialPoolBuilder.h"
+#include "SingletonInitStrategy.h"
 #include "SimulatedAnnealingImprovement.h"
 #include <ctime>
 #include <cstdlib>
 #include <cstdio>
 
-void InitialPoolBuilder::buildInitialPool(BestSolutionInfo *frt, Population& population, Graph& graph, ImprovementStrategy* improvementStrategy, int maxSeconds, int* generation_cnt) {
+void SingletonInitStrategy::buildInitialPool(BestSolutionInfo *frt, Population& population, Graph& graph, ImprovementStrategy* improvementStrategy, int maxSeconds, int* generation_cnt) {
     clock_t startTime = clock();
     int nnode = graph.getNodeCount();
 
@@ -29,7 +29,7 @@ void InitialPoolBuilder::buildInitialPool(BestSolutionInfo *frt, Population& pop
     printf("Average distance in the init population %.3f\n", population.getAvgDistance());
 }
 
-void InitialPoolBuilder::generateInitialSolution(Partition& partition, Graph& graph) {
+void SingletonInitStrategy::generateInitialSolution(Partition& partition, Graph& graph) {
     int nnode = graph.getNodeCount();
     int* initpart = new int[nnode];
     int sum = 0;

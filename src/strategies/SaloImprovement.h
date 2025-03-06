@@ -5,21 +5,33 @@
 #include "../partition/Partition.h"
 #include "../graph/Graph.h"
 #include "../Statistic.h"
-#include "../CPPJovanovic/CPPSolutionBase.h"
-#include "../CPPJovanovic/CPPSolution.h"
-#include "../CPPJovanovic/CPPProblem.h"
-#include "../CPPJovanovic/CPPInstance.h"
+#include "../RandomGenerator.h"
 #include <ctime>
 
+typedef struct SA_RT_Data {
+    const int* const* gmatrix;
+    int gnnode;
+
+    Partition* ppt;      /*current solution*/
+    int fcurrent; 	         /*The current objective function*/
+
+    Partition* ppt_best; /*best solution*/
+    int fbest;	             /*The ever found best solution*/
+
+    int itr;
+    int totalIter;
+
+    int** gammatbl;
+}SA_RT_Data;
 
 class SaloImprovement : public ImprovementStrategy {
 public:
-    SaloImprovement(int knownbest_, double minpercent_, double tempfactor_, int sizefactor_, Recorder* recorder_, RandomGenerator* generator) : ImprovementStrategy(knownbest_, minpercent_, tempfactor_, sizefactor_, recorder_, generator), problem(nullptr), instance(nullptr), selectType(SASelectType::Single) {};
-    ~SaloImprovement();
+    SaloImprovement(int knownbest_, double minpercent_, double tempfactor_, int sizefactor_, Recorder* recorder_, RandomGenerator* generator, bool withPureDescent) : ImprovementStrategy(knownbest_, minpercent_, tempfactor_, sizefactor_, recorder_, generator), lsdata(nullptr), withPureDescent(withPureDescent) {};
+    virtual ~SaloImprovement();
 
     void improveSolution(Partition& solution, clock_t startTime, int maxSeconds, BestSolutionInfo* frt, int generation_cnt) override;
     void search(clock_t startTime, int maxSeconds, int generation_cnt) override;
-    void selectBetter(BestSolutionInfo* frt, clock_t start_time, int generation_cnt);
+    // void search_original(clock_t startTime, int maxSeconds);
     void setEnvironment(Graph& graph) override;
     void setStart(Partition& startSol) override;
     void calibrateTemp() override;
@@ -27,11 +39,21 @@ public:
     int getBestObjective() override;
     Partition getBestPartition() override;
 
-private:
+    void selectBetter(BestSolutionInfo* frt, clock_t start_time, int generation_cnt);
+    double fastExp(double x);
+    double fastExpSafe(double x);
 
-    CPPProblem* problem;
-    CPPInstance* instance;
-    SASelectType selectType;
+protected:
+    void pureDescent();
+    void buildCurGamma(const int* pvertex);
+    void updateCurGamma(int u, int src, int dest);
+    int decideTarget(int dest);
+    int changeCurSolution(int u, int dest);
+
+    SA_RT_Data* lsdata;
+    bool withPureDescent;
+    std::uniform_real_distribution<double> uni_dist;
+    std::uniform_int_distribution<int> node_dist;
 };
 
 #endif // SALOIMPROVEMENT_H

@@ -1,4 +1,3 @@
-#include "InitialPoolBuilder.h"
 #include "ImprovementStrategy.h"
 #include "RCLInitStrategy.h"
 #include "../CPPJovanovic/CPPGreedy.h"

@@ -2,13 +2,17 @@
 #include "MemeticRun.h"
 #include "Recorder.h"
 #include "Statistic.h"
-#include "Test.h"
-#include "strategies/InitialPoolBuilder.h"
+// #include "Test.h"
+#include "strategies/SingletonInitStrategy.h"
 #include "strategies/MergeDivideCrossover.h"
-#include "strategies/SimulatedAnnealingImprovement.h"
+// #include "strategies/SimulatedAnnealingImprovement.h"
 #include "strategies/RCLInitStrategy.h"
 #include "strategies/SaloImprovement.h"
+#include "strategies/SaloCoolImprovement.h"
+#include "strategies/SaloeCoolImprovement.h"
 #include "strategies/SaloDoubleMoves.h"
+#include "strategies/SaloDoubleMovesSampled.h"
+#include "strategies/SaloDoubleMovesZero.h"
 #include "strategies/SaloJovaImprovement.h"
 #include "strategies/SaloExtendedImprovement.h"
 #include "strategies/SaloOverEdgesImprovement.h"
@@ -16,7 +20,7 @@
 #include "strategies/SaloDualNeighborImprovement.h"
 #include "strategies/EvolutionStrategy.h"
 #include "strategies/FixedSetEvolution.h"
-#include "strategies/SolutionEvolution.h"
+#include "strategies/MdxEvolution.h"
 #include "util/Util.h"
 #include "RandomGenerator.h"
 #include <fstream>
@@ -34,10 +38,10 @@ int nedge;
 int** matrix;
 
 // char param_filename[1000] = "instance/rand500-100.txt";
-std::string param_filename_string = std::string(PROJECT_ROOT_PATH) + "/instance/Medium Set (25 instances)/p1000-1.txt";
+std::string param_filename_string = "p500";
 char param_filename[1000];
 int param_knownbest = 10000000;
-int param_time = 2000;
+int param_time = 500;
 int param_seed = 123456;
 int param_max_generations = 100000;
 int param_sizefactor = 8;
@@ -45,35 +49,42 @@ double param_tempfactor = 0.96;
 double param_minpercent = 1.0;
 double param_shrink = 0.6;
 int param_pool_size = 10;
+bool param_manual = false;
+bool param_sdls = true;
+int param_runs = 5;
 
 double totaltime;
 int totalgen;
 BestSolutionInfo finalBest;
 FILE* fout = NULL;
 
-// Enum for Evolution Strategy
 enum class EvolutionStrategyCode {
-    Sol, // Sol
-    FSS  // FSS
+    MDX,
+    FSS
 };
 
-// Enum for Improvement Strategy
 enum class ImprovementStrategyCode {
-    SA,  
     SALO,
+    SALOC,
     SALOJ,
     SALOe,
+    SALOeC,
     SALOoE,
     SOEFD,
     SALODN,
     SALODM,
+    SALODM0,
+    SALODMS
 };
 
-// Enum for Initial Pool Strategy
 enum class InitialPoolStrategyCode {
-    RCL, // RCL
-    Std  // Std
+    RCL,
+    SNG
 };
+
+ImprovementStrategyCode param_impr;
+InitialPoolStrategyCode param_init_pool;
+EvolutionStrategyCode param_evol;
 
 void showUsage() {
     std::cerr << "usage: [-f <file path>] [-t <run time>] [-g <seed>] [-v <best solution>] "
@@ -81,20 +92,28 @@ void showUsage() {
         << "[-s <shrink ratio>] [-p <pool size>]\n" << std::endl;
 }
 
-std::string getAlgorithmConfigCode(EvolutionStrategyCode evol, ImprovementStrategyCode impr, InitialPoolStrategyCode ini) {
+std::string getAlgorithmConfigCode(EvolutionStrategyCode evol, bool withSdls, ImprovementStrategyCode impr, InitialPoolStrategyCode ini) {
     std::string configCode = "";
+
+    if (withSdls) {
+        configCode += "SDLS+";
+    }
+
     switch (impr) {
-    case ImprovementStrategyCode::SA:
-        configCode += "SA-";
-        break;
     case ImprovementStrategyCode::SALO:
         configCode += "SALO-";
+        break;
+    case ImprovementStrategyCode::SALOC:
+        configCode += "SALOC-";
         break;
     case ImprovementStrategyCode::SALOJ:
         configCode += "SALOJ-";
         break;
     case ImprovementStrategyCode::SALOe:
         configCode += "SALOe-";
+        break;
+    case ImprovementStrategyCode::SALOeC:
+        configCode += "SALOeC-";
         break;
     case ImprovementStrategyCode::SALOoE:
         configCode += "SALOoE-";
@@ -105,24 +124,30 @@ std::string getAlgorithmConfigCode(EvolutionStrategyCode evol, ImprovementStrate
     case ImprovementStrategyCode::SALODM:
         configCode += "SALODM-";
         break;
+    case ImprovementStrategyCode::SALODM0:
+        configCode += "SALODM0-";
+        break;
+    case ImprovementStrategyCode::SALODMS:
+        configCode += "SALODMS-";
+        break;
     }
 
-    CrossoverStrategy* mergeDevideCrossover = new MergeDivideCrossover(param_shrink);
+    // CrossoverStrategy* mergeDevideCrossover = new MergeDivideCrossover(param_shrink);
 
     InitialPoolStrategy* initialPoolstrategy = nullptr;
     switch (ini) {
     case InitialPoolStrategyCode::RCL:
         configCode += "RCL-";
         break;
-    case InitialPoolStrategyCode::Std:
-        configCode += "Std-";
+    case InitialPoolStrategyCode::SNG:
+        configCode += "SNG-";
         break;
     }
 
     EvolutionStrategy* evolutionStrategy = nullptr;
     switch (evol) {
-    case EvolutionStrategyCode::Sol:
-        configCode += "Sol";
+    case EvolutionStrategyCode::MDX:
+        configCode += "MDX";
         break;
     case EvolutionStrategyCode::FSS:
         configCode += "FSS";
@@ -142,6 +167,7 @@ void readParameters(int argc, char** argv) {
         }
         else if (argv[i][1] == 'f') {
             strncpy(param_filename, argv[i + 1], 1000);
+            param_filename_string = argv[i + 1];
         }
         else if (argv[i][1] == 't') {
             param_time = atoi(argv[i + 1]);
@@ -169,6 +195,62 @@ void readParameters(int argc, char** argv) {
         }
         else if (argv[i][1] == 'p') {
             param_pool_size = atoi(argv[i + 1]);
+        } 
+        else if (argv[i][1] == 'i') {
+            std::string impr = argv[i + 1];
+            if (impr == "salo") {
+                param_impr = ImprovementStrategyCode::SALO;
+            }
+            else if (impr == "saloc") {
+                param_impr = ImprovementStrategyCode::SALOC;
+            }
+            else if (impr == "saloj") {
+                param_impr = ImprovementStrategyCode::SALOJ;
+            }
+            else if (impr == "saloe") {
+                param_impr = ImprovementStrategyCode::SALOe;
+            }
+            else if (impr == "saloec") {
+                param_impr = ImprovementStrategyCode::SALOeC;
+            }
+            else if (impr == "salodm") {
+                param_impr = ImprovementStrategyCode::SALODM;
+            }
+            else if (impr == "salodm0") {
+                param_impr = ImprovementStrategyCode::SALODM0;
+            }
+            else if (impr == "salodms") {
+                param_impr = ImprovementStrategyCode::SALODMS;
+            }
+        }
+        else if (argv[i][1] == 'n') {
+            std::string init_pool = argv[i + 1];
+            if (init_pool == "rcl") {
+                param_init_pool = InitialPoolStrategyCode::RCL;
+            }
+            else {
+                param_init_pool = InitialPoolStrategyCode::SNG;
+            }
+        }
+        else if (argv[i][1] == 'e') {
+            std::string evol = argv[i + 1];
+            if (evol == "fss") {
+                param_evol = EvolutionStrategyCode::FSS;
+            }
+            else {
+                param_evol = EvolutionStrategyCode::MDX;
+            }
+        }
+        else if (argv[i][1] == 'l') {
+            std::string sdls = argv[i + 1];
+            param_sdls = (sdls == "true");
+        }
+        else if (argv[i][1] == 'r') {
+            param_runs = atoi(argv[i + 1]);
+        }
+        else if (argv[i][1] == 'm') {
+            std::string manual = argv[i + 1];
+            param_manual = (manual == "true");
         }
     }
 
@@ -204,6 +286,82 @@ FILE* setupRecordFile() {
     return f;
 }
 
+std::vector<std::tuple<std::string, int>> get_file_list(std::string file_name, int maxScore) {
+    std::string basePath = std::string(PROJECT_ROOT_PATH) + "/instance/";
+    std::vector<std::tuple<std::string, int>> file_list;
+
+    if (file_name == "p500") {
+        std::string fileBasePath = basePath + "Random/";
+        int num, weights;
+        std::vector<int> maxScore = { 17691, 17169, 16816, 16808, 16957, 16615, 16649, 16756, 16629, 17360, 308896, 310241, 310477, 309567, 309135, 310280, 310063, 303148, 305305, 314864 };
+        for (size_t i = 0; i < 20; i++) {
+            num = (i % 10) + 1;
+            weights = i < 10 ? 5 : 100;
+            std::string fileName = fileBasePath + "p500-" + std::to_string(weights) + "-" + std::to_string(num) + ".txt";
+            file_list.push_back(std::make_tuple(fileName, maxScore[i]));
+        }
+    }
+    else if (file_name == "p2000") {
+        std::string fileBasePath = basePath + "Random/";
+        std::vector<int> maxScore = { 2508005, 2495730, 2544728, 2528721, 2514009 };
+        for (size_t i = 0; i < 5; i++) {
+            std::string fileName = fileBasePath + "p2000-" + std::to_string(i+1) + ".txt";
+            file_list.push_back(std::make_tuple(fileName, 100000000));
+        }
+    }
+    else if (file_name == "p3000") {
+        std::string fileBasePath = basePath + "Random/";
+        for (size_t i = 0; i < 5; i++) {
+            std::string fileName = fileBasePath + "p3000-" + std::to_string(i + 1) + ".txt";
+            file_list.push_back(std::make_tuple(fileName, 100000000));
+        }
+    }
+    else if (file_name == "wang") {
+        std::string fileBasePath = basePath + "MCF/";
+        file_list.push_back(std::make_tuple(fileBasePath + "Wang250.txt", 419));
+        file_list.push_back(std::make_tuple(fileBasePath + "Wang800.txt", 100000000));
+        file_list.push_back(std::make_tuple(fileBasePath + "Wang1150.txt", 100000000));
+    }
+    else if (file_name == "abr") {
+        std::string fileBasePath = basePath + "ABR/";
+        file_list.push_back(std::make_tuple(fileBasePath + "bridges.txt", 3867));
+        file_list.push_back(std::make_tuple(fileBasePath + "hayes-roth.txt", 2800));
+        file_list.push_back(std::make_tuple(fileBasePath + "lecturers.txt", 14317));
+        file_list.push_back(std::make_tuple(fileBasePath + "lymphography.txt", 19174));
+        file_list.push_back(std::make_tuple(fileBasePath + "soup.txt", 4625));
+    }
+    else {
+        std::string filePath = basePath + file_name;
+        file_list.push_back(std::make_tuple(filePath, maxScore));
+    }
+
+    return file_list;
+}
+
+std::vector<std::tuple<std::string, int, ImprovementStrategyCode, bool, InitialPoolStrategyCode, EvolutionStrategyCode, int, int>> generateRunSettings(std::string file_name, ImprovementStrategyCode imprCode, bool useSdls, InitialPoolStrategyCode poolCode, EvolutionStrategyCode evolCode, int time, int numRuns, int maxScore) {
+    std::vector<std::tuple<std::string, int, ImprovementStrategyCode, bool, InitialPoolStrategyCode, EvolutionStrategyCode, int, int>> settings;
+
+    std::vector<std::tuple<std::string, int>> fileList = get_file_list(file_name, maxScore);
+
+    std::string filePath;
+    int maxScore_;
+    for (const auto& fileTuple : fileList) {
+        std::tie(filePath, maxScore_) = fileTuple;
+        settings.push_back(std::make_tuple(
+            filePath,
+            maxScore_,
+            imprCode,
+            useSdls,
+            poolCode,
+            evolCode,
+            time,
+            numRuns
+        ));
+    }
+
+    return settings;
+}
+
 void reportResult() {
     printf("\n");
     printf("$seed=%d\n", param_seed);
@@ -224,13 +382,13 @@ void reportResult() {
     }
     printf("\n");
 }
-
+/*
 int test_run(int argc, char** argv) {
     StrategyTests tests;
     tests.fullTest();
 
     return 0;
-}
+}*/
 
 int rcl_test(int argc, char** argv) {
     // loading graph
@@ -250,7 +408,7 @@ int rcl_test(int argc, char** argv) {
 
     int generationCnt = 0;
 
-    ImprovementStrategy* improvementStrategy = new SimulatedAnnealingImprovement(param_knownbest, param_minpercent, param_tempfactor, param_sizefactor, recorder, randomGenerator);
+    ImprovementStrategy* improvementStrategy = new SaloImprovement(param_knownbest, param_minpercent, param_tempfactor, param_sizefactor, recorder, randomGenerator, true);
     InitialPoolStrategy* RCLStrategy = new RCLInitStrategy(recorder, randomGenerator);
     RCLStrategy->buildInitialPool(&finalBest, population, graph, improvementStrategy, param_time, &generationCnt);
 
@@ -643,27 +801,55 @@ int bulk_run(int argc, char** argv) {
     */
     
         // file name, known best, improvement strategy, initial pool strategy, evolution strategy, number of runs
+    /*
+    switch (config_id) {
+    case 0:
+        Result = "GRASP_";
+        break;
+    case 1:
+        Result = "FSS_";
+        break;
+    }*/
+    std::vector<std::tuple<std::string, int, ImprovementStrategyCode, bool, InitialPoolStrategyCode, EvolutionStrategyCode, int, int>> list_of_run_settings;
+    if (param_manual) {
+        list_of_run_settings = {
+            std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/ABR/bridges.txt", 3867, ImprovementStrategyCode::SALOe, true, InitialPoolStrategyCode::SNG, EvolutionStrategyCode::MDX, 500, 1)
+        };
+    }
+    else {
+        list_of_run_settings = generateRunSettings(param_filename, param_impr, param_sdls, param_init_pool, param_evol, param_time, param_runs, param_knownbest);
+    }
+    
 
-    std::vector<std::tuple<std::string, int, ImprovementStrategyCode, InitialPoolStrategyCode, EvolutionStrategyCode, int>> list_of_run_settings = {
-        // std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/MCF/Wang250.txt", 419, ImprovementStrategyCode::SALOe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 3),
-        // std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/MCF/Wang800.txt", 1000000, ImprovementStrategyCode::SALOe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 3),
-        //std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/MCF/Wang1150.txt", 1000000, ImprovementStrategyCode::SALOe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 1),
-        //std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/MCF/Wang1150.txt", 1000000, ImprovementStrategyCode::SALOJ, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 1),
-        //std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/MCF/Wang1150.txt", 1000000, ImprovementStrategyCode::SOEFD, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 1),
-        // std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/MCF/Wang250.txt", 419, ImprovementStrategyCode::SALOJ, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 3),
-        // std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/MCF/Wang800.txt", 1000000, ImprovementStrategyCode::SALOJ, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 3),
-        // std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/MCF/Wang1150.txt", 1000000, ImprovementStrategyCode::SALOJ, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 3),
-        // std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/MCF/Wang250.txt", 419, ImprovementStrategyCode::SOEFD, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 3),
-        // std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/MCF/Wang800.txt", 1000000, ImprovementStrategyCode::SOEFD, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 3),
-        // std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/MCF/Wang1150.txt", 1000000, ImprovementStrategyCode::SOEFD, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 3),
+    /*
+    std::vector<std::tuple<std::string, int, ImprovementStrategyCode, bool, InitialPoolStrategyCode, EvolutionStrategyCode, int, int>> list_of_run_settings = {
+        // std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/MCF/Wang250.txt", 419, ImprovementStrategyCode::SALOe, true, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 3),
+        // std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/MCF/Wang800.txt", 1000000, ImprovementStrategyCode::SALOe, true, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 3),
+        // std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/MCF/Wang1150.txt", 1000000, ImprovementStrategyCode::SALOe, true, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 3),
+        // std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/MCF/Wang250.txt", 419, ImprovementStrategyCode::SALOJ, true, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 3),
+        // std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/MCF/Wang800.txt", 1000000, ImprovementStrategyCode::SALOJ, true, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 3),
+        // std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/MCF/Wang1150.txt", 1000000, ImprovementStrategyCode::SALOJ, true, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 3),
+        // std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/MCF/Wang250.txt", 419, ImprovementStrategyCode::SALODM, true, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 500, 3),
+        // std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/MCF/Wang800.txt", 1000000, ImprovementStrategyCode::SALODM, true, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 500, 3),
+        // std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/MCF/Wang250.txt", 419, ImprovementStrategyCode::SALODMS, true, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 500, 3),
+        // std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/MCF/Wang800.txt", 1000000, ImprovementStrategyCode::SALODMS, true, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 500, 3),
+        // std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/MCF/Wang250.txt", 419, ImprovementStrategyCode::SALODM0, true, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 500, 3),
+        // std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/MCF/Wang800.txt", 1000000, ImprovementStrategyCode::SALODM0, true, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 500, 3),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/MCF/Wang1150.txt", 1000000, ImprovementStrategyCode::SALOe, true, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 3000, 1),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/MCF/Wang1150.txt", 1000000, ImprovementStrategyCode::SALOJ, true, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 3000, 1),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/MCF/Wang1150.txt", 1000000, ImprovementStrategyCode::SALODM, true, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 3000, 1),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/MCF/Wang1150.txt", 1000000, ImprovementStrategyCode::SALODM0, true, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 3000, 1),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/MCF/Wang1150.txt", 1000000, ImprovementStrategyCode::SALODMS, true, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 3000, 1),
+
+        //std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/MCF/Wang1150.txt", 1000000, ImprovementStrategyCode::SALODM, true, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 3),
         // std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/MCF/sul_91.txt", 46, ImprovementStrategyCode::SALOe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 1),
-        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/CPn35-1.txt", 1, ImprovementStrategyCode::SALOJ, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 1),
+        // std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/CPn35-1.txt", 1, ImprovementStrategyCode::SALOJ, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 1),
         // std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p3000-1.txt", 100000000, ImprovementStrategyCode::SOEFD, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 1),
         // std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p3000-2.txt", 100000000, ImprovementStrategyCode::SOEFD, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 1),
         // std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p3000-3.txt", 100000000, ImprovementStrategyCode::SOEFD, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 1),
         // std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p3000-4.txt", 100000000, ImprovementStrategyCode::SOEFD, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 1),
         // std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p3000-5.txt", 100000000, ImprovementStrategyCode::SOEFD, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 1),
-    };
+    };*/
 
     /*
     *   std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p2000-2.txt", 2495730, ImprovementStrategyCode::SOEFD, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 5),
@@ -675,8 +861,9 @@ int bulk_run(int argc, char** argv) {
     std::vector<std::tuple<std::string, int, ImprovementStrategyCode, InitialPoolStrategyCode, EvolutionStrategyCode, int>> list_of_run_settings = {
         std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Small Set (38 instances)/p500-5-3.txt", 16816, ImprovementStrategyCode::SAe, InitialPoolStrategyCode::RCL, EvolutionStrategyCode::FSS, 20),
     };*/
-
-    Recorder* bulkRecorder = new Recorder("Wang.txt", "Test", true);
+    char cstr[1000];
+    std::strcpy(cstr, (param_filename_string + ".txt").c_str());
+    Recorder* bulkRecorder = new Recorder(cstr, getAlgorithmConfigCode(param_evol, param_sdls, param_impr, param_init_pool), true);
 
     for (const auto& run_settings : list_of_run_settings) {
         bulkRecorder->clearTimeResults();
@@ -685,20 +872,24 @@ int bulk_run(int argc, char** argv) {
         ImprovementStrategyCode improvementStrategyCode;
         InitialPoolStrategyCode initialPoolStrategyCode;
         EvolutionStrategyCode evolutionStrategyCode;
-        int total_runs;
+        int total_runs, total_time;
+        bool withSdls;
 
-        std::tie(filename, knownbest, improvementStrategyCode, initialPoolStrategyCode, evolutionStrategyCode, total_runs) = run_settings;
+        std::tie(filename, knownbest, improvementStrategyCode, withSdls, initialPoolStrategyCode, evolutionStrategyCode, total_time, total_runs) = run_settings;
         char filename_charlist[1000];
         std::strcpy(filename_charlist, filename.c_str());
 
-        Recorder* recorder = new Recorder(filename_charlist, getAlgorithmConfigCode(evolutionStrategyCode, improvementStrategyCode, initialPoolStrategyCode), false);
-        bulkRecorder->writeLine("\n" + filename + ":\n" + getAlgorithmConfigCode(evolutionStrategyCode, improvementStrategyCode, initialPoolStrategyCode));
+        Recorder* recorder = new Recorder(filename_charlist, getAlgorithmConfigCode(evolutionStrategyCode, withSdls, improvementStrategyCode, initialPoolStrategyCode), false);
+        std::string configLine = std::string("\n") + filename + ":\n" + getAlgorithmConfigCode(evolutionStrategyCode, withSdls, improvementStrategyCode, initialPoolStrategyCode);
+        bulkRecorder->writeLine(configLine);
+        printf("%s", configLine.c_str());
 
         graph.load(filename_charlist);
         graph.setKnownbest(knownbest);
         nnode = graph.getNodeCount();
         delete finalBest.best_partition;
         finalBest.best_partition = new Partition(nnode);
+        finalBest.best_val = INT_MIN;
 
         std::string line = "";
         for (int i = 0; i < argc; i++) {
@@ -708,7 +899,7 @@ int bulk_run(int argc, char** argv) {
 
         int run_cnt = 0;
         float sumtime = 0.0;
-        int sumres = 0;
+        float sumres = 0;
         int sumiter = 0;
         int bestInAll = -MAX_VAL;
         int* bestInAlllPartition = new int[nnode];
@@ -725,20 +916,29 @@ int bulk_run(int argc, char** argv) {
 
             ImprovementStrategy* improvementStrategy = nullptr;
             switch (improvementStrategyCode) {
-            case ImprovementStrategyCode::SA:
-                improvementStrategy = new SimulatedAnnealingImprovement(knownbest, param_minpercent, param_tempfactor, param_sizefactor, bulkRecorder, randomGenerator);
-                break;
             case ImprovementStrategyCode::SALO:
-                improvementStrategy = new SaloImprovement(knownbest, param_minpercent, param_tempfactor, param_sizefactor, bulkRecorder, randomGenerator);
+                improvementStrategy = new SaloImprovement(knownbest, param_minpercent, param_tempfactor, param_sizefactor, bulkRecorder, randomGenerator, withSdls);
+                break;
+            case ImprovementStrategyCode::SALOC:
+                improvementStrategy = new SaloCoolImprovement(knownbest, param_minpercent, param_tempfactor, param_sizefactor, bulkRecorder, randomGenerator, withSdls);
                 break;
             case ImprovementStrategyCode::SALOJ:
-                improvementStrategy = new SaloJovaImprovement(knownbest, param_minpercent, param_tempfactor, param_sizefactor, bulkRecorder, randomGenerator);
+                improvementStrategy = new SaloJovaImprovement(knownbest, param_minpercent, param_tempfactor, param_sizefactor, bulkRecorder, randomGenerator, withSdls);
                 break;
             case ImprovementStrategyCode::SALODM:
-                improvementStrategy = new SaloDoubleMoves(knownbest, param_minpercent, param_tempfactor, param_sizefactor, bulkRecorder, randomGenerator);
+                improvementStrategy = new SaloDoubleMoves(knownbest, param_minpercent, param_tempfactor, param_sizefactor, bulkRecorder, randomGenerator, withSdls);
+                break;
+            case ImprovementStrategyCode::SALODM0:
+                improvementStrategy = new SaloDoubleMovesZero(knownbest, param_minpercent, param_tempfactor, param_sizefactor, bulkRecorder, randomGenerator, withSdls);
+                break;
+            case ImprovementStrategyCode::SALODMS:
+                improvementStrategy = new SaloDoubleMovesSampled(knownbest, param_minpercent, param_tempfactor, param_sizefactor, bulkRecorder, randomGenerator, withSdls);
                 break;
             case ImprovementStrategyCode::SALOe:
-                improvementStrategy = new SaloExtendedImprovement(knownbest, param_minpercent, param_tempfactor, param_sizefactor, bulkRecorder, randomGenerator);
+                improvementStrategy = new SaloExtendedImprovement(knownbest, param_minpercent, param_tempfactor, param_sizefactor, bulkRecorder, randomGenerator, withSdls);
+                break;
+            case ImprovementStrategyCode::SALOeC:
+                improvementStrategy = new SaloeCoolImprovement(knownbest, param_minpercent, param_tempfactor, param_sizefactor, bulkRecorder, randomGenerator, withSdls);
                 break;
             case ImprovementStrategyCode::SALOoE:
                 improvementStrategy = new SaloOverEdgesImprovement(knownbest, param_minpercent, param_tempfactor, param_sizefactor, bulkRecorder, randomGenerator);
@@ -757,18 +957,18 @@ int bulk_run(int argc, char** argv) {
             case InitialPoolStrategyCode::RCL:
                 initialPoolstrategy = new RCLInitStrategy(bulkRecorder, randomGenerator);
                 break;
-            case InitialPoolStrategyCode::Std:
-                initialPoolstrategy = new InitialPoolBuilder(bulkRecorder, randomGenerator);
+            case InitialPoolStrategyCode::SNG:
+                initialPoolstrategy = new SingletonInitStrategy(bulkRecorder, randomGenerator);
                 break;
             }
 
             EvolutionStrategy* evolutionStrategy = nullptr;
             switch (evolutionStrategyCode) {
-            case EvolutionStrategyCode::Sol:
-                evolutionStrategy = new SolutionEvolution(mergeDevideCrossover, initialPoolstrategy, improvementStrategy, &graph, bulkRecorder, param_max_generations, param_time, randomGenerator);
+            case EvolutionStrategyCode::MDX:
+                evolutionStrategy = new MdxEvolution(mergeDevideCrossover, initialPoolstrategy, improvementStrategy, &graph, bulkRecorder, param_max_generations, total_time, randomGenerator);
                 break;
             case EvolutionStrategyCode::FSS:
-                evolutionStrategy = new FixedSetEvolution(mergeDevideCrossover, initialPoolstrategy, improvementStrategy, &graph, bulkRecorder, param_max_generations, param_time, randomGenerator);
+                evolutionStrategy = new FixedSetEvolution(mergeDevideCrossover, initialPoolstrategy, improvementStrategy, &graph, bulkRecorder, param_max_generations, total_time, randomGenerator);
                 break;
             }
 
@@ -820,6 +1020,11 @@ int bulk_run(int argc, char** argv) {
         bulkRecorder->writeLine("average result: " + std::to_string(sumres / run_cnt));
         bulkRecorder->writeLine("average best iteration: " + std::to_string(sumiter / run_cnt));
         bulkRecorder->writeTimeResults();
+        std::string bestSolution = "";
+        for (int i = 0; i < nnode; i++) {
+            bestSolution += std::to_string(finalBest.best_partition->getPvertex()[i]) + " ";
+        }
+        bulkRecorder->writeLine("best Solution: " + bestSolution);
         bulkRecorder->writeLine("-------------------------------------------------------------");
         // recorder->writeTimeResults();
         // recorder->createTimeResultsFiles();
@@ -844,12 +1049,13 @@ int normal_run(int argc, char** argv) {
     srand(param_seed);
 
     EvolutionStrategyCode evolutionStrategyCode = EvolutionStrategyCode::FSS; // Sol, FSS
+    bool withSdls = true;
     ImprovementStrategyCode improvementStrategyCode = ImprovementStrategyCode::SALOe; // SA, SAe
     InitialPoolStrategyCode initialPoolStrategyCode = InitialPoolStrategyCode::RCL; // RCL, Std
 
     // fout = setupRecordFile();
 
-    Recorder* recorder = new Recorder(param_filename, getAlgorithmConfigCode(evolutionStrategyCode, improvementStrategyCode, initialPoolStrategyCode), true);
+    Recorder* recorder = new Recorder(param_filename, getAlgorithmConfigCode(evolutionStrategyCode, true, improvementStrategyCode, initialPoolStrategyCode), withSdls);
 
     // use graph.load
     graph.load(param_filename);
@@ -865,7 +1071,7 @@ int normal_run(int argc, char** argv) {
 
     int run_cnt = 0;
     float sumtime = 0.0;
-    int sumres = 0;
+    float sumres = 0;
     int sumiter = 0;
     int bestInAll = -MAX_VAL;
     int* bestInAlllPartition = new int[nnode];
@@ -878,14 +1084,11 @@ int normal_run(int argc, char** argv) {
 
         ImprovementStrategy* improvementStrategy = nullptr;
         switch (improvementStrategyCode) {
-            case ImprovementStrategyCode::SA:
-                improvementStrategy = new SimulatedAnnealingImprovement(param_knownbest, param_minpercent, param_tempfactor, param_sizefactor, recorder, randomGenerator);
-                break;
             case ImprovementStrategyCode::SALO:
-                improvementStrategy = new SaloImprovement(param_knownbest, param_minpercent, param_tempfactor, param_sizefactor, recorder, randomGenerator);
+                improvementStrategy = new SaloImprovement(param_knownbest, param_minpercent, param_tempfactor, param_sizefactor, recorder, randomGenerator, withSdls);
                 break;
             case ImprovementStrategyCode::SALOe:
-                improvementStrategy = new SaloExtendedImprovement(param_knownbest, param_minpercent, param_tempfactor, param_sizefactor, recorder, randomGenerator);
+                improvementStrategy = new SaloExtendedImprovement(param_knownbest, param_minpercent, param_tempfactor, param_sizefactor, recorder, randomGenerator, withSdls);
                 break;
         }
 
@@ -896,15 +1099,15 @@ int normal_run(int argc, char** argv) {
         case InitialPoolStrategyCode::RCL:
             initialPoolstrategy = new RCLInitStrategy(recorder, randomGenerator);
             break;
-        case InitialPoolStrategyCode::Std:
-            initialPoolstrategy = new InitialPoolBuilder(recorder, randomGenerator);
+        case InitialPoolStrategyCode::SNG:
+            initialPoolstrategy = new SingletonInitStrategy(recorder, randomGenerator);
             break;
         }
 
         EvolutionStrategy* evolutionStrategy = nullptr;
         switch (evolutionStrategyCode) {
-        case EvolutionStrategyCode::Sol:
-            evolutionStrategy = new SolutionEvolution(mergeDevideCrossover, initialPoolstrategy, improvementStrategy, &graph, recorder, param_max_generations, param_time, randomGenerator);
+        case EvolutionStrategyCode::MDX:
+            evolutionStrategy = new MdxEvolution(mergeDevideCrossover, initialPoolstrategy, improvementStrategy, &graph, recorder, param_max_generations, param_time, randomGenerator);
             break;
         case EvolutionStrategyCode::FSS:
             evolutionStrategy = new FixedSetEvolution(mergeDevideCrossover, initialPoolstrategy, improvementStrategy, &graph, recorder, param_max_generations, param_time, randomGenerator);
@@ -969,46 +1172,46 @@ int benchmark_improvement(int argc, char** argv) {
     readParameters(argc, argv);
 
          // file name, known best, improvement strategy, initial pool strategy, evolution strategy, number of runs
-    std::vector<std::tuple<std::string, int, ImprovementStrategyCode, int>> list_of_run_settings = {
-        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-5-1.txt", 17691, ImprovementStrategyCode::SALOe, 50),
+    std::vector<std::tuple<std::string, int, ImprovementStrategyCode, bool, int>> list_of_run_settings = {
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-5-1.txt", 17691, ImprovementStrategyCode::SALOe, true, 50),
         // std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-5-1.txt", 17691, ImprovementStrategyCode::SALOe, 50),
-        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-5-2.txt", 17169, ImprovementStrategyCode::SALOe, 50),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-5-2.txt", 17169, ImprovementStrategyCode::SALOe, true, 50),
         // std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-5-2.txt", 17169, ImprovementStrategyCode::SALOe, 50),
-        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-5-3.txt", 16816, ImprovementStrategyCode::SALOe, 50),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-5-3.txt", 16816, ImprovementStrategyCode::SALOe, true, 50),
         // std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-5-3.txt", 16816, ImprovementStrategyCode::SALOe, 50),
-        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-5-4.txt", 16808, ImprovementStrategyCode::SALOe, 50),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-5-4.txt", 16808, ImprovementStrategyCode::SALOe, true, 50),
         // std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-5-4.txt", 16808, ImprovementStrategyCode::SALOe, 50),
-        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-5-5.txt", 16957, ImprovementStrategyCode::SALOe, 50),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-5-5.txt", 16957, ImprovementStrategyCode::SALOe, true, 50),
         // std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-5-5.txt", 16957, ImprovementStrategyCode::SALOe, 50),
-        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-5-6.txt", 16615, ImprovementStrategyCode::SALOe, 50),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-5-6.txt", 16615, ImprovementStrategyCode::SALOe, true, 50),
         // std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-5-6.txt", 16615, ImprovementStrategyCode::SALOe, 50),
-        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-5-7.txt", 16649, ImprovementStrategyCode::SALOe, 50),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-5-7.txt", 16649, ImprovementStrategyCode::SALOe, true, 50),
         // std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-5-7.txt", 16649, ImprovementStrategyCode::SALOe, 50),
-        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-5-8.txt", 16756, ImprovementStrategyCode::SALOe, 50),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-5-8.txt", 16756, ImprovementStrategyCode::SALOe, true, 50),
         // std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-5-8.txt", 16756, ImprovementStrategyCode::SALOe, 50),
-        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-5-9.txt", 16629, ImprovementStrategyCode::SALOe, 50),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-5-9.txt", 16629, ImprovementStrategyCode::SALOe, true, 50),
         // std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-5-9.txt", 16629, ImprovementStrategyCode::SALOe, 50),
-        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-5-10.txt", 17360, ImprovementStrategyCode::SALOe, 50),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-5-10.txt", 17360, ImprovementStrategyCode::SALOe, true, 50),
         // std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-5-10.txt", 17360, ImprovementStrategyCode::SALOe, 50),
-        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-100-1.txt", 308896, ImprovementStrategyCode::SALOe, 50),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-100-1.txt", 308896, ImprovementStrategyCode::SALOe, true, 50),
         // std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-100-1.txt", 308896, ImprovementStrategyCode::SALOe, 50),
-        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-100-2.txt", 310241, ImprovementStrategyCode::SALOe, 50),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-100-2.txt", 310241, ImprovementStrategyCode::SALOe, true, 50),
         // std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-100-2.txt", 310241, ImprovementStrategyCode::SALOe, 50),
-        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-100-3.txt", 310477, ImprovementStrategyCode::SALOe, 50),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-100-3.txt", 310477, ImprovementStrategyCode::SALOe, true, 50),
         // std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-100-3.txt", 310477, ImprovementStrategyCode::SALOe, 50),
-        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-100-4.txt", 309567, ImprovementStrategyCode::SALOe, 50),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-100-4.txt", 309567, ImprovementStrategyCode::SALOe, true, 50),
         // std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-100-4.txt", 309567, ImprovementStrategyCode::SALOe, 50),
-        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-100-5.txt", 309135, ImprovementStrategyCode::SALOe, 50),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-100-5.txt", 309135, ImprovementStrategyCode::SALOe, true, 50),
         // std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-100-5.txt", 309135, ImprovementStrategyCode::SALOe, 50),
-        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-100-6.txt", 310280, ImprovementStrategyCode::SALOe, 50),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-100-6.txt", 310280, ImprovementStrategyCode::SALOe, true, 50),
         // std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-100-6.txt", 310280, ImprovementStrategyCode::SALOe, 50),
-        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-100-7.txt", 310063, ImprovementStrategyCode::SALOe, 50),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-100-7.txt", 310063, ImprovementStrategyCode::SALOe, true, 50),
         // std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-100-7.txt", 310063, ImprovementStrategyCode::SALOe, 50),
-        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-100-8.txt", 303148, ImprovementStrategyCode::SALOe, 50),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-100-8.txt", 303148, ImprovementStrategyCode::SALOe, true, 50),
         // std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-100-8.txt", 303148, ImprovementStrategyCode::SALOe, 50),
-        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-100-9.txt", 305305, ImprovementStrategyCode::SALOe, 50),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-100-9.txt", 305305, ImprovementStrategyCode::SALOe, true, 50),
         // std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-100-9.txt", 305305, ImprovementStrategyCode::SALOe, 50),
-        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-100-10.txt", 314864, ImprovementStrategyCode::SALOe, 50),
+        std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-100-10.txt", 314864, ImprovementStrategyCode::SALOe, true, 50),
         // std::make_tuple(std::string(PROJECT_ROOT_PATH) + "/instance/Random/p500-100-10.txt", 314864, ImprovementStrategyCode::SALOe, 50),
     };
     /*
@@ -1024,22 +1227,31 @@ int benchmark_improvement(int argc, char** argv) {
         int knownbest;
         ImprovementStrategyCode improvementStrategyCode;
         int total_runs;
+        bool withSdls;
 
-        std::tie(filename, knownbest, improvementStrategyCode, total_runs) = run_settings;
+        std::tie(filename, knownbest, improvementStrategyCode, withSdls, total_runs) = run_settings;
         char filename_charlist[1000];
         std::strcpy(filename_charlist, filename.c_str());
 
         std::vector<Partition> generatedSolutions;
         std::string configCode = "";
+
+        if (withSdls) {
+            configCode += "SDLS+";
+        }
+
         switch (improvementStrategyCode) {
-        case ImprovementStrategyCode::SA:
-            configCode += "SA-";
-            break;
         case ImprovementStrategyCode::SALO:
             configCode += "SALO-";
             break;
+        case ImprovementStrategyCode::SALOC:
+            configCode += "SALOC-";
+            break;
         case ImprovementStrategyCode::SALOe:
             configCode += "SALOe-";
+            break;
+        case ImprovementStrategyCode::SALOeC:
+            configCode += "SALOeC-";
             break;
         case ImprovementStrategyCode::SALOoE:
             configCode += "SALOoE-";
@@ -1050,10 +1262,18 @@ int benchmark_improvement(int argc, char** argv) {
         case ImprovementStrategyCode::SALODM:
             configCode += "SALODM-";
             break;
+        case ImprovementStrategyCode::SALODM0:
+            configCode += "SALODM0-";
+            break;
+        case ImprovementStrategyCode::SALODMS:
+            configCode += "SALODMS-";
+            break;
         }
 
         Recorder* recorder = new Recorder(filename_charlist, configCode, false);
-        bulkRecorder->writeLine("\n" + filename + ":\n" + configCode);
+        std::string configLine = std::string("\n") + filename + ":\n" + configCode;
+        bulkRecorder->writeLine(configLine);
+        printf("%s", configLine.c_str());
 
         graph.load(filename_charlist);
         graph.setKnownbest(knownbest);
@@ -1086,17 +1306,20 @@ int benchmark_improvement(int argc, char** argv) {
 
             ImprovementStrategy* improvementStrategy = nullptr;
             switch (improvementStrategyCode) {
-            case ImprovementStrategyCode::SA:
-                improvementStrategy = new SimulatedAnnealingImprovement(knownbest, param_minpercent, param_tempfactor, param_sizefactor, bulkRecorder, randomGenerator);
-                break;
             case ImprovementStrategyCode::SALO:
-                improvementStrategy = new SaloImprovement(knownbest, param_minpercent, param_tempfactor, param_sizefactor, bulkRecorder, randomGenerator);
+                improvementStrategy = new SaloImprovement(knownbest, param_minpercent, param_tempfactor, param_sizefactor, bulkRecorder, randomGenerator, withSdls);
+                break;
+            case ImprovementStrategyCode::SALOC:
+                improvementStrategy = new SaloCoolImprovement(knownbest, param_minpercent, param_tempfactor, param_sizefactor, bulkRecorder, randomGenerator, withSdls);
                 break;
             case ImprovementStrategyCode::SALOJ:
-                improvementStrategy = new SaloJovaImprovement(knownbest, param_minpercent, param_tempfactor, param_sizefactor, bulkRecorder, randomGenerator);
+                improvementStrategy = new SaloJovaImprovement(knownbest, param_minpercent, param_tempfactor, param_sizefactor, bulkRecorder, randomGenerator, withSdls);
                 break;
             case ImprovementStrategyCode::SALOe:
-                improvementStrategy = new SaloExtendedImprovement(knownbest, param_minpercent, param_tempfactor, param_sizefactor, bulkRecorder, randomGenerator);
+                improvementStrategy = new SaloExtendedImprovement(knownbest, param_minpercent, param_tempfactor, param_sizefactor, bulkRecorder, randomGenerator, withSdls);
+                break;
+            case ImprovementStrategyCode::SALOeC:
+                improvementStrategy = new SaloeCoolImprovement(knownbest, param_minpercent, param_tempfactor, param_sizefactor, bulkRecorder, randomGenerator, withSdls);
                 break;
             case ImprovementStrategyCode::SALOoE:
                 improvementStrategy = new SaloOverEdgesImprovement(knownbest, param_minpercent, param_tempfactor, param_sizefactor, bulkRecorder, randomGenerator);
@@ -1108,7 +1331,13 @@ int benchmark_improvement(int argc, char** argv) {
                 improvementStrategy = new SaloDualNeighborImprovement(knownbest, param_minpercent, param_tempfactor, param_sizefactor, bulkRecorder, randomGenerator);
                 break;
             case ImprovementStrategyCode::SALODM:
-                improvementStrategy = new SaloDoubleMoves(knownbest, param_minpercent, param_tempfactor, param_sizefactor, bulkRecorder, randomGenerator);
+                improvementStrategy = new SaloDoubleMoves(knownbest, param_minpercent, param_tempfactor, param_sizefactor, bulkRecorder, randomGenerator, withSdls);
+                break;
+            case ImprovementStrategyCode::SALODM0:
+                improvementStrategy = new SaloDoubleMovesZero(knownbest, param_minpercent, param_tempfactor, param_sizefactor, bulkRecorder, randomGenerator, withSdls);
+                break;
+            case ImprovementStrategyCode::SALODMS:
+                improvementStrategy = new SaloDoubleMovesSampled(knownbest, param_minpercent, param_tempfactor, param_sizefactor, bulkRecorder, randomGenerator, withSdls);
                 break;
             }
 

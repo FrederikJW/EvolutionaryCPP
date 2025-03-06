@@ -1,12 +1,12 @@
-#ifndef INITIALPOOLBUILDER_H
-#define INITIALPOOLBUILDER_H
+#ifndef SINGLETONINITSTRATEGY_H
+#define SINGLETONINITSTRATEGY_H
 
 #include "InitialPoolStrategy.h"
 #include "../partition/Partition.h"
 #include "../population/Population.h"
 #include "../graph/Graph.h"
 
-class InitialPoolBuilder : public InitialPoolStrategy {
+class SingletonInitStrategy : public InitialPoolStrategy {
 public:
     using InitialPoolStrategy::InitialPoolStrategy;
 
@@ -14,4 +14,4 @@ public:
     void generateInitialSolution(Partition& partition, Graph& graph) override;
 };
 
-#endif // INITIALPOOLBUILDER_H
+#endif // SINGLETONINITSTRATEGY_H

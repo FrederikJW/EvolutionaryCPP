@@ -1,7 +1,7 @@
 #ifndef SALOODOUBLEMOVES_H
 #define SALOODOUBLEMOVES_H
 
-#include "ImprovementStrategy.h"
+#include "SaloJovaImprovement.h"
 #include "../partition/Partition.h"
 #include "../graph/Graph.h"
 #include "../Statistic.h"
@@ -12,26 +12,11 @@
 #include <ctime>
 
 
-class SaloDoubleMoves : public ImprovementStrategy {
+class SaloDoubleMoves : public SaloJovaImprovement {
 public:
-    SaloDoubleMoves(int knownbest_, double minpercent_, double tempfactor_, int sizefactor_, Recorder* recorder_, RandomGenerator* generator) : ImprovementStrategy(knownbest_, minpercent_, tempfactor_, sizefactor_, recorder_, generator), problem(nullptr), instance(nullptr), selectType(SASelectType::SingleEdge) {};
-    ~SaloDoubleMoves();
+    SaloDoubleMoves(int knownbest_, double minpercent_, double tempfactor_, int sizefactor_, Recorder* recorder_, RandomGenerator* generator, bool withSdls) : SaloJovaImprovement(knownbest_, minpercent_, tempfactor_, sizefactor_, recorder_, generator, withSdls) { selectType = SASelectType::SingleEdge; };
 
-    void improveSolution(Partition& solution, clock_t startTime, int maxSeconds, BestSolutionInfo* frt, int generation_cnt) override;
-    void search(clock_t startTime, int maxSeconds, int generation_cnt) override;
-    void selectBetter(BestSolutionInfo* frt, clock_t start_time, int generation_cnt);
     void setEnvironment(Graph& graph) override;
-    void setStart(Partition& startSol) override;
-    void calibrateTemp() override;
-    void disposeEnvironment() override;
-    int getBestObjective() override;
-    Partition getBestPartition() override;
-
-private:
-
-    CPPProblem* problem;
-    CPPInstance* instance;
-    SASelectType selectType;
 };
 
 #endif // SALOODOUBLEMOVES_H

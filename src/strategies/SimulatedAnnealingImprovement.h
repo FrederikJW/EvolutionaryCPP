@@ -26,12 +26,12 @@ typedef struct SA_RT_Data {
 
 class SimulatedAnnealingImprovement : public ImprovementStrategy {
 public:
-    SimulatedAnnealingImprovement(int knownbest_, double minpercent_, double tempfactor_, int sizefactor_, Recorder* recorder_, RandomGenerator* generator) : ImprovementStrategy(knownbest_, minpercent_, tempfactor_, sizefactor_, recorder_, generator), lsdata(nullptr) {};
+    SimulatedAnnealingImprovement(int knownbest_, double minpercent_, double tempfactor_, int sizefactor_, Recorder* recorder_, RandomGenerator* generator, bool withPureDescent) : ImprovementStrategy(knownbest_, minpercent_, tempfactor_, sizefactor_, recorder_, generator), lsdata(nullptr), withPureDescent(withPureDescent) {};
     ~SimulatedAnnealingImprovement();
 
     void improveSolution(Partition& solution, clock_t startTime, int maxSeconds, BestSolutionInfo* frt, int generation_cnt) override;
     void search(clock_t startTime, int maxSeconds, int generation_cnt) override;
-    void search_original(clock_t startTime, int maxSeconds);
+    // void search_original(clock_t startTime, int maxSeconds);
     void setEnvironment(Graph& graph) override;
     void setStart(Partition& startSol) override;
     void calibrateTemp() override;
@@ -50,6 +50,7 @@ private:
     int changeCurSolution(int u, int dest);
 
     SA_RT_Data* lsdata;
+    bool withPureDescent;
 };
 
 #endif // SIMULATEDANNEALINGIMPROVEMENT_H

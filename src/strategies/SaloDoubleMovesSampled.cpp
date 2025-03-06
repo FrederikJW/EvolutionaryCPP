@@ -1,4 +1,4 @@
-#include "SaloDoubleMoves.h"
+#include "SaloDoubleMovesSampled.h"
 #include "../Defines.h"
 #include <cassert>
 #include <cstdio>
@@ -8,11 +8,11 @@
 #include <vector>
 #include <unordered_map>
 
-void SaloDoubleMoves::setEnvironment(Graph& graph) {
+void SaloDoubleMovesSampled::setEnvironment(Graph& graph) {
     delete instance;
-    instance = new CPPInstance(graph.getNodeCount(), graph.getMatrix());
+    instance = new CPPInstance(graph.getNodeCount(), graph.getMatrix(), false, true);
     delete problem;
     problem = new CPPProblem(instance, mGenerator);
     problem->SetSASelect(selectType);
-    problem->setNeighborhoodFactor(1);
+    problem->setNeighborhoodFactor(2);
 }

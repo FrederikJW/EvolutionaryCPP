@@ -1,12 +1,12 @@
-#ifndef SOLUTIONEVOLUTION_H
-#define SOLUTIONEVOLUTION_H
+#ifndef MDXEVOLUTION_H
+#define MDXEVOLUTION_H
 
 #include "EvolutionStrategy.h"
 #include "CrossoverStrategy.h"
 #include "InitialPoolStrategy.h"
 #include "ImprovementStrategy.h"
 
-class SolutionEvolution : public EvolutionStrategy {
+class MdxEvolution : public EvolutionStrategy {
 public:
     using EvolutionStrategy::EvolutionStrategy;
 
@@ -15,4 +15,4 @@ public:
 
 };
 
-#endif // SOLUTIONEVOLUTION_H
+#endif // MDX_H

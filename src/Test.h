@@ -2,12 +2,12 @@
 #define STRATEGYTEST_H
 
 #include "Statistic.h"
-#include "strategies/InitialPoolBuilder.h"
+#include "strategies/SingletonInitStrategy.h"
 #include "strategies/RCLInitStrategy.h"
 #include "strategies/SimulatedAnnealingImprovement.h"
 #include "strategies/SaloExtendedImprovement.h"
 #include "strategies/MergeDivideCrossover.h"
-#include "strategies/SolutionEvolution.h"
+#include "strategies/MdxEvolution.h"
 #include "strategies/FixedSetEvolution.h"
 
 class StrategyTests {

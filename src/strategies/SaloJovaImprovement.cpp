@@ -46,7 +46,12 @@ void SaloJovaImprovement::calibrateTemp() {
 }
 
 void SaloJovaImprovement::search(clock_t startTime, int maxSeconds, int generation_cnt) {
-    problem->SALOSearch();
+    if (withSdls) {
+        problem->SALOSearch();
+    }
+    else { 
+        problem->SASearch();
+    }
 }
 
 void SaloJovaImprovement::selectBetter(BestSolutionInfo* frt, clock_t start_time, int generation_cnt) {
@@ -72,7 +77,6 @@ Partition SaloJovaImprovement::getBestPartition() {
     int* vpart = new int[nnode];
 
     for (int i = 0; i < nnode; i++) {
-        // TODO: does this return the actual best solution?
         vpart[i] = problem->GetSolution().getNodeClique()[i] + 1;
     }
 

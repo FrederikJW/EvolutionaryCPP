@@ -14,7 +14,7 @@
 
 class SaloJovaImprovement : public ImprovementStrategy {
 public:
-    SaloJovaImprovement(int knownbest_, double minpercent_, double tempfactor_, int sizefactor_, Recorder* recorder_, RandomGenerator* generator) : ImprovementStrategy(knownbest_, minpercent_, tempfactor_, sizefactor_, recorder_, generator), problem(nullptr), instance(nullptr), selectType(SASelectType::Single) {};
+    SaloJovaImprovement(int knownbest_, double minpercent_, double tempfactor_, int sizefactor_, Recorder* recorder_, RandomGenerator* generator, bool withSdls) : ImprovementStrategy(knownbest_, minpercent_, tempfactor_, sizefactor_, recorder_, generator), problem(nullptr), instance(nullptr), selectType(SASelectType::Single), withSdls(withSdls) {};
     ~SaloJovaImprovement();
 
     void improveSolution(Partition& solution, clock_t startTime, int maxSeconds, BestSolutionInfo* frt, int generation_cnt) override;
@@ -27,11 +27,12 @@ public:
     int getBestObjective() override;
     Partition getBestPartition() override;
 
-private:
+protected:
 
     CPPProblem* problem;
     CPPInstance* instance;
     SASelectType selectType;
+    bool withSdls;
 };
 
 #endif // SALOJOVAIMPROVEMENT_H
