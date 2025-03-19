@@ -1,3 +1,4 @@
+// initialization strategy of a partition with singelton cliques
 #include "SingletonInitStrategy.h"
 #include "SimulatedAnnealingImprovement.h"
 #include <ctime>

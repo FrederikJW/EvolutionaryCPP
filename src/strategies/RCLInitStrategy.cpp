@@ -1,3 +1,4 @@
+// pool initialization strategy using a restricted candidate list
 #include "ImprovementStrategy.h"
 #include "RCLInitStrategy.h"
 #include "../CPPJovanovic/CPPGreedy.h"

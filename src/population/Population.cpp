@@ -1,3 +1,4 @@
+// class encapsulating functionalities and data of a population; rewritten from https://github.com/hellozhilu/MDMCP/tree/main/code
 #include "Population.h"
 #include <algorithm>
 #include <numeric>

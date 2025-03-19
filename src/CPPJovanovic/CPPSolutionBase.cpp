@@ -1,3 +1,5 @@
+// a rewritten version of CPPSolutionBase.cs into C++ https://github.com/rakabog/CPPConsole/blob/master/CPPConsole/CPPSolutionBase.cs
+// with additional functionality for simulated annealing variations presented in this repository
 #include <tbb/tbb.h>
 #include <emmintrin.h>
 #include <immintrin.h> 
@@ -125,8 +127,7 @@ void parallelAddSse6(std::vector<int>& a, const std::vector<int>& b) {
         throw std::invalid_argument("Vectors must be the same size");
     }
 
-    // Define the grain size (the chunk size for each thread)
-    const size_t grain_size = 1024; // Adjust as needed for optimal performance
+    const size_t grain_size = 1024;
 
     tbb::parallel_for(tbb::blocked_range<size_t>(0, size, grain_size),
         [&a, &b](const tbb::blocked_range<size_t>& range) {
@@ -149,6 +150,15 @@ void parallelAddSse6(std::vector<int>& a, const std::vector<int>& b) {
             }
         }
     );
+}
+
+void parallelAddSse7(std::vector<int>& a, const std::vector<int>& b) {
+    const size_t size = a.size();
+
+    // Handle any remaining elements
+    for (size_t i = 0; i < size; ++i) {
+        a[i] += b[i];
+    }
 }
 
 void shuffle(std::vector<int>& list, RandomGenerator* iGenerator) {
@@ -426,8 +436,8 @@ void CPPSolutionBase::UpdateAllConnections(int nNode, int nClique)
     const std::vector<int>& NodeWeights = mInstance->getWeights()[nNode];
     const std::vector<int>& NodeNegativeWeights = mInstance->getNegativeWeights()[nNode];
 
-    parallelAddSse4(newAllConnectedNode, NodeWeights);
-    parallelAddSse4(oldAllConnectedNode, NodeNegativeWeights);
+    parallelAddSse7(newAllConnectedNode, NodeWeights);
+    parallelAddSse7(oldAllConnectedNode, NodeNegativeWeights);
 }
 
 void CPPSolutionBase::UpdateAllConnectionsRestricted(int nNodeIndex, int nClique)
@@ -3001,6 +3011,8 @@ bool CPPSolutionBase::SimulatedAnnealing(SAParameters& iSAParameters, double& Ac
     AcceptTotal = 0;
     int sumNodeChange;
 
+    int numRelocations = 0;
+
     while (true)
     {   
         
@@ -3030,6 +3042,7 @@ bool CPPSolutionBase::SimulatedAnnealing(SAParameters& iSAParameters, double& Ac
                 prevAccepted = true;
                 Accept += numMoves;
                 ApplyRelocation(cRelocation);
+                numRelocations++;
                 cSolObjective += cRelocation.mChange;
                 if (cSol != cSolObjective)
                     cSol = cSolObjective;
@@ -3093,6 +3106,8 @@ bool CPPSolutionBase::SimulatedAnnealing(SAParameters& iSAParameters, double& Ac
     CreateFromNodeClique(tNodeClique);
 
     AcceptRelative = static_cast<double>(AcceptTotal) / (NeiborhoodSize * iSAParameters.mSizeRepeat * counter);
+
+    printf("numRelocations=%d\n", numRelocations);
     return true;
 }
 

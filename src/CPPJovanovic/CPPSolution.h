@@ -1,3 +1,4 @@
+// a rewritten version of CPPSolution.cs into C++ https://github.com/rakabog/CPPConsole/blob/master/CPPConsole/CPPSolution.cs
 #ifndef CPPSOLUTION_H
 #define CPPSOLUTION_H
 

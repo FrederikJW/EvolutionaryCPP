@@ -1,3 +1,4 @@
+// SALO with double moves and filtered 0 edges; extension to SALOe
 #include "SaloDoubleMovesZero.h"
 #include "../Defines.h"
 #include <cassert>

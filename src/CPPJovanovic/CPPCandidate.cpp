@@ -1,3 +1,5 @@
+// rewritten version of CPPCandidate.cs into C++ https://github.com/rakabog/CPPConsole/blob/master/CPPConsole/CPPCandidate.cs
+
 #include "CPPCandidate.h"
 
 #include <vector>

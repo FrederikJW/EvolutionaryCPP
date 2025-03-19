@@ -1,3 +1,4 @@
+// rewritten version of BufferElement.cs into C++ https://github.com/rakabog/CPPConsole/blob/master/CPPConsole/BufferElement.cs
 #ifndef BUFFERELEMENT_H
 #define BUFFERELEMENT_H
 

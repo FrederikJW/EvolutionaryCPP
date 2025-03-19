@@ -1,3 +1,5 @@
+// a rewritten version of CPPInstance.cs into C++ https://github.com/rakabog/CPPConsole/blob/master/CPPConsole/CPPInstance.cs
+// with added functionality to get random edges
 #include "CPPInstance.h"
 
 #include <iostream>

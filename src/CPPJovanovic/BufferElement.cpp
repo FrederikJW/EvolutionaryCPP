@@ -1,3 +1,4 @@
+// rewritten version of BufferElement.cs into C++ https://github.com/rakabog/CPPConsole/blob/master/CPPConsole/BufferElement.cs
 #include "BufferElement.h"
 #include <algorithm>
 #include <iterator>

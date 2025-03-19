@@ -1,3 +1,4 @@
+// SALOe with node cooling
 #ifndef SALOECOOLIMPROVEMENT_H
 #define SALOECOOLIMPROVEMENT_H
 

@@ -1,3 +1,4 @@
+// rewritten version of partition.cpp into a class encapsulating functionalities and data for partitions https://github.com/hellozhilu/MDMCP/blob/main/code/partition.cpp 
 #include <algorithm>
 #include "Partition.h"
 #include "../hungarian.h"

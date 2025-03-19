@@ -1,3 +1,4 @@
+// SALO by [1] with the rewritten implementation of https://github.com/rakabog/CPPConsole
 #ifndef SALOJOVAIMPROVEMENT_H
 #define SALOJOVAIMPROVEMENT_H
 

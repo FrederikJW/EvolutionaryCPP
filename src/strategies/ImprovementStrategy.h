@@ -1,3 +1,4 @@
+// abstract improvement class
 #ifndef IMPROVEMENTSTRATEGY_H
 #define IMPROVEMENTSTRATEGY_H
 

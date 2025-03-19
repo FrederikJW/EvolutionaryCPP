@@ -1,3 +1,4 @@
+// class for recording benchmark values and writing them to a file or console
 #ifndef RECORDER_H
 #define RECORDER_H
 

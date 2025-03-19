@@ -1,3 +1,5 @@
+// a minimalistic version of CPPProblem.cs in C++ https://github.com/rakabog/CPPConsole/blob/master/CPPConsole/CPPProblem.cs
+
 #ifndef CPPGREEDY_H
 #define CPPGREEDY_H
 

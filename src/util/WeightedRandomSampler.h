@@ -1,3 +1,5 @@
+// implementation of the a weighted random sampler based on Vose's Alias method [3]
+// used for SALODMS 
 #ifndef WEIGHTED_RANDOM_SAMPLER_H
 #define WEIGHTED_RANDOM_SAMPLER_H
 
@@ -7,17 +9,13 @@
 
 class WeightedRandomSampler {
 public:
-    // Constructor that takes a vector of integer weights
     explicit WeightedRandomSampler(const std::vector<int>& weights);
 
-    // Function to retrieve a random index
     int sample();
 
 private:
-    // Helper function to build the alias table
     void buildAliasTable(const std::vector<double>& probabilities);
 
-    // Member variables
     std::vector<double> prob;  // Probability table
     std::vector<int> alias;    // Alias table
     int N;                     // Number of weights

@@ -1,3 +1,4 @@
+// abstract initial pool class
 #ifndef INITIALPOOLSTRATEGY_H
 #define INITIALPOOLSTRATEGY_H
 

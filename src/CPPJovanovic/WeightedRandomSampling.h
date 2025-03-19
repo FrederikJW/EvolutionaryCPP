@@ -1,3 +1,4 @@
+// rewritten version of WeightedRadnomSampling.cs into C++ https://github.com/rakabog/CPPConsole/blob/master/CPPConsole/WeightedRadnomSampling.cs
 #ifndef WEIGHTEDRANDOMSAMPLING_H
 #define WEIGHTEDRANDOMSAMPLING_H
 

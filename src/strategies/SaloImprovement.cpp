@@ -1,4 +1,5 @@
-﻿#include "SaloImprovement.h"
+﻿// SALO by [1]
+#include "SaloImprovement.h"
 #include "../Defines.h"
 #include <cassert>
 #include <cstdio>
@@ -105,8 +106,6 @@ void SaloImprovement::updateCurGamma(int u, int src, int dest) {
     }
 }
 
-
-// algorithm gets stuck on certain instances when trying to move nodes back and forth with gamma 0
 void SaloImprovement::calibrateTemp() {
     double lt = 1.0, ut = 2000.0;
     double tempTolerate = 0.05;

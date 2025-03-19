@@ -1,3 +1,4 @@
+// SALO with node cooling
 #include "SaloCoolImprovement.h"
 #include "../Defines.h"
 #include <cassert>

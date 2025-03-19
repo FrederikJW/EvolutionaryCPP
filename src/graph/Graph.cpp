@@ -1,3 +1,4 @@
+// class to encapsulate graph functionalities and data rewritten from https://github.com/hellozhilu/MDMCP/tree/main/code
 #include "Graph.h"
 #include <fstream>
 #include <iostream>

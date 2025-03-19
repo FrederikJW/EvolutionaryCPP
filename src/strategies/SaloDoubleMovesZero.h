@@ -1,3 +1,4 @@
+// SALO with double moves and filtered 0 edges; extension to SALOe
 #ifndef SALOODOUBLEMOVESZERO_H
 #define SALOODOUBLEMOVESZERO_H
 

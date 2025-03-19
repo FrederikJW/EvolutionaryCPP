@@ -1,3 +1,4 @@
+// experimental extension to SALOe
 #ifndef SALODUALNEIGHBORIMPROVEMENT_H
 #define SALODUALNEIGHBORIMPROVEMENT_H
 

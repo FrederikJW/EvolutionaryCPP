@@ -1,3 +1,4 @@
+// initialization strategy of a partition with singelton cliques
 #ifndef SINGLETONINITSTRATEGY_H
 #define SINGLETONINITSTRATEGY_H
 

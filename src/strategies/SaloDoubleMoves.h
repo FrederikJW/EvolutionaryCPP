@@ -1,3 +1,4 @@
+// SALO with double moves; extension to SALOe
 #ifndef SALOODOUBLEMOVES_H
 #define SALOODOUBLEMOVES_H
 

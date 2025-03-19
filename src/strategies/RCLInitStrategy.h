@@ -1,3 +1,4 @@
+// pool initialization strategy using a restricted candidate list
 #ifndef RCLINITSTRATEGY_H
 #define RCLINITSTRATEGY_H
 

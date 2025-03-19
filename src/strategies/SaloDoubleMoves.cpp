@@ -1,3 +1,4 @@
+// SALO with double moves; extension to SALOe
 #include "SaloDoubleMoves.h"
 #include "../Defines.h"
 #include <cassert>

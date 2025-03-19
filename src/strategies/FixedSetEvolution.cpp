@@ -1,3 +1,4 @@
+// fixed set evolution strategy
 #include "FixedSetEvolution.h"
 #include "../CPPJovanovic/CPPInstance.h"
 #include "../CPPJovanovic/CPPProblem.h"
@@ -32,7 +33,6 @@ void FixedSetEvolution::run(BestSolutionInfo* frt_, int* totalGen, int poolSize)
     generationCnt = 0;
     startTime = clock();
 
-    // graph?
     CPPInstance* instance = new CPPInstance(graph->getNodeCount(), graph->getMatrix());
     int nnode = instance->getNumberOfNodes();
     delete problem;
@@ -67,8 +67,6 @@ void FixedSetEvolution::run(BestSolutionInfo* frt_, int* totalGen, int poolSize)
 
     improvementStrategy->setEnvironment(*graph);
 
-    // TODO: use initial population strategy
-    // problem->SolveGRASP(mFixInitPopulation, iTimeLimit);
     printf("Calibrate the initial temperature.\n");
     initialPoolStrategy->generateInitialSolution(*childPartition, *graph);
     improvementStrategy->setStart(*childPartition);
@@ -102,18 +100,19 @@ void FixedSetEvolution::run(BestSolutionInfo* frt_, int* totalGen, int poolSize)
         printf("\n------------The %dth generation-----------\n", generationCnt);
 
         recorder->enter("run_generation");
-
+        clock_t start = clock();
         FixSize = 1 - std::pow(2, -1 * (FixSetSizeIndex + 1));
         FixSet = problem->GetFix(mFixN, mFixK, FixSize);
 
-        problem->SolveGreedy(FixSet); // memory increase
+        problem->SolveGreedy(FixSet);
 
         // TODO this could be optimized by no conversion and using the same solution/partition structure
         convertCPPSolutionToPartition(*childPartition, problem->GetSolution());
+        // printf("time fix set: %f\n", (double)(clock() - start) / (double)CLOCKS_PER_SEC);
 
-        clock_t start = clock();
+        // start = clock();
         improvementStrategy->improveSolution(*childPartition, startTime, maxSeconds, frt, generationCnt);
-        printf("time: %d\n", clock() - start);
+        // printf("time: %d\n", clock() - start);
 
         recorder->recordSolution(frt->best_partition, clock());
 

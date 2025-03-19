@@ -1,3 +1,4 @@
+// merge divide crossover evolution strategy
 #include "MdxEvolution.h"
 
 void MdxEvolution::run(BestSolutionInfo* frt_, int* totalGen, int poolSize) {
@@ -6,7 +7,6 @@ void MdxEvolution::run(BestSolutionInfo* frt_, int* totalGen, int poolSize) {
     startTime = clock();
     generationCnt = 0;
 
-    // TODO: could be created inside initial pool builder
     delete population;
     population = new Population(poolSize);
     delete childPartition;

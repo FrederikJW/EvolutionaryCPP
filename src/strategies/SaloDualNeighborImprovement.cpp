@@ -1,3 +1,4 @@
+// experimental extension to SALOe
 #include "SaloDualNeighborImprovement.h"
 #include "../Defines.h"
 #include <cassert>

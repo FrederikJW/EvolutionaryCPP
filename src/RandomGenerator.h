@@ -24,6 +24,7 @@ using RandomGenerator = std::minstd_rand;
 
 #elif defined(USE_XOROSHIRO128PLUS)
 
+// an implementation of XOROSHIRO128+ in C++ source: https://xoroshiro.di.unimi.it/xoroshiro128plus.c 
 class RandomGenerator {
 public:
     RandomGenerator(uint64_t seed1, uint64_t seed2) {

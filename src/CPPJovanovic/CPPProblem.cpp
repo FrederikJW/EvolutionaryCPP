@@ -1,3 +1,5 @@
+// a rewritten version of CPPProblem.cs into C++ https://github.com/rakabog/CPPConsole/blob/master/CPPConsole/CPPProblem.cs
+// with added functionality for SALO with double moves and SALOe with node cooling
 #include "CPPProblem.h"
 #include "CPPSolution.h"
 

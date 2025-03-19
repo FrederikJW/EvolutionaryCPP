@@ -1,3 +1,4 @@
+// unused file; translation from https://github.com/hellozhilu/MDMCP/blob/main/code/partition.cpp
 #ifndef PARTITIONTYPE_H
 #define PARTITIONTYPE_H
 

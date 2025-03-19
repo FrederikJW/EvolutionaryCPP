@@ -1,3 +1,4 @@
+// rewritten version of CPPSolutionHolder.cs into C++ https://github.com/rakabog/CPPConsole/blob/master/CPPConsole/CPPSolutionHolder.cs
 #ifndef CPPSOLUTIONHOLDER_H
 #define CPPSOLUTIONHOLDER_H
 

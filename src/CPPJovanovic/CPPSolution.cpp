@@ -1,3 +1,4 @@
+// a rewritten version of CPPSolution.cs into C++ https://github.com/rakabog/CPPConsole/blob/master/CPPConsole/CPPSolution.cs
 #include "CPPSolution.h"
 
 #include <algorithm>
@@ -57,18 +58,14 @@ int CPPSolution::GetChange(const std::vector<int>& nodes, int iClique) {
 }
 
 void CPPSolution::UpdateChange(int Clique, int Node) {
-    // Cache the number of nodes to avoid calling the function repeatedly
     const int numNodes = mInstance->getNumberOfNodes();
 
-    // Get references to the vectors to avoid repeated lookups
     std::vector<int>& changeClique = mChange[Clique];
     const std::vector<int>& weightsNode = mInstance->getWeights()[Node];
 
-    // Use pointers for efficient iteration
     int* changePtr = changeClique.data();
     const int* weightsPtr = weightsNode.data();
 
-    // Loop through the nodes and update the changeClique
     for (int n = 0; n < numNodes; ++n) {
         changePtr[n] += weightsPtr[n];
     }

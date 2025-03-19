@@ -1,3 +1,4 @@
+// SALO with double moves and sampled edges; extension to SALOe
 #ifndef SALOODOUBLEMOVESSAMPLED_H
 #define SALOODOUBLEMOVESSAMPLED_H
 

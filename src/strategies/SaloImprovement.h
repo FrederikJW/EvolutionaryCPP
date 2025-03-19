@@ -1,3 +1,4 @@
+// SALO by [1]
 #ifndef SALOIMPROVEMENT_H
 #define SALOIMPROVEMENT_H
 

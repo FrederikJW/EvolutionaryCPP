@@ -1,3 +1,5 @@
+// a rewritten version of CPPSolutionBase.cs into C++ https://github.com/rakabog/CPPConsole/blob/master/CPPConsole/CPPSolutionBase.cs
+// with additional functionality for simulated annealing variations presented in this repository
 #ifndef CPPSOLUTIONBASE_H
 #define CPPSOLUTIONBASE_H
 
@@ -23,7 +25,7 @@ protected:
     int mObjective;
     std::vector<int> mNodeClique; // holds the clique id for every node
     CPPInstance* mInstance;
-    std::vector<std::vector<int>> mAllConnections;
+    std::vector<std::vector<int>> mAllConnections; // holds the weight from all cliques to all nodes
     SASelectType mSASelectType;
     std::vector<int> mRestricted;
     RandomGenerator* mGenerator;
@@ -86,24 +88,33 @@ public:
     void UpdateAllConnections(int nNode, int nClique);
     void UpdateAllConnectionsRestricted(int nNodeIndex, int nClique);
     void InitAllConnections();
-    void CreateRelocations(int n1, int n2, int n3, int c, std::vector<std::array<int, 2>>& BestRelocations);
-    void CreateRelocations(int n1, int n2, int c, std::vector<std::array<int, 2>>& BestRelocations);
-
-
+    void ApplyRelocation(SARelocation Relocation);
     bool RemoveEmptyClique(bool bUpdateAllConections = false, bool bUseCliqueSize = false);
     bool RemoveEmptyCliqueSA(bool bUpdateAllConections = false, bool bUseCliqueSize = false);
     virtual bool LocalSearch(std::vector<std::vector<int>> Nodes = {});
+    
+    void CreateRelocations(int n1, int n2, int n3, int c, std::vector<std::array<int, 2>>& BestRelocations);
+    void CreateRelocations(int n1, int n2, int c, std::vector<std::array<int, 2>>& BestRelocations);
+
+    // unused?
     bool ImproveMove(std::vector<std::vector<int>>& Nodes);
     bool ImproveMove();
     void ExpandedBuffer(std::vector<BufferElement>& AllTest, int iNode, int iClique, int oClique);
-
     int CalculateSwap(int A, const std::vector<int>& CliqueA, int B, const std::vector<int>& CliqueB);
     int CalculateRemoveChange(int iNode);
     int CalculateAddChange(int iNode, int iClique);
     void CreateFromNodeClique(const std::vector<int>& iNodeClique);
 
     // Simulated Annealing Methods
-    void SimulatedAnnealingSelectTrio(int n1, int n2, int n3, int& BestChange, std::vector<std::array<int, 2>>& BestRelocations);
+    void SimulatedAnnealingSelectTrio(int n1, int n2, int n3, int& BestChange, std::vector<std::array<int, 2>>& BestRelocations);    
+    bool SimulatedAnnealing(SAParameters& iSAParameters, double& AcceptRelative);
+    bool SimulatedAnnealingCool(SAParameters& iSAParameters, double& AcceptRelative);
+    bool SimulatedAnnealingWithDoubleMoves(SAParameters& iSAParameters, double& AcceptRelative);
+    bool CalibrateSA(SAParameters& iSAParameters, double& Accept);
+    bool CalibrateSACool(SAParameters& iSAParameters, double& Accept);
+    bool CalibrateSADoubleMoves(SAParameters& iSAParameters, double& Accept);
+
+    // selection methods; most are experimental
     void SASelectDual(SARelocation& Relocation);
     void SASelectDualPrev(SARelocation& Relocation);
     void SASelectDualExt(SARelocation& Relocation);
@@ -118,15 +129,8 @@ public:
     void SASelectR(SARelocation& Relocations);
     void SASelectDoubleR(SARelocationStruct& RelocationBoth, SARelocationStruct& RelocationN0, SARelocationStruct& RelocationN1);
     void SASelectDoubleR2(SARelocation& RelocationBoth, SARelocation& RelocationN0, SARelocation& RelocationN1);
-    void ApplyRelocation(SARelocation Relocation);
-    bool SimulatedAnnealing(SAParameters& iSAParameters, double& AcceptRelative);
-    bool SimulatedAnnealingCool(SAParameters& iSAParameters, double& AcceptRelative);
-    bool SimulatedAnnealingWithDoubleMoves(SAParameters& iSAParameters, double& AcceptRelative);
-    bool CalibrateSA(SAParameters& iSAParameters, double& Accept);
-    bool CalibrateSACool(SAParameters& iSAParameters, double& Accept);
-    bool CalibrateSADoubleMoves(SAParameters& iSAParameters, double& Accept);
-    // double FastExp(double x);
 
+    // unused?
     int CalculateMoveChange(const std::vector<int>& iNodes, int iClique);
     int CalculateMoveChange(BufferElement Set);
     int CalculateMoveChange(int iNode, int iClique, int iNodeRemoveChange = INT_MIN);
