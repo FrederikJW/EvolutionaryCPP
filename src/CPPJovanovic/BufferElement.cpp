@@ -4,20 +4,17 @@
 #include <iterator>
 #include <cstring>
 
-// Constructor
 BufferElement::BufferElement(int size) {
     InitializeArrays(size);
     std::fill(mNewLocations, mNewLocations + size, -1);
     std::fill(mOldLocations, mOldLocations + size, -1);
 }
 
-// Copy constructor
 BufferElement::BufferElement(const BufferElement& other) {
     InitializeArrays(other.mOldLocations[0]); // Assuming the size can be derived from the first element
     CopyArrays(other);
 }
 
-// Destructor
 BufferElement::~BufferElement() {
     delete[] mNewLocations;
     delete[] mOldLocations;
@@ -27,13 +24,11 @@ BufferElement::~BufferElement() {
     mRelocations.clear();
 }
 
-// Initializes the arrays
 void BufferElement::InitializeArrays(int size) {
     mNewLocations = new int[size];
     mOldLocations = new int[size];
 }
 
-// Copies the arrays from another instance
 void BufferElement::CopyArrays(const BufferElement& other) {
     std::copy(other.mNewLocations, other.mNewLocations + sizeof(other.mNewLocations) / sizeof(int), mNewLocations);
     std::copy(other.mOldLocations, other.mOldLocations + sizeof(other.mOldLocations) / sizeof(int), mOldLocations);
@@ -46,7 +41,6 @@ void BufferElement::CopyArrays(const BufferElement& other) {
     }
 }
 
-// Checks if the relocation exists
 bool BufferElement::HasRelocation(int* r) {
     return mNewLocations[r[0]] == r[1];
 }
@@ -64,7 +58,6 @@ int* BufferElement::TakeRandomRelocation(RandomGenerator& generator) {
     return result;
 }*/
 
-// Removes a relocation
 void BufferElement::RemoveRelocation(int iNode) {
     mNewLocations[iNode] = -1;
     mOldLocations[iNode] = -1;
@@ -81,17 +74,14 @@ void BufferElement::RemoveRelocation(int iNode) {
     mRelocations = tRelocations;
 }
 
-// Checks if a node can be added
 bool BufferElement::CanAdd(int nNode, int nClique) const {
     return mNewLocations[nNode] == -1;
 }
 
-// Checks if a node is contained
 bool BufferElement::Contains(int nNode) {
     return mNewLocations[nNode] != -1;
 }
 
-// Adds a node
 bool BufferElement::Add(int nNode, int nClique, int oClique) {
     if (!CanAdd(nNode, nClique)) return false;
 
@@ -105,12 +95,10 @@ bool BufferElement::Add(int nNode, int nClique, int oClique) {
     return true;
 }
 
-// Checks if two nodes have the same destination
 bool BufferElement::IsSameDest(int N1, int N2) {
     return mNewLocations[N1] == mNewLocations[N2];
 }
 
-// Checks if this buffer element is related to another
 bool BufferElement::Related(const BufferElement& A) {
     bool* contains = new bool[sizeof(mOldLocations) / sizeof(int)];
     std::fill(contains, contains + sizeof(mOldLocations) / sizeof(int), false);
@@ -135,14 +123,12 @@ bool BufferElement::Related(const BufferElement& A) {
     return false;
 }
 
-// Merges another buffer element into this one
 void BufferElement::Merge(const BufferElement& A) {
     for (auto& t : A.mRelocations) {
         Add(t[0], t[1], A.mOldLocations[t[0]]);
     }
 }
 
-// Splits the buffer element into independent elements
 std::vector<BufferElement> BufferElement::SplitIndependent() {
     std::vector<BufferElement> result;
     BufferElement dependent(mOldLocations[0]);

@@ -28,19 +28,10 @@
     <ClCompile Include="D:\projects\EvolutionaryCPP\src\Main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="D:\projects\EvolutionaryCPP\src\MemeticRun.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="D:\projects\EvolutionaryCPP\src\Recorder.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="D:\projects\EvolutionaryCPP\src\Statistic.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="D:\projects\EvolutionaryCPP\src\StrategyFactory.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="D:\projects\EvolutionaryCPP\src\Test.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="D:\projects\EvolutionaryCPP\src\graph\Graph.cpp">
@@ -58,7 +49,7 @@
     <ClCompile Include="D:\projects\EvolutionaryCPP\src\strategies\FixedSetEvolution.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="D:\projects\EvolutionaryCPP\src\strategies\InitialPoolBuilder.cpp">
+    <ClCompile Include="..\src\strategies\SingletonInitStrategy.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="D:\projects\EvolutionaryCPP\src\strategies\MergeDivideCrossover.cpp">
@@ -70,10 +61,7 @@
     <ClCompile Include="D:\projects\EvolutionaryCPP\src\strategies\SaloExtendedImprovement.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="D:\projects\EvolutionaryCPP\src\strategies\SimulatedAnnealingImprovement.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="D:\projects\EvolutionaryCPP\src\strategies\SolutionEvolution.cpp">
+    <ClCompile Include="..\src\strategies\MdxEvolution.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\src\strategies\SaloImprovement.cpp">
@@ -98,6 +86,18 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\src\strategies\SaloDoubleMoves.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\strategies\SaloDoubleMovesSampled.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\strategies\SaloDoubleMovesZero.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\strategies\SaloCoolImprovement.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\strategies\SaloeCoolImprovement.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -1171,6 +1171,33 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="..\src\strategies\SaloDoubleMoves.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\strategies\SaloDoubleMovesSampled.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\strategies\SaloDoubleMovesZero.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\strategies\SaloExtendedImprovement.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\strategies\SingletonInitStrategy.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\strategies\MdxEvolution.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\strategies\InitialPoolStrategy.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\strategies\ImprovementStrategy.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\strategies\SaloCoolImprovement.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\strategies\SaloeCoolImprovement.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -153,7 +153,7 @@
       <ExceptionHandling>Sync</ExceptionHandling>
       <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
       <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
-      <Optimization>Disabled</Optimization>
+      <Optimization>Full</Optimization>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -163,6 +163,7 @@
       <ObjectFileName>$(IntDir)</ObjectFileName>
       <DebugInformationFormat>
       </DebugInformationFormat>
+      <WholeProgramOptimization>true</WholeProgramOptimization>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;PROJECT_ROOT_PATH=\"D:/projects/EvolutionaryCPP\";CMAKE_INTDIR=\"Release\"</PreprocessorDefinitions>
@@ -185,6 +186,7 @@
       <ImportLibrary>D:/projects/EvolutionaryCPP/build/Release/EvolutionaryCPP.lib</ImportLibrary>
       <ProgramDataBaseFile>D:/projects/EvolutionaryCPP/build/Release/EvolutionaryCPP.pdb</ProgramDataBaseFile>
       <SubSystem>Console</SubSystem>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
     <ProjectReference>
       <LinkLibraryDependencies>false</LinkLibraryDependencies>
@@ -396,8 +398,12 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\strategies\SaloCoolImprovement.cpp" />
     <ClCompile Include="..\src\strategies\SaloDoubleMoves.cpp" />
+    <ClCompile Include="..\src\strategies\SaloDoubleMovesSampled.cpp" />
+    <ClCompile Include="..\src\strategies\SaloDoubleMovesZero.cpp" />
     <ClCompile Include="..\src\strategies\SaloDualNeighborImprovement.cpp" />
+    <ClCompile Include="..\src\strategies\SaloeCoolImprovement.cpp" />
     <ClCompile Include="..\src\strategies\SaloImprovement.cpp" />
     <ClCompile Include="..\src\strategies\SaloJovaImprovement.cpp" />
     <ClCompile Include="..\src\strategies\SaloOverEdgesForcedDualImprovement.cpp" />
@@ -413,29 +419,34 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="D:\projects\EvolutionaryCPP\src\CPPJovanovic\CPPSolutionBase.cpp" />
     <ClCompile Include="D:\projects\EvolutionaryCPP\src\CPPJovanovic\SAParameters.cpp" />
     <ClCompile Include="D:\projects\EvolutionaryCPP\src\Main.cpp" />
-    <ClCompile Include="D:\projects\EvolutionaryCPP\src\MemeticRun.cpp" />
     <ClCompile Include="D:\projects\EvolutionaryCPP\src\Recorder.cpp" />
     <ClCompile Include="D:\projects\EvolutionaryCPP\src\Statistic.cpp" />
-    <ClCompile Include="D:\projects\EvolutionaryCPP\src\StrategyFactory.cpp" />
-    <ClCompile Include="D:\projects\EvolutionaryCPP\src\Test.cpp" />
     <ClCompile Include="D:\projects\EvolutionaryCPP\src\graph\Graph.cpp" />
     <ClCompile Include="D:\projects\EvolutionaryCPP\src\hungarian.cpp" />
     <ClCompile Include="D:\projects\EvolutionaryCPP\src\partition\Partition.cpp" />
     <ClCompile Include="D:\projects\EvolutionaryCPP\src\population\Population.cpp" />
     <ClCompile Include="D:\projects\EvolutionaryCPP\src\strategies\FixedSetEvolution.cpp" />
-    <ClCompile Include="D:\projects\EvolutionaryCPP\src\strategies\InitialPoolBuilder.cpp" />
+    <ClCompile Include="..\src\strategies\SingletonInitStrategy.cpp" />
     <ClCompile Include="D:\projects\EvolutionaryCPP\src\strategies\MergeDivideCrossover.cpp" />
     <ClCompile Include="D:\projects\EvolutionaryCPP\src\strategies\RCLInitStrategy.cpp" />
     <ClCompile Include="D:\projects\EvolutionaryCPP\src\strategies\SaloExtendedImprovement.cpp" />
-    <ClCompile Include="D:\projects\EvolutionaryCPP\src\strategies\SimulatedAnnealingImprovement.cpp" />
-    <ClCompile Include="D:\projects\EvolutionaryCPP\src\strategies\SolutionEvolution.cpp" />
+    <ClCompile Include="..\src\strategies\MdxEvolution.cpp" />
     <ClInclude Include="..\src\RandomGenerator.h" />
+    <ClInclude Include="..\src\strategies\ImprovementStrategy.h" />
+    <ClInclude Include="..\src\strategies\InitialPoolStrategy.h" />
+    <ClInclude Include="..\src\strategies\SaloCoolImprovement.h" />
+    <ClInclude Include="..\src\strategies\SaloeCoolImprovement.h" />
+    <ClInclude Include="..\src\strategies\SingletonInitStrategy.h" />
     <ClInclude Include="..\src\strategies\SaloDoubleMoves.h" />
+    <ClInclude Include="..\src\strategies\SaloDoubleMovesSampled.h" />
+    <ClInclude Include="..\src\strategies\SaloDoubleMovesZero.h" />
     <ClInclude Include="..\src\strategies\SaloDualNeighborImprovement.h" />
+    <ClInclude Include="..\src\strategies\SaloExtendedImprovement.h" />
     <ClInclude Include="..\src\strategies\SaloImprovement.h" />
     <ClInclude Include="..\src\strategies\SaloJovaImprovement.h" />
     <ClInclude Include="..\src\strategies\SaloOverEdgesForcedDualImprovement.h" />
     <ClInclude Include="..\src\strategies\SaloOverEdgesImprovement.h" />
+    <ClInclude Include="..\src\strategies\MdxEvolution.h" />
     <ClInclude Include="..\src\util\Util.h" />
     <ClInclude Include="..\src\util\WeightedRandomSampler.h" />
     <ClInclude Include="D:\projects\EvolutionaryCPP\libs\Eigen\src\AccelerateSupport\AccelerateSupport.h" />
