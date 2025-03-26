@@ -152,10 +152,10 @@ void parallelAddSse6(std::vector<int>& a, const std::vector<int>& b) {
     );
 }
 
+// sequential implementation
 void parallelAddSse7(std::vector<int>& a, const std::vector<int>& b) {
     const size_t size = a.size();
 
-    // Handle any remaining elements
     for (size_t i = 0; i < size; ++i) {
         a[i] += b[i];
     }
@@ -2852,6 +2852,7 @@ bool CPPSolutionBase::SimulatedAnnealingWithDoubleMoves(SAParameters& iSAParamet
     return true;
 }
 
+// Simulated annealing with node cooling as inspired by tabu search [4]
 bool CPPSolutionBase::SimulatedAnnealingCool(SAParameters& iSAParameters, double& AcceptRelative)
 {
     nextRelocationCalculated = false;
